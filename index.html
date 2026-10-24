@@ -2563,21 +2563,20 @@
 
                             try {
                                 const parsed = JSON.parse(jsonStr);
-                                if (parsed.sources) {
+                                if (parsed.sources && parsed.sources.length > 0) {
                                     sources = parsed.sources;
-                                        sourcesEl.innerHTML = `
-                                            <span class="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
-                                                <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak:
-                                            </span>
-                                        ` + sources.map(s => `
-                                            <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/70 hover:bg-slate-850 border border-slate-800/80 hover:border-indigo-500/50 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-slate-300 hover:text-white transition cursor-pointer group shadow-sm" title="Sayfayı aç">
-                                                <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
-                                                <span class="text-[11px] text-indigo-400 font-mono font-medium">s. ${s.page_number}</span>
-                                            </button>
-                                        `).join('');
-                                        sourcesEl.classList.remove('hidden');
-                                        lucide.createIcons();
-                                    }
+                                    sourcesEl.innerHTML = `
+                                        <span class="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
+                                            <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak:
+                                        </span>
+                                    ` + sources.map(s => `
+                                        <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/70 hover:bg-slate-850 border border-slate-800/80 hover:border-indigo-500/50 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-slate-300 hover:text-white transition cursor-pointer group shadow-sm" title="Sayfayı aç">
+                                            <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
+                                            <span class="text-[11px] text-indigo-400 font-mono font-medium">s. ${s.page_number}</span>
+                                        </button>
+                                    `).join('');
+                                    sourcesEl.classList.remove('hidden');
+                                    lucide.createIcons();
                                 }
                                 if (parsed.text) {
                                     fullText += parsed.text;
