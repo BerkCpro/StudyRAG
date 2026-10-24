@@ -66,6 +66,7 @@ quiz_stats = {}
 def load_storage():
     """study_storage.json dosyasından dökümanları ve quiz istatistiklerini diskten yükler."""
     global uploaded_documents, quiz_stats
+
     if os.path.exists(STORAGE_FILE):
         try:
             with open(STORAGE_FILE, "r", encoding="utf-8") as f:
@@ -574,9 +575,8 @@ def build_chat_context_and_prompt(request: ChatRequest):
     except Exception as e:
         print(f"[WARN] Qdrant arama: {e}", flush=True)
 
-    if not search_results and not has_image:
-        raise HTTPException(status_code=404, detail="Yüklenen dökümanlar arasında bu soruyla ilgili içerik bulunamadı. Lütfen sol menüden PDF yüklediğinizden emin olun.")
-
+    # Not: search_results boş olsa bile 404 fırlatmıyoruz!
+    # Öğrenci PDF yüklemeden de "Bana şu konuyu anlat" diyebilmeli.
     context_parts = []
     sources = []
     seen_sources = set()
@@ -593,7 +593,10 @@ def build_chat_context_and_prompt(request: ChatRequest):
                 snippet=(p.get("text") or "")[:140] + "..."
             ))
 
-    context_text = "\n\n---\n\n".join(context_parts) if context_parts else "(Bu soru için eşleşen PDF ders notu parçası bulunamadı. Doğrudan yüklenen görsel ve genel konu bilgisiyle yanıt veriliyor.)"
+    if context_parts:
+        context_text = "\n\n---\n\n".join(context_parts)
+    else:
+        context_text = "(Bu çalışma alanında henüz bu konuyla ilgili özel bir PDF ders notu yüklenmedi. Üniversite ders müfredatına uygun genel uzman akademik bilginle kapsamlı, eğitici ve net bir yanıt ver.)"
 
     style_instruction = (
         "Konuyu hiç bilmeyen birine anlatır gibi günlük hayattan benzetmelerle çok sade ve basitçe anlat."
@@ -675,7 +678,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
             # Yedek modele düş
             try:
                 stream = client.models.generate_content_stream(
-                    model="gemini-2.5-flash",
+                    model=GEMINI_FALLBACK_MODEL,
                     contents=contents
                 )
                 for chunk in stream:

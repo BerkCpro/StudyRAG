@@ -902,6 +902,16 @@
         </div>
     </div>
 
+    <!-- ================= GÖRSEL BÜYÜTME (LIGHTBOX) MODALI ================= -->
+    <div id="imageLightboxModal" onclick="closeImageLightbox()" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in cursor-zoom-out">
+        <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+            <button onclick="closeImageLightbox()" title="Kapat" class="absolute -top-10 right-0 text-white/80 hover:text-white p-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition cursor-pointer">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <img id="lightboxImg" src="" alt="Büyütülmüş Görsel" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10">
+        </div>
+    </div>
+
     <!-- ================= JAVASCRIPT ETKİLEŞİMLERİ & API ENTEGRASYONU ================= -->
     <script>
         // Lucide İkonlarını Başlat
@@ -1794,6 +1804,22 @@
             window.speechSynthesis.speak(utter);
         }
 
+        function openImageLightbox(src) {
+            if (!src) return;
+            const modal = document.getElementById('imageLightboxModal');
+            const img = document.getElementById('lightboxImg');
+            if (modal && img) {
+                img.src = src;
+                modal.classList.remove('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        function closeImageLightbox() {
+            const modal = document.getElementById('imageLightboxModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         // -------------------------------------------------------------
         // 4. SOHBET MESAJLARINI ÇİZME (RENDER)
         // -------------------------------------------------------------
@@ -1813,7 +1839,7 @@
                                 <strong class="text-indigo-300">${escapeHtml(currentCourse)}</strong> dersinin PDF'lerinden arama yapar, sayfa referanslarıyla doğrulanmış yanıtlar sunar.
                             </p>
                             <p class="text-[11px] text-emerald-400 flex items-center justify-center gap-1.5 pt-1">
-                                <i data-lucide="camera" class="w-3.5 h-3.5"></i> Fotoğraf veya ekran görüntüsü yapıştırarak (Ctrl+V) soru sorabilirsiniz!
+                                <i data-lucide="camera" class="w-3.5 h-3.5"></i> Fotoğraf veya ekran görüntüsü yapıştırarak (Ctrl+V) soru sorabilir, PDF yüklemeden de konu anlatımı isteyebilirsiniz!
                             </p>
                         </div>
                         <div class="grid grid-cols-1 gap-2 w-full pt-2">
@@ -1821,7 +1847,7 @@
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
                                 <span>En kritik sınav konuları nelerdir?</span>
                             </button>
-                            <button onclick="sendQuickPrompt('Temel kavramları ve tanımları sayfa numaralarıyla listele.')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
+                            <button onclick="sendQuickPrompt('Temel kavramları ve tanımları detaylıca açıkla.')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
                                 <i data-lucide="book-marked" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
                                 <span>Temel kavramları ve tanımları listele</span>
                             </button>
@@ -1836,7 +1862,7 @@
                 if (msg.role === 'user') {
                     const imageHtml = msg.image ? `
                         <div class="mb-2 max-w-sm rounded-xl overflow-hidden border border-indigo-400/30 shadow-md">
-                            <img src="${msg.image}" alt="Yüklenen Görsel" class="w-full max-h-56 object-contain bg-black/30 cursor-pointer transition hover:opacity-95" onclick="window.open('${msg.image}')">
+                            <img src="${msg.image}" alt="Yüklenen Görsel" class="w-full max-h-56 object-contain bg-black/30 cursor-pointer transition hover:opacity-95" onclick="openImageLightbox(this.src)">
                         </div>
                     ` : '';
 
