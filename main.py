@@ -346,6 +346,8 @@ class QuizGenerateRequest(BaseModel):
     count: int = 5
     course_name: Optional[str] = None
     user_id: Optional[str] = "default_user"
+    focus_weak_topics: bool = False  # Hata yapılan zayıf konulara odaklan
+    focus_pages: Optional[list[int]] = None  # Odaklanılacak belirli sayfa listesi
 
 
 # --- Flashcard Şemaları ---
@@ -748,15 +750,64 @@ async def generate_quiz(
     scroll_result, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=scroll_filter,
-        limit=50
+        limit=100
     )
 
     if not scroll_result:
         course_msg = f"'{request.course_name}' dersi için" if request.course_name else "Bu çalışma alanı için"
         raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF yüklenmedi. Lütfen sol menüden bu derse en az bir PDF ekleyin.")
 
-    # Rastgele en fazla 5 parça seç
-    sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
+    u_stats = get_user_quiz_stats(uid)
+    weak_pages_map = u_stats.get("weak_pages", {})
+    focus_pages_set = set(request.focus_pages or [])
+
+    sampled_points = []
+    weak_focus_instructions = ""
+
+    # Eğer zayıf konulara odaklanma talep edildiyse:
+    if request.focus_weak_topics:
+        weak_points = []
+        other_points = []
+
+        for p in scroll_result:
+            p_payload = p.payload or {}
+            p_num = p_payload.get("page_number")
+            doc_name = p_payload.get("document_name", "")
+            key = f"{doc_name} (Sayfa {p_num})"
+
+            if p_num in focus_pages_set or key in weak_pages_map:
+                weak_points.append(p)
+            else:
+                other_points.append(p)
+
+        if weak_points:
+            # Zayıf konulardan ağırlıklı (maksimum 4-5 parça) seç, gerekirse kalanlardan tamamla
+            needed = min(len(scroll_result), 5)
+            sample_weak_count = min(len(weak_points), needed)
+            sampled_points = random.sample(weak_points, sample_weak_count)
+            if len(sampled_points) < needed and other_points:
+                rem_count = min(len(other_points), needed - len(sampled_points))
+                sampled_points.extend(random.sample(other_points, rem_count))
+        else:
+            sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
+
+        focus_details = []
+        if focus_pages_set:
+            focus_details.append(f"Önceki testte yanlış yapılan sayfalar: {sorted(list(focus_pages_set))}")
+        if weak_pages_map:
+            top_weak = sorted(weak_pages_map.items(), key=lambda x: x[1], reverse=True)[:4]
+            focus_details.append("Geçmişte en çok hata yapılan konular: " + ", ".join([f"{k} ({v} hata)" for k, v in top_weak]))
+
+        focus_str = " | ".join(focus_details) if focus_details else "Öğrencinin zorlandığı kritik temel kavramlar"
+        weak_focus_instructions = f"""
+ÖZEL VE KRİTİK GÖREV: Bu sınav, öğrencinin DAHA ÖNCE YANLIŞ YAPTIĞI VE ANLAMAKTA ZORLANDIĞI KONULARI TELAFİ ETMEK İÇİN ÜRETİLMEKTEDİR.
+[ZAYIF KONU BİLGİSİ]: {focus_str}
+Lütfen soruları ÖNCELİKLE bu sayfa ve kavramlardaki püf noktaları, eksik anlaşılan ilkeleri ve yanılgıları pekiştirecek, öğrenciye konuyu tam kavratacak şekilde üret!
+"""
+    else:
+        # Genel / farklı konulardan dengeli rastgele seçim
+        sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
+
     context_text = "\n\n---\n\n".join(
         [f"[PDF: {p.payload['document_name']} | Sayfa: {p.payload['page_number']}]\n{p.payload['text']}" for p in sampled_points]
     )
@@ -771,7 +822,7 @@ async def generate_quiz(
 
     prompt = f"""Aşağıdaki ders notlarından {request.difficulty} zorluk seviyesinde toplam {request.count} adet {type_desc} sınav sorusu üret.
 Her sorunun doğru cevabını, açıklamasını ve kaynak PDF ile sayfa numarasını eksiksiz doldur.
-
+{weak_focus_instructions}
 [DERS NOTLARI]:
 {context_text}
 """
@@ -790,8 +841,9 @@ Her sorunun doğru cevabını, açıklamasını ve kaynak PDF ile sayfa numaras�
 
     try:
         response = await asyncio.to_thread(_call_gemini_quiz, GEMINI_MODEL)
-    except Exception:
-        response = await asyncio.to_thread(_call_gemini_quiz, "gemini-3.8-flash")
+    except Exception as e:
+        print(f"[WARN] Quiz lite model hatası: {e}, fallback modele geçiliyor...", flush=True)
+        response = await asyncio.to_thread(_call_gemini_quiz, GEMINI_FALLBACK_MODEL)
 
     return QuizListResponse.model_validate_json(response.text)
 
@@ -858,7 +910,7 @@ KURALLAR (HIZLI VE ETKİLİ ÖĞRENME İÇİN):
         response = await asyncio.to_thread(_call_gemini_flashcards, GEMINI_MODEL)
     except Exception as e:
         print(f"[WARN] Flashcard lite model hatasi: {e}, yedek modele geciliyor...", flush=True)
-        response = await asyncio.to_thread(_call_gemini_flashcards, "gemini-3.8-flash")
+        response = await asyncio.to_thread(_call_gemini_flashcards, GEMINI_FALLBACK_MODEL)
 
     return FlashcardListResponse.model_validate_json(response.text)
 
