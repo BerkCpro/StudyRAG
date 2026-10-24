@@ -872,39 +872,100 @@
         </div>
     </div>
 
-    <!-- ================= DERS NOTU SAYFA KAYNAĞI ÖNİZLEME MODALI ================= -->
-    <div id="sourceSnippetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in">
-        <div class="bg-slate-900 border border-indigo-500/40 rounded-2xl w-full max-w-lg p-5 shadow-2xl relative space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
-                        <i data-lucide="book-open" class="w-4 h-4"></i>
+    <!-- ================= DERS NOTU & PDF SAYFASI ÖNİZLEME MODALI ================= -->
+    <div id="sourceSnippetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
+        <div class="bg-slate-900 border border-indigo-500/40 rounded-2xl w-full max-w-4xl max-h-[95vh] shadow-2xl relative flex flex-col overflow-hidden">
+            
+            <!-- Modal Üst Başlık & Araç Çubuğu -->
+            <div class="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-800 bg-slate-900/90 shrink-0 gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
                     </div>
-                    <div>
-                        <h3 id="modalSourceDocTitle" class="text-xs md:text-sm font-semibold text-slate-100 truncate max-w-xs">Ders Notu Kaynağı</h3>
+                    <div class="truncate">
+                        <h3 id="modalSourceDocTitle" class="text-xs sm:text-sm font-semibold text-slate-100 truncate">Ders Notu Önizleme</h3>
                         <p id="modalSourcePageBadge" class="text-[10px] text-indigo-300 font-mono">Sayfa ...</p>
                     </div>
                 </div>
-                <button onclick="closeSourceSnippetModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            
-            <div class="space-y-1.5">
-                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">İlgili Sayfadan Alıntı Parça:</span>
-                <div id="modalSourceSnippetText" class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-sans max-h-60 overflow-y-auto select-text whitespace-pre-wrap">
-                    ...
+
+                <!-- Sayfa Kontrolleri (Önceki / Sonraki / Git) -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <button id="pdfPrevPageBtn" onclick="changePdfPreviewPage(-1)" title="Önceki Sayfa (Sol Ok)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <div class="flex items-center gap-1 text-xs text-slate-300 font-medium bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                        <span>Sayfa</span>
+                        <input id="pdfPageInput" type="number" min="1" value="1" onchange="jumpToPdfPage(this.value)" class="w-10 text-center bg-transparent border-b border-indigo-500 text-indigo-300 font-bold text-xs focus:outline-none">
+                        <span id="pdfTotalPagesLabel" class="text-slate-400">/ 1</span>
+                    </div>
+                    <button id="pdfNextPageBtn" onclick="changePdfPreviewPage(1)" title="Sonraki Sayfa (Sağ Ok)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                    
+                    <!-- Zoom & Yeni Sekme & Kapat Butonları -->
+                    <div class="hidden sm:flex items-center gap-1 pl-2 border-l border-slate-800">
+                        <button onclick="zoomPdfPreview(-0.15)" title="Uzaklaştır" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">
+                            <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                        </button>
+                        <span id="pdfZoomLabel" class="text-[10px] text-slate-400 font-mono w-10 text-center">100%</span>
+                        <button onclick="zoomPdfPreview(0.15)" title="Yakınlaştır" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">
+                            <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <a id="modalOpenFullPdfLink" href="#" target="_blank" title="Tam PDF'i Yeni Sekmede Aç" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </a>
+                    <button onclick="closeSourceSnippetModal()" class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
-                <button id="modalAskAboutSourceBtn" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition shadow-md">
-                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Bu Sayfayı Açıkla
-                </button>
-                <button onclick="closeSourceSnippetModal()" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1 rounded-lg hover:bg-slate-800 transition">
-                    Kapat
-                </button>
+            <!-- Modal Gövdesi: PDF Sayfası Görseli & İsteğe Bağlı Metin Özeti -->
+            <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 flex flex-col items-center">
+                
+                <!-- PDF Sayfa Görseli Çerçevesi -->
+                <div class="relative w-full flex items-center justify-center bg-slate-950/90 rounded-xl border border-slate-800/80 overflow-hidden min-h-[300px] sm:min-h-[420px] p-2">
+                    
+                    <div id="pdfPageLoadingSpinner" class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/70 backdrop-blur-xs gap-2">
+                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400"></i>
+                        <span class="text-xs text-slate-300 font-medium">Sayfa Oluşturuluyor...</span>
+                    </div>
+
+                    <img id="modalPdfPageImg" src="" alt="PDF Sayfası" class="max-w-full max-h-[65vh] object-contain rounded shadow-2xl transition-transform duration-150 select-none cursor-pointer" onclick="openLightboxFromPreview()" title="Büyütmek için tıkla">
+                </div>
+
+                <!-- Sayfadaki RAG Alıntısı Açılır Çekmece / Bölüm -->
+                <div id="modalSnippetSection" class="w-full space-y-1.5">
+                    <button type="button" onclick="toggleElement('modalSourceSnippetText')" class="text-[11px] font-semibold text-slate-400 hover:text-indigo-300 flex items-center gap-1.5 transition select-none">
+                        <i data-lucide="quote" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Bu Sayfadan Çıkarılan Metin Alıntısını Gör / Gizle</span>
+                    </button>
+                    <div id="modalSourceSnippetText" class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-sans max-h-36 overflow-y-auto select-text whitespace-pre-wrap">
+                        ...
+                    </div>
+                </div>
+
             </div>
+
+            <!-- Modal Alt Butonlar -->
+            <div class="flex items-center justify-between p-3.5 sm:p-4 border-t border-slate-800 bg-slate-900/90 shrink-0 gap-2">
+                <button id="modalAskAboutSourceBtn" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-medium transition shadow-md">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>Bu Sayfayı Sohbette Açıkla</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <a id="modalDownloadPdfBtn" href="#" download class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">İndir</span>
+                    </a>
+                    <button onclick="closeSourceSnippetModal()" class="text-xs text-slate-400 hover:text-slate-200 px-3.5 py-2 rounded-xl hover:bg-slate-800 transition">
+                        Kapat
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1399,16 +1460,21 @@
 
                 listEl.innerHTML = docs.map(d => `
                     <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg p-2 text-xs group transition">
-                        <div class="flex items-center gap-2 overflow-hidden">
+                        <div onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" class="flex items-center gap-2 overflow-hidden flex-1 cursor-pointer" title="PDF'i Önizlemek için tıkla">
                             <i data-lucide="file-text" class="w-4 h-4 text-rose-400 shrink-0"></i>
                             <div class="truncate">
-                                <p class="text-slate-200 font-medium truncate text-[11px]">${escapeHtml(d.filename)}</p>
+                                <p class="text-slate-200 hover:text-indigo-300 font-medium truncate text-[11px] transition">${escapeHtml(d.filename)}</p>
                                 <p class="text-[9px] text-slate-500">${d.total_pages || 0} Sayfa • ${d.total_chunks || 0} Chunk</p>
                             </div>
                         </div>
-                        <button onclick="deletePdfFile('${escapeHtml(d.filename)}')" title="PDF'i Sil" class="text-slate-500 hover:text-rose-400 p-1 opacity-60 hover:opacity-100 transition shrink-0">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                        </button>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" title="PDF Sayfalarını İncele" class="text-slate-500 hover:text-indigo-400 p-1 opacity-70 hover:opacity-100 transition">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="deletePdfFile('${escapeHtml(d.filename)}')" title="PDF'i Sil" class="text-slate-500 hover:text-rose-400 p-1 opacity-60 hover:opacity-100 transition">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
                 `).join('');
 
@@ -1711,31 +1777,141 @@
         // -------------------------------------------------------------
         // 3.2 KAYNAK ALINTISI ÖNİZLEME & SESLİ OKUMA (TTS) & KOPYALAMA
         // -------------------------------------------------------------
-        function showSourceSnippetModal(docName, pageNo, encodedSnippet) {
+        // -------------------------------------------------------------
+        // 3.2 İNTERAKTİF PDF SAYFA ÖNİZLEME & SESLİ OKUMA (TTS) & KOPYALAMA
+        // -------------------------------------------------------------
+        let currentPdfPreview = {
+            docName: '',
+            page: 1,
+            totalPages: 1,
+            snippet: '',
+            zoom: 1.0
+        };
+
+        async function showSourceSnippetModal(docName, pageNo, encodedSnippet) {
             const modal = document.getElementById('sourceSnippetModal');
+            currentPdfPreview.docName = docName || '';
+            currentPdfPreview.page = parseInt(pageNo) || 1;
+            currentPdfPreview.totalPages = 1;
+            currentPdfPreview.snippet = decodeURIComponent(encodedSnippet || '');
+            currentPdfPreview.zoom = 1.0;
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                if (window.lucide) lucide.createIcons();
+            }
+
+            renderCurrentPdfPreviewPage();
+
+            // Sayfa sayısını backend'den öğren
+            try {
+                const infoRes = await fetch(`/pdf-info?filename=${encodeURIComponent(docName)}&user_id=${encodeURIComponent(currentUserId)}`, {
+                    headers: { 'X-User-Id': currentUserId }
+                });
+                if (infoRes.ok) {
+                    const infoData = await infoRes.json();
+                    currentPdfPreview.totalPages = Math.max(infoData.total_pages || 1, 1);
+                    renderCurrentPdfPreviewPage(false); // Sadece etiket ve sınırları güncelle
+                }
+            } catch (e) {
+                console.warn("PDF sayfa bilgisi alınamadı:", e);
+            }
+        }
+
+        function renderCurrentPdfPreviewPage(reloadImage = true) {
             const title = document.getElementById('modalSourceDocTitle');
             const badge = document.getElementById('modalSourcePageBadge');
+            const pageInput = document.getElementById('pdfPageInput');
+            const totalLabel = document.getElementById('pdfTotalPagesLabel');
             const snippetEl = document.getElementById('modalSourceSnippetText');
             const askBtn = document.getElementById('modalAskAboutSourceBtn');
+            const img = document.getElementById('modalPdfPageImg');
+            const spinner = document.getElementById('pdfPageLoadingSpinner');
+            const fullLink = document.getElementById('modalOpenFullPdfLink');
+            const downloadBtn = document.getElementById('modalDownloadPdfBtn');
+            const zoomLabel = document.getElementById('pdfZoomLabel');
+            const prevBtn = document.getElementById('pdfPrevPageBtn');
+            const nextBtn = document.getElementById('pdfNextPageBtn');
 
-            const decodedSnippet = decodeURIComponent(encodedSnippet || 'Alıntı metni bulunamadı.');
+            if (title) title.textContent = currentPdfPreview.docName;
+            if (badge) badge.textContent = `Sayfa ${currentPdfPreview.page} / ${currentPdfPreview.totalPages}`;
+            if (pageInput) {
+                pageInput.value = currentPdfPreview.page;
+                pageInput.max = currentPdfPreview.totalPages;
+            }
+            if (totalLabel) totalLabel.textContent = `/ ${currentPdfPreview.totalPages}`;
+            if (snippetEl) snippetEl.textContent = currentPdfPreview.snippet || 'Bu sayfa için metin alıntısı kaydedilmedi.';
+            if (zoomLabel) zoomLabel.textContent = `${Math.round(currentPdfPreview.zoom * 100)}%`;
 
-            if (title) title.textContent = docName;
-            if (badge) badge.textContent = `Sayfa ${pageNo}`;
-            if (snippetEl) snippetEl.textContent = decodedSnippet;
+            if (prevBtn) prevBtn.disabled = currentPdfPreview.page <= 1;
+            if (nextBtn) nextBtn.disabled = currentPdfPreview.page >= currentPdfPreview.totalPages;
+
+            const fullPdfUrl = `/pdf-file/${encodeURIComponent(currentPdfPreview.docName)}?user_id=${encodeURIComponent(currentUserId)}#page=${currentPdfPreview.page}`;
+            if (fullLink) fullLink.href = fullPdfUrl;
+            if (downloadBtn) {
+                downloadBtn.href = `/pdf-file/${encodeURIComponent(currentPdfPreview.docName)}?user_id=${encodeURIComponent(currentUserId)}`;
+                downloadBtn.setAttribute('download', currentPdfPreview.docName);
+            }
 
             if (askBtn) {
                 askBtn.onclick = () => {
                     closeSourceSnippetModal();
                     switchTab('chat');
-                    const q = `"${docName}" dökümanının ${pageNo}. sayfasındaki şu bölümü açıklar mısın:\n"${decodedSnippet.slice(0, 100)}..."`;
+                    const q = `"${currentPdfPreview.docName}" dökümanının ${currentPdfPreview.page}. sayfasındaki konuları detaylıca açıklar mısın?`;
                     executeChatMessage(q);
                 };
             }
 
-            if (modal) {
-                modal.classList.remove('hidden');
-                lucide.createIcons();
+            if (reloadImage && img) {
+                if (spinner) spinner.classList.remove('hidden');
+                img.style.transform = `scale(${currentPdfPreview.zoom})`;
+                const imgUrl = `/pdf-page-image?filename=${encodeURIComponent(currentPdfPreview.docName)}&page=${currentPdfPreview.page}&user_id=${encodeURIComponent(currentUserId)}&dpi=140`;
+                
+                img.onload = () => {
+                    if (spinner) spinner.classList.add('hidden');
+                };
+                img.onerror = () => {
+                    if (spinner) spinner.classList.add('hidden');
+                };
+                img.src = imgUrl;
+            }
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function changePdfPreviewPage(delta) {
+            let next = currentPdfPreview.page + delta;
+            if (next < 1) next = 1;
+            if (currentPdfPreview.totalPages && next > currentPdfPreview.totalPages) next = currentPdfPreview.totalPages;
+            if (next !== currentPdfPreview.page) {
+                currentPdfPreview.page = next;
+                renderCurrentPdfPreviewPage(true);
+            }
+        }
+
+        function jumpToPdfPage(val) {
+            let p = parseInt(val) || 1;
+            if (p < 1) p = 1;
+            if (currentPdfPreview.totalPages && p > currentPdfPreview.totalPages) p = currentPdfPreview.totalPages;
+            currentPdfPreview.page = p;
+            renderCurrentPdfPreviewPage(true);
+        }
+
+        function zoomPdfPreview(delta) {
+            let z = currentPdfPreview.zoom + delta;
+            if (z < 0.6) z = 0.6;
+            if (z > 2.5) z = 2.5;
+            currentPdfPreview.zoom = parseFloat(z.toFixed(2));
+            const img = document.getElementById('modalPdfPageImg');
+            const zoomLabel = document.getElementById('pdfZoomLabel');
+            if (img) img.style.transform = `scale(${currentPdfPreview.zoom})`;
+            if (zoomLabel) zoomLabel.textContent = `${Math.round(currentPdfPreview.zoom * 100)}%`;
+        }
+
+        function openLightboxFromPreview() {
+            const img = document.getElementById('modalPdfPageImg');
+            if (img && img.src) {
+                openImageLightbox(img.src);
             }
         }
 
@@ -1743,6 +1919,20 @@
             const modal = document.getElementById('sourceSnippetModal');
             if (modal) modal.classList.add('hidden');
         }
+
+        // Klavye ile sayfa geçişleri (Sol/Sağ ok ve Esc)
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('sourceSnippetModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                if (e.key === 'ArrowLeft') {
+                    changePdfPreviewPage(-1);
+                } else if (e.key === 'ArrowRight') {
+                    changePdfPreviewPage(1);
+                } else if (e.key === 'Escape') {
+                    closeSourceSnippetModal();
+                }
+            }
+        });
 
         function copyMessageText(btn) {
             const text = btn.getAttribute('data-text') || '';
@@ -2347,9 +2537,10 @@
                         <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">
                             Soru ${idx + 1} • ${q.question_type.toUpperCase()}
                         </span>
-                        <span class="text-[11px] text-slate-400">
-                            Kaynak: ${escapeHtml(q.source_document)} (S. ${q.page_number})
-                        </span>
+                        <button type="button" onclick="showSourceSnippetModal('${escapeHtml(q.source_document)}', ${q.page_number}, '${encodeURIComponent(q.explanation || '')}')" class="text-[11px] text-slate-400 hover:text-indigo-300 transition flex items-center gap-1 cursor-pointer" title="PDF sayfasını incele">
+                            <i data-lucide="book-open" class="w-3 h-3 text-indigo-400"></i>
+                            <span>Kaynak: ${escapeHtml(q.source_document)} (S. ${q.page_number})</span>
+                        </button>
                     </div>
                     <p class="text-xs md:text-sm font-medium text-slate-100 leading-relaxed">${escapeHtml(q.question_text)}</p>
                     ${optionsHtml}
@@ -2528,9 +2719,10 @@
                                 <div class="bg-slate-950/80 border border-rose-900/40 rounded-xl p-3.5 space-y-2 text-xs">
                                     <div class="flex items-center justify-between text-[11px]">
                                         <span class="font-bold text-rose-300">Soru ${m.index}</span>
-                                        <span class="text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                            📄 ${escapeHtml(m.source_document)} (Sayfa ${m.page_number})
-                                        </span>
+                                        <button type="button" onclick="showSourceSnippetModal('${escapeHtml(m.source_document)}', ${m.page_number}, '${encodeURIComponent(m.explanation || '')}')" class="text-slate-300 hover:text-indigo-300 bg-slate-900 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-800 hover:border-indigo-500/50 transition cursor-pointer flex items-center gap-1 text-[11px]" title="PDF Sayfasını İncele">
+                                            <i data-lucide="book-open" class="w-3 h-3 text-indigo-400"></i>
+                                            <span>📄 ${escapeHtml(m.source_document)} (Sayfa ${m.page_number})</span>
+                                        </button>
                                     </div>
                                     <p class="text-slate-200 font-medium">${escapeHtml(m.question_text)}</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
@@ -2702,7 +2894,10 @@
                 document.getElementById('fcBadge').textContent = `Kart ${currentCardIndex + 1} / ${generatedCards.length} • ${currentCourse}`;
                 document.getElementById('fcFront').textContent = card.front;
                 document.getElementById('fcBack').textContent = card.back;
-                document.getElementById('fcSource').textContent = `Kaynak: ${card.source_document} (Sayfa ${card.page_number})`;
+                const fcSourceEl = document.getElementById('fcSource');
+                if (fcSourceEl) {
+                    fcSourceEl.innerHTML = `Kaynak: <span class="underline hover:text-indigo-300 cursor-pointer" onclick="event.stopPropagation(); showSourceSnippetModal('${escapeHtml(card.source_document || '')}', ${card.page_number || 1}, '')">${escapeHtml(card.source_document || '')} (Sayfa ${card.page_number || 1})</span>`;
+                }
             }, 150);
         }
 

@@ -33,7 +33,7 @@ from typing import Literal, Optional
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
@@ -51,6 +51,8 @@ COLLECTION_NAME = "study_rag_collection"
 
 # Kalıcı veri yolları (Deploy ve yeniden başlatmalarda PDF ve istatistik kaybını önler)
 STORAGE_FILE = "study_storage.json"
+PDF_STORAGE_DIR = os.getenv("PDF_STORAGE_DIR", "pdf_storage")
+os.makedirs(PDF_STORAGE_DIR, exist_ok=True)
 QDRANT_STORAGE_PATH = os.getenv("QDRANT_STORAGE_PATH", "./qdrant_storage")
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
@@ -62,6 +64,24 @@ gemini_client: genai.Client = None
 # Yüklenen PDF'lerin ve çözülen soruların kullanıcı bazlı takibi
 uploaded_documents = []
 quiz_stats = {}
+
+
+def find_pdf_file_path(filename: str, uid: str = "") -> Optional[str]:
+    """Diskteki pdf_storage klasöründen ilgili dökümanın dosya yolunu bulur."""
+    safe_filename = os.path.basename(filename)
+    if uid:
+        p1 = os.path.join(PDF_STORAGE_DIR, f"{uid}_{safe_filename}")
+        if os.path.exists(p1):
+            return p1
+    p2 = os.path.join(PDF_STORAGE_DIR, safe_filename)
+    if os.path.exists(p2):
+        return p2
+    # Dosya adıyla biten herhangi bir eşleşme ara
+    if os.path.exists(PDF_STORAGE_DIR):
+        for f in os.listdir(PDF_STORAGE_DIR):
+            if f.endswith(f"_{safe_filename}") or f == safe_filename:
+                return os.path.join(PDF_STORAGE_DIR, f)
+    return None
 
 
 def load_storage():
@@ -408,6 +428,16 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="Lütfen sadece PDF dosyası yükleyin.")
 
     pdf_bytes = await file.read()
+
+    # Sayfa görseli önizleme ve indirme için PDF dosyasını diske kaydet
+    safe_name = os.path.basename(file.filename)
+    stored_path = os.path.join(PDF_STORAGE_DIR, f"{uid}_{safe_name}")
+    try:
+        with open(stored_path, "wb") as f_out:
+            f_out.write(pdf_bytes)
+    except Exception as e:
+        print(f"[WARN] PDF diske kaydedilemedi: {e}", flush=True)
+
     doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
 
     # 160 sayfadan büyük dosyalarda sunucu ve bellek koruması
@@ -570,10 +600,98 @@ async def delete_document(
     if target_course:
         user_docs = [d for d in user_docs if d.get("course_name", "").strip().lower() == target_course]
 
+    # Diskteki PDF dosyasını da temizle
+    pdf_path = find_pdf_file_path(filename, uid)
+    if pdf_path and os.path.exists(pdf_path):
+        try:
+            os.remove(pdf_path)
+        except Exception as e:
+            print(f"[WARN] PDF dosyası silinirken hata: {e}", flush=True)
+
     # Değişiklikleri diske kalıcı olarak yaz
     save_storage()
 
     return {"message": f"'{filename}' başarıyla silindi.", "documents": user_docs}
+
+
+# 2.2 PDF Sayfa Görseli Önizleme Endpoint'i (Ultra Hızlı PyMuPDF Renderer)
+@app.get("/pdf-page-image")
+async def get_pdf_page_image(
+    filename: str,
+    page: int = 1,
+    user_id: Optional[str] = None,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    dpi: int = 140
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    pdf_path = find_pdf_file_path(filename, uid)
+
+    if not pdf_path or not os.path.exists(pdf_path):
+        # Şık ve modern bir bilgilendirme SVG görseli dön
+        placeholder_svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+            <rect width="600" height="420" fill="#0f172a"/>
+            <rect x="25" y="25" width="550" height="370" rx="16" fill="#1e293b" stroke="#475569" stroke-dasharray="6 6"/>
+            <text x="300" y="160" fill="#818cf8" font-size="52" font-family="sans-serif" text-anchor="middle">📄</text>
+            <text x="300" y="215" fill="#f8fafc" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">PDF Sayfa Görseli Henüz Kaydedilmedi</text>
+            <text x="300" y="248" fill="#94a3b8" font-size="12" font-family="sans-serif" text-anchor="middle">"{filename}" bu özellikten önce yüklendiği için dosya diske yazılmamış.</text>
+            <text x="300" y="280" fill="#38bdf8" font-size="12" font-family="sans-serif" font-weight="600" text-anchor="middle">Görsel sayfa önizlemesi için lütfen sol menüden bu PDF'i tekrar yükleyiniz.</text>
+        </svg>"""
+        return Response(content=placeholder_svg, media_type="image/svg+xml")
+
+    try:
+        doc = pymupdf.open(pdf_path)
+        total = len(doc)
+        page_idx = min(max(page - 1, 0), total - 1)
+        pix = doc[page_idx].get_pixmap(dpi=min(max(dpi, 72), 220))
+        img_bytes = pix.tobytes("png")
+        doc.close()
+        return Response(
+            content=img_bytes,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "X-Total-Pages": str(total)
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Sayfa görseli oluşturulamadı: {e}")
+
+
+# 2.3 Tam PDF İndirme / Görüntüleme Endpoint'i
+@app.get("/pdf-file/{filename}")
+async def get_pdf_file(
+    filename: str,
+    user_id: Optional[str] = None,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    pdf_path = find_pdf_file_path(filename, uid)
+    if not pdf_path or not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="PDF dosyası depoda bulunamadı.")
+    return FileResponse(pdf_path, media_type="application/pdf", filename=filename)
+
+
+# 2.4 PDF Sayfa Sayısı ve Bilgi Endpoint'i
+@app.get("/pdf-info")
+async def get_pdf_info(
+    filename: str,
+    user_id: Optional[str] = None,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    pdf_path = find_pdf_file_path(filename, uid)
+    if not pdf_path or not os.path.exists(pdf_path):
+        match = next((d for d in uploaded_documents if d.get("filename") == filename), None)
+        total = match.get("total_pages", 1) if match else 1
+        return {"filename": filename, "total_pages": total, "has_file": False}
+
+    try:
+        doc = pymupdf.open(pdf_path)
+        total = len(doc)
+        doc.close()
+        return {"filename": filename, "total_pages": total, "has_file": True}
+    except Exception:
+        return {"filename": filename, "total_pages": 1, "has_file": True}
 
 
 # 3. RAG Sohbet & Özet & "Basitçe Anlat" Modu & Multimodal Görsel Desteği
