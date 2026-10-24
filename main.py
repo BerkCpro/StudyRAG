@@ -614,6 +614,58 @@ async def delete_document(
     return {"message": f"'{filename}' başarıyla silindi.", "documents": user_docs}
 
 
+# 2.1.1 Ders Silme Endpoint'i (Kullanıcının o dersteki tüm PDF'lerini ve vektörlerini temizler)
+@app.delete("/courses/{course_name}")
+async def delete_course(
+    course_name: str,
+    user_id: Optional[str] = None,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    global uploaded_documents
+    uid = (x_user_id or user_id or "default_user").strip()
+    target_course = course_name.strip()
+
+    # 1. Qdrant'tan bu kullanıcının bu dersine ait tüm vektörleri sil
+    try:
+        must_conditions = [
+            FieldCondition(key="course_name", match=MatchValue(value=target_course)),
+            FieldCondition(key="user_id", match=MatchValue(value=uid))
+        ]
+        qdrant_client.delete(
+            collection_name=COLLECTION_NAME,
+            points_selector=Filter(must=must_conditions)
+        )
+    except Exception as e:
+        print(f"[WARN] Qdrant ders silme hatası: {e}", flush=True)
+
+    # 2. Diskteki bu derse ait PDF dosyalarını da sil
+    docs_to_delete = [
+        d for d in uploaded_documents
+        if d.get("user_id") == uid and d.get("course_name", "").strip().lower() == target_course.lower()
+    ]
+    for d in docs_to_delete:
+        fname = d.get("filename")
+        if fname:
+            pdf_path = find_pdf_file_path(fname, uid)
+            if pdf_path and os.path.exists(pdf_path):
+                try:
+                    os.remove(pdf_path)
+                except Exception:
+                    pass
+
+    # 3. uploaded_documents listesinden bu kullanıcının bu dersindeki kayıtları çıkar
+    uploaded_documents = [
+        d for d in uploaded_documents
+        if not (
+            d.get("user_id") == uid and
+            d.get("course_name", "").strip().lower() == target_course.lower()
+        )
+    ]
+    save_storage()
+
+    return {"message": f"'{target_course}' dersi ve tüm materyalleri başarıyla silindi."}
+
+
 # 2.2 PDF Sayfa Görseli Önizleme Endpoint'i (Ultra Hızlı PyMuPDF Renderer)
 @app.get("/pdf-page-image")
 async def get_pdf_page_image(

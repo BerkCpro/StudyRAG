@@ -324,20 +324,27 @@
                     <!-- Genişleyen İçerik (Ders seçimi, PDF yükle, PDF listesi) -->
                     <div id="materialsContent" class="p-3 pt-1 space-y-3 border-t border-slate-800/60">
                         
-                        <!-- Ders Seçimi -->
+                        <!-- Ders Seçimi & Yönetimi -->
                         <div>
-                            <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center justify-between mb-1.5">
                                 <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Aktif Ders</label>
-                                <button onclick="promptNewCourse()" class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5">
-                                    <i data-lucide="plus" class="w-3 h-3"></i> Yeni Ders
+                                <div class="flex items-center gap-2">
+                                    <button id="deleteCourseTextBtn" onclick="promptDeleteCurrentCourse()" class="text-[10px] text-rose-400 hover:text-rose-300 flex items-center gap-0.5 transition" title="Seçili dersi sil">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Dersi Sil
+                                    </button>
+                                    <button onclick="promptNewCourse()" class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 transition font-medium" title="Yeni bir ders ekle">
+                                        <i data-lucide="plus" class="w-3 h-3"></i> Yeni Ders
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <select id="courseSelect" onchange="onCourseChange()" class="flex-1 bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                    <option value="">-- Henüz Ders Eklenmedi --</option>
+                                </select>
+                                <button id="deleteCourseBtn" onclick="promptDeleteCurrentCourse()" title="Aktif Dersi Sil" class="p-1.5 rounded-lg border border-slate-700/80 hover:border-rose-500/60 bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition shrink-0">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
-                            <select id="courseSelect" onchange="onCourseChange()" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                                <option value="CEN3004 - Operating Systems">CEN3004 - Operating Systems</option>
-                                <option value="CEN3002 - Database Systems">CEN3002 - Database Systems</option>
-                                <option value="Microprocessors">Microprocessors</option>
-                                <option value="Advanced Programming">Advanced Programming</option>
-                            </select>
                         </div>
 
                         <!-- PDF Yükleme Butonu -->
@@ -993,7 +1000,14 @@
             localStorage.setItem('study_user_id', currentUserId);
         }
 
-        let currentCourse = localStorage.getItem('study_current_course') || 'CEN3004 - Operating Systems';
+        const LEGACY_DEFAULT_COURSES = ["CEN3004 - Operating Systems", "CEN3002 - Database Systems", "Microprocessors", "Advanced Programming"];
+        let initialCourse = localStorage.getItem('study_current_course_' + currentUserId) || localStorage.getItem('study_current_course') || '';
+        if (LEGACY_DEFAULT_COURSES.includes(initialCourse)) {
+            initialCourse = '';
+            localStorage.removeItem('study_current_course_' + currentUserId);
+            localStorage.removeItem('study_current_course');
+        }
+        let currentCourse = initialCourse;
         let isMaterialsOpen = localStorage.getItem('study_materials_open') !== 'false';
         let isSidebarOpen = window.innerWidth >= 768 ? (localStorage.getItem('study_sidebar_open') !== 'false') : false;
         let sidebarWidth = parseInt(localStorage.getItem('study_sidebar_width')) || 320;
@@ -1276,34 +1290,122 @@
         }
 
         // -------------------------------------------------------------
-        // 1. ÇALIŞMA ALANI & MATERYAL PANELİ (COLLAPSIBLE / ACCORDION)
+        // 1. ÇALIŞMA ALANI & DERS YÖNETİMİ & MATERYAL PANELİ
         // -------------------------------------------------------------
+        function getUserCoursesStorageKey() {
+            return 'study_custom_courses_' + currentUserId;
+        }
+
+        function getUserCurrentCourseKey() {
+            return 'study_current_course_' + currentUserId;
+        }
+
+        function getSavedUserCourses() {
+            const key = getUserCoursesStorageKey();
+            let stored = localStorage.getItem(key);
+
+            // Eğer kullanıcıya özel anahtar henüz yoksa, eski genel listeden varsayılanları eleyerek al
+            if (!stored) {
+                const legacy = localStorage.getItem('study_custom_courses');
+                if (legacy) {
+                    try {
+                        const parsed = JSON.parse(legacy);
+                        const defaults = ["CEN3004 - Operating Systems", "CEN3002 - Database Systems", "Microprocessors", "Advanced Programming"];
+                        const filtered = Array.isArray(parsed) ? parsed.filter(c => !defaults.includes(c)) : [];
+                        localStorage.setItem(key, JSON.stringify(filtered));
+                        return filtered;
+                    } catch (_) {}
+                }
+                return [];
+            }
+
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    const defaults = ["CEN3004 - Operating Systems", "CEN3002 - Database Systems", "Microprocessors", "Advanced Programming"];
+                    const filtered = parsed.filter(c => !defaults.includes(c));
+                    if (filtered.length !== parsed.length) {
+                        localStorage.setItem(key, JSON.stringify(filtered));
+                    }
+                    return filtered;
+                }
+            } catch (_) {}
+            return [];
+        }
+
+        function saveUserCourses(courses) {
+            localStorage.setItem(getUserCoursesStorageKey(), JSON.stringify(courses));
+        }
+
         function initCourseDropdown() {
             const select = document.getElementById('courseSelect');
-            const storedCourses = JSON.parse(localStorage.getItem('study_custom_courses') || '[]');
-            
-            storedCourses.forEach(c => {
-                if (![...select.options].some(o => o.value === c)) {
+            if (!select) return;
+
+            const courses = getSavedUserCourses();
+            select.innerHTML = '';
+
+            if (courses.length === 0) {
+                currentCourse = '';
+                localStorage.removeItem(getUserCurrentCourseKey());
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '-- Henüz Ders Eklenmedi --';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                select.appendChild(placeholder);
+            } else {
+                courses.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c;
                     opt.textContent = c;
                     select.appendChild(opt);
-                }
-            });
+                });
 
-            select.value = currentCourse;
+                let saved = localStorage.getItem(getUserCurrentCourseKey());
+                if (saved && courses.includes(saved)) {
+                    currentCourse = saved;
+                } else {
+                    currentCourse = courses[0];
+                    localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+                }
+                select.value = currentCourse;
+            }
+
             updateHeaderCourseBadge();
+            updateCourseButtonsState();
         }
 
         function updateHeaderCourseBadge() {
-            document.getElementById('headerCourseName').textContent = currentCourse;
+            const badge = document.getElementById('headerCourseName');
+            if (badge) {
+                badge.textContent = currentCourse || 'Ders Seçilmedi';
+            }
+        }
+
+        function updateCourseButtonsState() {
+            const delBtn = document.getElementById('deleteCourseBtn');
+            const delTextBtn = document.getElementById('deleteCourseTextBtn');
+            const hasCourse = Boolean(currentCourse && currentCourse.trim());
+            if (delBtn) delBtn.disabled = !hasCourse;
+            if (delTextBtn) {
+                delTextBtn.style.opacity = hasCourse ? '1' : '0.4';
+                delTextBtn.style.pointerEvents = hasCourse ? 'auto' : 'none';
+            }
         }
 
         function onCourseChange() {
-            currentCourse = document.getElementById('courseSelect').value;
-            localStorage.setItem('study_current_course', currentCourse);
+            const select = document.getElementById('courseSelect');
+            if (select && select.value) {
+                currentCourse = select.value;
+                localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            } else {
+                currentCourse = '';
+                localStorage.removeItem(getUserCurrentCourseKey());
+            }
             updateHeaderCourseBadge();
-            // Kullanıcı ders değiştirdiğinde menüyü kapatma; materyal panelini açık tut ki PDF ekleyebilsin
+            updateCourseButtonsState();
+
+            // Kullanıcı ders değiştirdiğinde menüyü açık tut
             isMaterialsOpen = true;
             localStorage.setItem('study_materials_open', 'true');
             initMaterialsAccordion();
@@ -1378,23 +1480,60 @@
         }
 
         function promptNewCourse() {
-            const courseName = prompt("Yeni Çalışma Alanı (Ders Adı) giriniz:\nÖrnek: CEN3005 - Software Engineering");
+            const courseName = prompt("Yeni Çalışma Alanı (Ders Adı) giriniz:\nÖrnek: Bilgisayar Mimarisi");
             if (!courseName || !courseName.trim()) return;
             const trimmed = courseName.trim();
 
-            const select = document.getElementById('courseSelect');
-            if (![...select.options].some(o => o.value === trimmed)) {
-                const opt = document.createElement('option');
-                opt.value = trimmed;
-                opt.textContent = trimmed;
-                select.appendChild(opt);
-                
-                const storedCourses = JSON.parse(localStorage.getItem('study_custom_courses') || '[]');
-                storedCourses.push(trimmed);
-                localStorage.setItem('study_custom_courses', JSON.stringify(storedCourses));
+            let courses = getSavedUserCourses();
+            if (!courses.includes(trimmed)) {
+                courses.push(trimmed);
+                saveUserCourses(courses);
             }
 
-            select.value = trimmed;
+            currentCourse = trimmed;
+            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            initCourseDropdown();
+            onCourseChange();
+        }
+
+        async function promptDeleteCurrentCourse() {
+            if (!currentCourse || !currentCourse.trim()) {
+                alert("Silinecek bir aktif ders bulunmuyor. Önce '+ Yeni Ders' ile ders ekleyebilirsiniz.");
+                return;
+            }
+
+            const targetToDelete = currentCourse;
+            const confirmMsg = `"${targetToDelete}" dersini ve bu derse ait tüm yüklenmiş PDF'leri silmek istediğinizden emin misiniz?`;
+            if (!confirm(confirmMsg)) return;
+
+            // 1. Backend'den o dersin vektörlerini ve PDF dosyalarını temizle
+            try {
+                await fetch(`/courses/${encodeURIComponent(targetToDelete)}?user_id=${encodeURIComponent(currentUserId)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    }
+                });
+            } catch (err) {
+                console.warn("Backend ders silme uyarısı:", err);
+            }
+
+            // 2. Kullanıcının kayıtlı ders listesinden çıkar
+            let courses = getSavedUserCourses();
+            courses = courses.filter(c => c !== targetToDelete);
+            saveUserCourses(courses);
+
+            // 3. Yeni aktif dersi belirle
+            if (courses.length > 0) {
+                currentCourse = courses[0];
+                localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            } else {
+                currentCourse = '';
+                localStorage.removeItem(getUserCurrentCourseKey());
+            }
+
+            initCourseDropdown();
             onCourseChange();
         }
 
@@ -1433,6 +1572,21 @@
             const badgeEl = document.getElementById('coursePdfBadge');
             const countLabel = document.getElementById('pdfCountLabel');
             const statPdf = document.getElementById('statCoursePdfCount');
+
+            if (!currentCourse || !currentCourse.trim()) {
+                if (badgeEl) badgeEl.textContent = `0 PDF`;
+                if (countLabel) countLabel.textContent = `0 Dosya`;
+                if (statPdf) statPdf.textContent = `0 PDF`;
+                if (listEl) {
+                    listEl.innerHTML = `
+                        <div class="text-[11px] text-slate-500 italic text-center py-4 bg-slate-900/40 rounded-lg border border-slate-800/40 px-2 space-y-1">
+                            <p class="text-slate-400 font-medium">Henüz bir ders eklenmedi.</p>
+                            <p class="text-[10px] text-slate-500">Yukarıdaki <strong class="text-indigo-400 font-semibold cursor-pointer" onclick="promptNewCourse()">"+ Yeni Ders"</strong> butonuna tıklayarak ilk dersinizi oluşturabilirsiniz.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
 
             try {
                 const res = await fetch(`/documents?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
@@ -1486,6 +1640,13 @@
 
         async function handleRealPdfUpload(input) {
             if (!input.files || !input.files[0]) return;
+
+            if (!currentCourse || !currentCourse.trim()) {
+                alert("Lütfen önce yukarıdaki '+ Yeni Ders' butonuna tıklayarak bir ders ekleyin.");
+                input.value = '';
+                return;
+            }
+
             const file = input.files[0];
             const progressBox = document.getElementById('uploadProgressBox');
             const statusText = document.getElementById('uploadStatusText');
@@ -1495,7 +1656,7 @@
             const selectEl = document.getElementById('courseSelect');
             if (selectEl && selectEl.value) {
                 currentCourse = selectEl.value;
-                localStorage.setItem('study_current_course', currentCourse);
+                localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
                 updateHeaderCourseBadge();
             }
 
