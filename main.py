@@ -111,8 +111,8 @@ app.add_middleware(
 # ==========================================
 # 3. YARDIMCI FONKSİYONLAR (CHUNKING & EMBED)
 # ==========================================
-def split_text(text: str, chunk_size: int = 800, overlap: int = 150) -> list[str]:
-    """Metni cümle bütünlüğünü koruyacak şekilde kesişimli (overlap) parçalara böler."""
+def split_text(text: str, chunk_size: int = 1200, overlap: int = 150) -> list[str]:
+    """Metni cümle bütünlüğünü koruyacak şekilde kesişimli (overlap) parçalara böler (Optimize edilmiş boyut)."""
     chunks = []
     start = 0
     while start < len(text):
@@ -125,10 +125,10 @@ def split_text(text: str, chunk_size: int = 800, overlap: int = 150) -> list[str
 
 
 def get_embeddings(texts: list[str]) -> list[list[float]]:
-    """Metin listesini Gemini Embedding API ile vektöre çevirir (Hata ve kota korumalı)."""
+    """Metin listesini Gemini Embedding API ile vektöre çevirir (Gelişmiş kota ve hata korumalı)."""
     import time
     client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
-    max_retries = 3
+    max_retries = 4
     for attempt in range(max_retries):
         try:
             response = client.models.embed_content(
@@ -138,8 +138,10 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
             return [emb.values for emb in response.embeddings]
         except Exception as e:
             err_str = str(e)
-            if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries - 1:
-                time.sleep(2.0 * (attempt + 1))
+            if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "Quota" in err_str) and attempt < max_retries - 1:
+                wait_time = 2.5 * (attempt + 1)
+                print(f"[WARN] Gemini kota siniri yakalandi, {wait_time}s bekleniyor... (Deneme {attempt + 1})", flush=True)
+                time.sleep(wait_time)
                 continue
             raise e
 
@@ -223,15 +225,19 @@ class QuizAnswerSubmit(BaseModel):
 # 5. ENDPOINT'LER
 # ==========================================
 
-# Ana sayfaya girildiğinde index.html varsa onu açar
+# Ana sayfaya girildiğinde index.html varsa onu açar (Mobil ve tarayıcı önbellek kilidini kırmak için no-cache eklendi)
 @app.get("/")
 async def serve_frontend():
     if os.path.exists("index.html"):
-        return FileResponse("index.html")
+        response = FileResponse("index.html")
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
     return {"message": "StudyRAG API çalışıyor! Arayüz için index.html dosyasını aynı klasöre koyun veya /docs adresine gidin."}
 
 
-# 1. PDF Yükleme ve Qdrant'a Kaydetme
+# 1. PDF Yükleme ve Qdrant'a Kaydetme (80'lik Batch Optimizasyonu & Sayfa Koruması)
 @app.post("/upload-pdf")
 async def upload_pdf(
     file: UploadFile = File(...),
@@ -239,13 +245,22 @@ async def upload_pdf(
     user_id: Optional[str] = Form(None),
     x_user_id: Optional[str] = Header(None, alias="X-User-Id")
 ):
-    uid = (x_user_id or user_id or "default_user").strip()
+    uid = (x_user_id or user_id or "").strip()
+    if not uid:
+        uid = f"user_{uuid.uuid4().hex[:8]}"
 
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Lütfen sadece PDF dosyası yükleyin.")
 
     pdf_bytes = await file.read()
     doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+
+    # 160 sayfadan büyük dosyalarda sunucu ve bellek koruması
+    if len(doc) > 160:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Yüklenen dosya {len(doc)} sayfa. Sunucu zaman aşımını ve bellek taşmasını önlemek için lütfen en fazla 150 sayfalık bölümler halinde yükleyiniz."
+        )
 
     chunks_to_embed = []
     payloads = []
@@ -268,13 +283,15 @@ async def upload_pdf(
     if not chunks_to_embed:
         raise HTTPException(status_code=400, detail="PDF içinden metin okunamadı.")
 
-    # Gemini API ile 25'erli paketler halinde güvenli, kotalı ve non-blocking vektöre çevir
+    # Gemini API ile 80'erli paketler halinde (25 -> 80) 4 kat daha az istek ile hızlıca vektöre çevir
     embeddings = []
-    batch_size = 25
+    batch_size = 80
     for i in range(0, len(chunks_to_embed), batch_size):
         batch = chunks_to_embed[i:i + batch_size]
         batch_embs = await asyncio.to_thread(get_embeddings, batch)
         embeddings.extend(batch_embs)
+        if len(chunks_to_embed) > batch_size:
+            await asyncio.sleep(0.15)  # Ani kota dalgalanmalarına karşı kısa mikro bekleme
 
     points = [
         PointStruct(
@@ -325,15 +342,18 @@ async def upload_pdf(
     return {"message": "PDF başarıyla indekslendi!", "document": doc_info}
 
 
-# 2. Yüklü PDF'leri Listeleme (Kullanıcı ve Ders filtreli)
+# 2. Yüklü PDF'leri Listeleme (Kesin Kullanıcı ve Ders filtreli - Cihaz Ayrımı Garantili)
 @app.get("/documents")
 async def get_documents(
     course_name: Optional[str] = None,
     user_id: Optional[str] = None,
     x_user_id: Optional[str] = Header(None, alias="X-User-Id")
 ):
-    uid = (x_user_id or user_id or "default_user").strip()
-    user_docs = [d for d in uploaded_documents if d.get("user_id", "default_user") == uid]
+    uid = (x_user_id or user_id or "").strip()
+    if not uid:
+        return {"documents": []}
+
+    user_docs = [d for d in uploaded_documents if d.get("user_id") == uid]
 
     if course_name and course_name.strip():
         target = course_name.strip().lower()

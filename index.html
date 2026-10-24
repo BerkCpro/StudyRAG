@@ -81,8 +81,13 @@
             -webkit-overflow-scrolling: touch;
         }
     </style>
-</head>
 <body class="bg-slate-950 text-slate-100 h-full h-[100dvh] min-h-0 flex overflow-hidden antialiased select-none relative">
+
+    <!-- Mobil Pull-To-Refresh Göstergesi -->
+    <div id="pullToRefreshPill" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-indigo-600/95 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 transform -translate-y-24 transition-all duration-200 pointer-events-none backdrop-blur-md border border-indigo-400/40">
+        <i id="pullRefreshIcon" data-lucide="arrow-down" class="w-4 h-4 transition-transform duration-200"></i>
+        <span id="pullRefreshText">Yenilemek için çekin</span>
+    </div>
 
     <!-- Mobil Karartma Overlay'i (Backdrop) -->
     <div id="mobileBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-300"></div>
@@ -607,7 +612,7 @@
         // DURUM YÖNETİMİ (STATE & LOCAL STORAGE)
         // -------------------------------------------------------------
         let currentUserId = localStorage.getItem('study_user_id');
-        if (!currentUserId) {
+        if (!currentUserId || currentUserId === 'default_user' || currentUserId.length < 5) {
             currentUserId = 'user_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
             localStorage.setItem('study_user_id', currentUserId);
         }
@@ -631,6 +636,7 @@
             initChats();
             fetchDocumentsForCurrentCourse();
             refreshDashboardStats();
+            initPullToRefresh();
         });
 
         window.addEventListener('resize', () => {
@@ -855,10 +861,77 @@
             currentCourse = document.getElementById('courseSelect').value;
             localStorage.setItem('study_current_course', currentCourse);
             updateHeaderCourseBadge();
+            // Kullanıcı ders değiştirdiğinde menüyü kapatma; materyal panelini açık tut ki PDF ekleyebilsin
+            isMaterialsOpen = true;
+            localStorage.setItem('study_materials_open', 'true');
+            initMaterialsAccordion();
             fetchDocumentsForCurrentCourse();
-            if (window.innerWidth < 768) {
-                toggleSidebar(false);
-            }
+        }
+
+        // -------------------------------------------------------------
+        // 1.1 MOBİL PULL-TO-REFRESH (YUKARIDAN AŞAĞI ÇEKİNCE YENİLEME)
+        // -------------------------------------------------------------
+        function initPullToRefresh() {
+            let startY = 0;
+            let currentY = 0;
+            let isPulling = false;
+            const threshold = 70;
+            const pill = document.getElementById('pullToRefreshPill');
+            const text = document.getElementById('pullRefreshText');
+            const icon = document.getElementById('pullRefreshIcon');
+
+            window.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                const activeScroll = document.querySelector('.overflow-y-auto');
+                const isAtTop = (!activeScroll || activeScroll.scrollTop <= 2) && (window.scrollY <= 2);
+                if (isAtTop) {
+                    startY = e.touches[0].clientY;
+                    isPulling = true;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isPulling) return;
+                currentY = e.touches[0].clientY;
+                const pullDistance = currentY - startY;
+
+                if (pullDistance > 12) {
+                    const translateY = Math.min(pullDistance * 0.45 - 20, 24);
+                    if (pill) {
+                        pill.style.transform = `translate(-50%, ${translateY}px)`;
+                    }
+
+                    if (pullDistance >= threshold) {
+                        if (text) text.textContent = 'Bırakınca Yenilenir';
+                        if (icon) icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        if (text) text.textContent = 'Yenilemek için çekin';
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                    }
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', (e) => {
+                if (!isPulling) return;
+                const pullDistance = currentY - startY;
+                isPulling = false;
+                startY = 0;
+                currentY = 0;
+
+                if (pullDistance >= threshold) {
+                    if (pill) {
+                        pill.style.transform = 'translate(-50%, 24px)';
+                        if (text) text.textContent = 'Yenileniyor...';
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 200);
+                } else {
+                    if (pill) {
+                        pill.style.transform = 'translate(-50%, -96px)';
+                    }
+                }
+            }, { passive: true });
         }
 
         function promptNewCourse() {
