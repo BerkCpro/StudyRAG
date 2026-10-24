@@ -25,6 +25,7 @@ if sys.platform == "win32":
 
 import uuid
 import json
+import base64
 import random
 import asyncio
 import pymupdf
@@ -273,6 +274,8 @@ class ChatRequest(BaseModel):
     course_name: Optional[str] = None
     eli5_mode: bool = False  # "Basitçe Anlat" modu
     user_id: Optional[str] = "default_user"
+    image_base64: Optional[str] = None  # Base64 formatında soru/not görseli
+    image_mime_type: Optional[str] = "image/jpeg"
 
 
 class SourceInfo(BaseModel):
@@ -540,9 +543,17 @@ async def delete_document(
     return {"message": f"'{filename}' başarıyla silindi.", "documents": user_docs}
 
 
-# 3. RAG Sohbet & Özet & "Basitçe Anlat" Modu
+# 3. RAG Sohbet & Özet & "Basitçe Anlat" Modu & Multimodal Görsel Desteği
 def build_chat_context_and_prompt(request: ChatRequest):
-    query_vector = get_embeddings([request.question])[0]
+    raw_question = (request.question or "").strip()
+    has_image = bool(request.image_base64 and request.image_base64.strip())
+
+    if not raw_question and has_image:
+        raw_question = "Lütfen bu görseldeki soruyu veya konuyu incele, adımlarıyla açıkla ve doğru yanıtı bul."
+    elif not raw_question and not has_image:
+        raise HTTPException(status_code=400, detail="Lütfen bir soru yazın veya bir görsel ekleyin.")
+
+    query_vector = get_embeddings([raw_question])[0]
     uid = (request.user_id or "default_user").strip()
 
     must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
@@ -552,14 +563,18 @@ def build_chat_context_and_prompt(request: ChatRequest):
     query_filter = Filter(must=must_conditions)
 
     # Genel özet ve geniş kapsam için limit 8
-    search_results = qdrant_client.query_points(
-        collection_name=COLLECTION_NAME,
-        query=query_vector,
-        query_filter=query_filter,
-        limit=8
-    ).points
+    search_results = []
+    try:
+        search_results = qdrant_client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_vector,
+            query_filter=query_filter,
+            limit=8
+        ).points
+    except Exception as e:
+        print(f"[WARN] Qdrant arama: {e}", flush=True)
 
-    if not search_results:
+    if not search_results and not has_image:
         raise HTTPException(status_code=404, detail="Yüklenen dökümanlar arasında bu soruyla ilgili içerik bulunamadı. Lütfen sol menüden PDF yüklediğinizden emin olun.")
 
     context_parts = []
@@ -567,18 +582,18 @@ def build_chat_context_and_prompt(request: ChatRequest):
     seen_sources = set()
 
     for hit in search_results:
-        p = hit.payload
-        doc_key = f"{p['document_name']}_{p['page_number']}"
-        context_parts.append(f"[Kaynak: {p['document_name']}, Sayfa {p['page_number']}]\n{p['text']}")
-        if doc_key not in seen_sources:
+        p = hit.payload or {}
+        doc_key = f"{p.get('document_name')}_{p.get('page_number')}"
+        context_parts.append(f"[Kaynak: {p.get('document_name')}, Sayfa {p.get('page_number')}]\n{p.get('text')}")
+        if doc_key not in seen_sources and p.get('document_name'):
             seen_sources.add(doc_key)
             sources.append(SourceInfo(
-                document_name=p["document_name"],
-                page_number=p["page_number"],
-                snippet=p["text"][:140] + "..."
+                document_name=p.get("document_name", "Bilinmeyen"),
+                page_number=p.get("page_number", 1),
+                snippet=(p.get("text") or "")[:140] + "..."
             ))
 
-    context_text = "\n\n---\n\n".join(context_parts)
+    context_text = "\n\n---\n\n".join(context_parts) if context_parts else "(Bu soru için eşleşen PDF ders notu parçası bulunamadı. Doğrudan yüklenen görsel ve genel konu bilgisiyle yanıt veriliyor.)"
 
     style_instruction = (
         "Konuyu hiç bilmeyen birine anlatır gibi günlük hayattan benzetmelerle çok sade ve basitçe anlat."
@@ -586,43 +601,62 @@ def build_chat_context_and_prompt(request: ChatRequest):
         "Akademik, net, öğretici ve sınava yönelik bir dille açıkla."
     )
 
+    image_instruction = ""
+    image_part = None
+    if has_image:
+        try:
+            b64_data = request.image_base64
+            if "," in b64_data:
+                b64_data = b64_data.split(",", 1)[1]
+            img_bytes = base64.b64decode(b64_data)
+            mime = request.image_mime_type or "image/jpeg"
+            image_part = types.Part.from_bytes(data=img_bytes, mime_type=mime)
+            image_instruction = "\n\n[GÖRSEL YÖNERGESİ]: Öğrenci soruyla birlikte bir görsel (soru, tahta fotoğrafı, formül, şema veya not) ekledi. Görseli çok dikkatle incele, görseldeki soruyu/ifadeleri eksiksiz analiz et, adım adım çöz ve varsa yukarıdaki ders notlarıyla bağdaştırarak açıkla."
+        except Exception as e:
+            print(f"[WARN] Görsel decode hatası: {e}", flush=True)
+
     prompt = f"""Sen üniversite öğrencilerine ders çalışma ve sınav hazırlığında rehberlik eden uzman bir yapay zeka asistanısın.
 Tarzın: {style_instruction}
 
 Aşağıda öğrencinin yüklediği ilgili [DERS NOTLARI] parçaları verilmiştir.
 
 YÖNERGELER:
-1. Öğrencinin [SORU]'sunu verilen [DERS NOTLARI]'ndan faydalanarak kapsamlı, anlaşılır ve eğitici bir şekilde yanıtla.
+1. Öğrencinin [SORU]'sunu verilen [DERS NOTLARI]'ndan ve (varsa) eklenen [GÖRSEL]'den faydalanarak kapsamlı, anlaşılır ve eğitici bir şekilde yanıtla.
 2. Öğrenci "özet", "en kritik sınav konuları", "önemli kavramlar" gibi genel bir soru soruyorsa; notlardaki ana başlıkları, tanımları ve önemli konuları sentezleyerek öğrencinin sınava çalışabileceği maddeli net bir analiz hazırla.
 3. Notlardaki bilgileri açıklarken ilgili sayfayı cümle sonlarında mutlaka [Sayfa X] şeklinde belirt.
-4. Yalnızca soru ders notlarının alanıyla tamamen ilgisizse ve notlarda hiçbir ipucu yoksa 'Yüklenen ders notlarında bu konu hakkında bilgi yer almıyor' de.
+4. Matematiksel veya teknik formülleri KaTeX uyumlu standart LaTeX ($ ... $ veya $$ ... $$) formatında yaz.
 
 [DERS NOTLARI]:
 {context_text}
 
 [SORU]:
-{request.question}
+{raw_question}{image_instruction}
 """
-    return prompt, sources
+    return prompt, sources, image_part
 
 
 # 3. RAG Sohbet & Özet (Standart JSON Yanıt)
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_pdf(request: ChatRequest):
-    prompt, sources = build_chat_context_and_prompt(request)
+    prompt, sources, image_part = build_chat_context_and_prompt(request)
     client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+
+    contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
+
     response = client.models.generate_content(
         model=GEMINI_MODEL,
-        contents=prompt
+        contents=contents
     )
     return ChatResponse(answer=response.text, sources=sources)
 
 
-# 3.1 Canlı Akış (Streaming SSE - Kayan Metin)
+# 3.1 Canlı Akış (Streaming SSE - Kayan Metin & Multimodal Görsel)
 @app.post("/chat-stream")
 async def chat_stream_with_pdf(request: ChatRequest):
-    prompt, sources = build_chat_context_and_prompt(request)
+    prompt, sources, image_part = build_chat_context_and_prompt(request)
     client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+
+    contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
 
     async def event_generator():
         # 1. İlk olarak kaynakları gönder
@@ -632,7 +666,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
         try:
             stream = client.models.generate_content_stream(
                 model=GEMINI_MODEL,
-                contents=prompt
+                contents=contents
             )
             for chunk in stream:
                 if chunk.text:
@@ -641,8 +675,8 @@ async def chat_stream_with_pdf(request: ChatRequest):
             # Yedek modele düş
             try:
                 stream = client.models.generate_content_stream(
-                    model="gemini-3.5-flash",
-                    contents=prompt
+                    model="gemini-2.5-flash",
+                    contents=contents
                 )
                 for chunk in stream:
                     if chunk.text:
@@ -657,7 +691,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
         event_generator(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no"
         }
