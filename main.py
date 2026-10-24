@@ -400,6 +400,15 @@ class QuizAnswerSubmit(BaseModel):
 # 5. ENDPOINT'LER
 # ==========================================
 
+# Render ve Harici Cronjob'lar için Ultra Hafif Canlılık / Ping Kontrolü (Response Data Too Big Hatasını Önler)
+@app.get("/health")
+@app.get("/ping")
+@app.head("/health")
+@app.head("/ping")
+async def health_check():
+    return {"status": "ok"}
+
+
 # Ana sayfaya girildiğinde index.html varsa onu açar (Mobil ve tarayıcı önbellek kilidini kırmak için no-cache eklendi)
 @app.get("/")
 async def serve_frontend():
@@ -410,6 +419,7 @@ async def serve_frontend():
         response.headers["Expires"] = "0"
         return response
     return {"message": "StudyRAG API çalışıyor! Arayüz için index.html dosyasını aynı klasöre koyun veya /docs adresine gidin."}
+
 
 
 # 1. PDF Yükleme ve Qdrant'a Kaydetme (80'lik Batch Optimizasyonu & Sayfa Koruması)

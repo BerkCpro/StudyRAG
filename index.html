@@ -239,11 +239,18 @@
         /* Modallar */
         html.light #profileModal > div,
         html.light #onboardingModal > div,
-        html.light #sourceSnippetModal > div {
+        html.light #sourceSnippetModal > div,
+        html.light #newCourseModal > div,
+        html.light #deleteCourseModal > div {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+        }
+        html.light #newCourseInput {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
         }
         html.light #modalFullUserId {
             background-color: #f1f5f9 !important;
@@ -986,6 +993,74 @@
         </div>
     </div>
 
+    <!-- ================= YENİ DERS EKLEME MODALI ================= -->
+    <div id="newCourseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in" onclick="if(event.target === this) closeNewCourseModal()">
+        <div class="bg-slate-900 border border-indigo-500/40 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4 overflow-hidden" onclick="event.stopPropagation()">
+            <!-- Arka plan renkli parlama -->
+            <div class="absolute -top-16 -right-16 w-36 h-36 bg-indigo-600/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center justify-between relative">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="folder-plus" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-semibold text-slate-100">Yeni Ders Ekle</h3>
+                        <p class="text-[11px] text-slate-400">Çalışma alanı ve döküman grubu oluşturun</p>
+                    </div>
+                </div>
+                <button onclick="closeNewCourseModal()" class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-1.5 relative">
+                <label class="text-xs font-medium text-slate-300">Ders / Konu Adı</label>
+                <input id="newCourseInput" type="text" placeholder="Örn: Bilgisayar Mimarisi, Yapay Zeka, Fizik II..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
+                <p id="newCourseError" class="hidden text-[11px] text-rose-400 font-medium"></p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80 relative">
+                <button type="button" onclick="closeNewCourseModal()" class="px-3.5 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                    İptal
+                </button>
+                <button type="button" onclick="submitNewCourse()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition flex items-center gap-1.5">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Dersi Ekle</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DERS SİLME ONAY MODALI ================= -->
+    <div id="deleteCourseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in" onclick="if(event.target === this) closeDeleteCourseModal()">
+        <div class="bg-slate-900 border border-rose-500/30 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4 overflow-hidden" onclick="event.stopPropagation()">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-semibold text-slate-100">Dersi Silmek İstediğinize Emin Misiniz?</h3>
+                    <p id="deleteCourseTargetName" class="text-xs text-rose-400 font-medium mt-0.5"></p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                Bu ders silindiğinde sisteme yüklediğiniz ilişkili tüm PDF dökümanları ve Qdrant vektör indeksleri kalıcı olarak kaldırılacaktır.
+            </p>
+
+            <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-800/80">
+                <button type="button" onclick="closeDeleteCourseModal()" class="px-3.5 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                    Vazgeç
+                </button>
+                <button id="confirmDeleteCourseBtn" type="button" onclick="confirmDeleteCurrentCourseAction()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/25 transition flex items-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>Evet, Dersi Sil</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= JAVASCRIPT ETKİLEŞİMLERİ & API ENTEGRASYONU ================= -->
     <script>
         // Lucide İkonlarını Başlat
@@ -1479,32 +1554,110 @@
             }, { passive: true });
         }
 
-        function promptNewCourse() {
-            const courseName = prompt("Yeni Çalışma Alanı (Ders Adı) giriniz:\nÖrnek: Bilgisayar Mimarisi");
-            if (!courseName || !courseName.trim()) return;
-            const trimmed = courseName.trim();
+        // --- YENİ DERS EKLEME MODALI (TARAYICI PROMPT YERİNE DOĞRUDAN SİTEDE METİN GİRİŞİ) ---
+        function openNewCourseModal(hintText = '') {
+            const modal = document.getElementById('newCourseModal');
+            const input = document.getElementById('newCourseInput');
+            const error = document.getElementById('newCourseError');
+            if (!modal || !input) return;
 
-            let courses = getSavedUserCourses();
-            if (!courses.includes(trimmed)) {
-                courses.push(trimmed);
-                saveUserCourses(courses);
+            input.value = '';
+            if (error) {
+                if (hintText) {
+                    error.textContent = hintText;
+                    error.classList.remove('hidden');
+                } else {
+                    error.textContent = '';
+                    error.classList.add('hidden');
+                }
             }
 
-            currentCourse = trimmed;
-            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
-            initCourseDropdown();
-            onCourseChange();
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+
+            setTimeout(() => {
+                input.focus();
+            }, 60);
+
+            // Enter tuşu ile doğrudan ekleme desteği
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitNewCourse();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeNewCourseModal();
+                }
+            };
         }
 
-        async function promptDeleteCurrentCourse() {
-            if (!currentCourse || !currentCourse.trim()) {
-                alert("Silinecek bir aktif ders bulunmuyor. Önce '+ Yeni Ders' ile ders ekleyebilirsiniz.");
+        function closeNewCourseModal() {
+            const modal = document.getElementById('newCourseModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitNewCourse() {
+            const input = document.getElementById('newCourseInput');
+            const error = document.getElementById('newCourseError');
+            const courseName = input ? input.value.trim() : '';
+
+            if (!courseName) {
+                if (error) {
+                    error.textContent = 'Lütfen geçerli bir ders adı giriniz.';
+                    error.classList.remove('hidden');
+                }
+                if (input) input.focus();
                 return;
             }
 
-            const targetToDelete = currentCourse;
-            const confirmMsg = `"${targetToDelete}" dersini ve bu derse ait tüm yüklenmiş PDF'leri silmek istediğinizden emin misiniz?`;
-            if (!confirm(confirmMsg)) return;
+            let courses = getSavedUserCourses();
+            if (!courses.includes(courseName)) {
+                courses.push(courseName);
+                saveUserCourses(courses);
+            }
+
+            currentCourse = courseName;
+            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            initCourseDropdown();
+            onCourseChange();
+
+            closeNewCourseModal();
+        }
+
+        function promptNewCourse() {
+            openNewCourseModal();
+        }
+
+        // --- DERS SİLME MODALI ---
+        let _courseToDeletePending = '';
+
+        function promptDeleteCurrentCourse() {
+            if (!currentCourse || !currentCourse.trim()) {
+                openNewCourseModal('Silinecek bir aktif ders bulunmuyor. Buradan yeni bir ders ekleyebilirsiniz.');
+                return;
+            }
+
+            _courseToDeletePending = currentCourse;
+            const modal = document.getElementById('deleteCourseModal');
+            const targetEl = document.getElementById('deleteCourseTargetName');
+            if (targetEl) targetEl.textContent = `"${_courseToDeletePending}"`;
+            if (modal) {
+                modal.classList.remove('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        function closeDeleteCourseModal() {
+            const modal = document.getElementById('deleteCourseModal');
+            if (modal) modal.classList.add('hidden');
+            _courseToDeletePending = '';
+        }
+
+        async function confirmDeleteCurrentCourseAction() {
+            const targetToDelete = _courseToDeletePending || currentCourse;
+            closeDeleteCourseModal();
+
+            if (!targetToDelete) return;
 
             // 1. Backend'den o dersin vektörlerini ve PDF dosyalarını temizle
             try {
@@ -1642,7 +1795,7 @@
             if (!input.files || !input.files[0]) return;
 
             if (!currentCourse || !currentCourse.trim()) {
-                alert("Lütfen önce yukarıdaki '+ Yeni Ders' butonuna tıklayarak bir ders ekleyin.");
+                openNewCourseModal("PDF yükleyebilmek için lütfen önce bir ders adı giriniz.");
                 input.value = '';
                 return;
             }
