@@ -537,7 +537,7 @@ async def upload_pdf(
 
     print(f"[UPLOAD OK] '{file.filename}' ({course_name}) [User: {uid}] -> {len(doc)} sayfa, {len(points)} parca basariyla eklendi.", flush=True)
 
-    return {"message": "PDF başarıyla indekslendi!", "document": doc_info}
+    return {"message": "Ders notu başarıyla yüklendi!", "document": doc_info}
 
 
 # 2. Yüklü PDF'leri Listeleme (Kesin Kullanıcı ve Ders filtreli - Cihaz Ayrımı Garantili)

@@ -286,17 +286,16 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             
             <!-- Logo & Başlık & Kapatma Butonu -->
-            <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
+            <div class="p-4 border-b border-slate-800/60 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                        <i data-lucide="brain-circuit" class="w-5 h-5 text-white"></i>
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
+                        <h1 class="font-semibold text-sm tracking-tight text-white">
                             StudyRAG
-                            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v1.0</span>
                         </h1>
-                        <span class="text-[11px] text-slate-400 font-medium">Akıllı Çalışma Asistanı</span>
+                        <span class="text-[11px] text-slate-400 font-normal">Ders Çalışma Asistanı</span>
                     </div>
                 </div>
 
@@ -308,9 +307,9 @@
 
             <!-- Yeni Sohbet Butonu -->
             <div class="p-3">
-                <button onclick="createNewChat()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium text-xs py-2.5 px-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition group">
-                    <i data-lucide="plus" class="w-4 h-4 transition-transform group-hover:rotate-90"></i>
-                    <span>Yeni Sohbet Başlat</span>
+                <button onclick="createNewChat()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2.5 px-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Yeni Sohbet</span>
                 </button>
             </div>
 
@@ -356,24 +355,24 @@
 
                         <!-- PDF Yükleme Butonu -->
                         <div>
-                            <label class="border border-dashed border-slate-700 hover:border-indigo-500 bg-slate-900/60 hover:bg-slate-900 rounded-lg p-2.5 flex flex-col items-center justify-center cursor-pointer transition group text-center">
-                                <div class="flex items-center gap-1.5 text-slate-300 group-hover:text-indigo-300">
+                            <label class="border border-dashed border-slate-700/80 hover:border-indigo-400 bg-slate-900/40 hover:bg-slate-900/80 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition group text-center">
+                                <div class="flex items-center gap-2 text-slate-300 group-hover:text-indigo-300 font-medium">
                                     <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-400"></i>
-                                    <span class="text-xs font-medium">Bu Derse PDF Ekle</span>
+                                    <span class="text-xs">PDF Notu Yükle</span>
                                 </div>
-                                <span class="text-[10px] text-slate-500 mt-0.5">Qdrant vektör tabanına indekslenir</span>
+                                <span class="text-[11px] text-slate-400 mt-1">Dosyayı seçin veya sürükleyip bırakın</span>
                                 <input id="pdfFileInput" type="file" accept=".pdf" class="hidden" onchange="handleRealPdfUpload(this)">
                             </label>
 
                             <!-- Yükleme Göstergesi -->
-                            <div id="uploadProgressBox" class="hidden mt-2 bg-indigo-950/70 border border-indigo-700/80 rounded-xl p-2.5 shadow-lg">
-                                <div class="flex items-center justify-between text-[11px] text-indigo-300">
-                                    <span class="flex items-center gap-1.5 font-medium truncate">
+                            <div id="uploadProgressBox" class="hidden mt-2 bg-slate-900 border border-indigo-500/30 rounded-xl p-2.5 shadow-lg">
+                                <div class="flex items-center justify-between text-xs text-slate-200">
+                                    <span class="flex items-center gap-2 font-medium truncate">
                                         <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-indigo-400 shrink-0"></i>
-                                        <span id="uploadPhaseText" class="truncate">İndeksleniyor...</span>
+                                        <span id="uploadPhaseText" class="truncate">İşleniyor...</span>
                                     </span>
                                     <div class="flex items-center gap-1 shrink-0 ml-1">
-                                        <span id="uploadStatusText" class="text-indigo-300 font-semibold text-[10px] bg-indigo-900/60 px-1.5 py-0.5 rounded">Gemini</span>
+                                        <span id="uploadStatusText" class="text-indigo-300 font-medium text-[11px] bg-indigo-500/10 px-2 py-0.5 rounded-md">Hazırlanıyor</span>
                                         <button type="button" onclick="document.getElementById('uploadProgressBox').classList.add('hidden')" class="text-slate-400 hover:text-white p-0.5 rounded transition" title="Kapat">
                                             <i data-lucide="x" class="w-3 h-3"></i>
                                         </button>
@@ -453,27 +452,24 @@
                         <i data-lucide="panel-left" class="w-4 h-4 text-indigo-400"></i>
                     </button>
                     <!-- Mobilde Marka Logosu -->
-                    <div class="flex items-center gap-1.5 md:hidden">
-                        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-md">
-                            <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-white"></i>
+                    <div class="flex items-center gap-2 md:hidden">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+                            <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
                         </div>
-                        <span class="font-bold text-sm tracking-tight text-white">StudyRAG</span>
+                        <span class="font-semibold text-sm tracking-tight text-white">StudyRAG</span>
                     </div>
                 </div>
 
                 <!-- Aktif Ders Rozeti & Tema Butonu -->
-                <div class="flex items-center gap-1.5 text-xs shrink-0">
-                    <button onclick="toggleSidebar(true)" title="Dersi değiştirmek için tıklayın" class="flex items-center gap-1.5 bg-indigo-950/70 hover:bg-indigo-900/70 border border-indigo-800/70 px-2.5 py-1 rounded-lg text-indigo-300 transition">
+                <div class="flex items-center gap-2 text-xs shrink-0">
+                    <button onclick="toggleSidebar(true)" title="Dersi değiştirmek için tıklayın" class="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-lg text-slate-200 hover:text-white transition shadow-sm">
                         <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-                        <span id="headerCourseName" class="font-medium text-xs max-w-[120px] sm:max-w-[170px] md:max-w-[190px] truncate">CEN3004 - Operating Systems</span>
+                        <span id="headerCourseName" class="font-medium text-xs max-w-[130px] sm:max-w-[180px] md:max-w-[220px] truncate">Ders Seçilmedi</span>
                     </button>
                     <!-- Gece / Gündüz Modu Butonu -->
                     <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir" class="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center shrink-0 border border-slate-700/50">
                         <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
                     </button>
-                    <span class="hidden sm:flex bg-slate-900 border border-slate-800 px-2 py-1 rounded-md text-slate-400 items-center gap-1.5 text-[11px]">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Qdrant
-                    </span>
                 </div>
             </div>
 
@@ -489,7 +485,7 @@
                 </button>
                 <button onclick="switchTab('flashcards')" id="tab-btn-flashcards" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
                     <i data-lucide="layers" class="w-3.5 h-3.5 shrink-0"></i>
-                    <span>Kartlar<span class="hidden lg:inline"> / Flashcards</span></span>
+                    <span>Bilgi Kartları</span>
                 </button>
                 <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
                     <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 shrink-0"></i>
@@ -501,23 +497,23 @@
         <!-- ================= SEKME 1: RAG SOHBET VE ÖZET ================= -->
         <section id="tab-chat" class="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
             
-            <!-- Hızlı Komutlar & Basitçe Anlat (ELI5) Toggle -->
-            <div class="bg-slate-900/60 border-b border-slate-800/80 px-3 md:px-6 py-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
+            <!-- Hızlı Komutlar & Basitçe Anlat Toggle -->
+            <div class="bg-slate-900/60 border-b border-slate-800/60 px-3 md:px-6 py-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
                 <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                     <span class="text-xs text-slate-400 font-medium shrink-0 hidden sm:inline">Hızlı:</span>
-                    <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 px-2.5 md:px-3 py-1 rounded-md text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                    <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
                         <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-indigo-400"></i> Genel Özet
                     </button>
-                    <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 px-2.5 md:px-3 py-1 rounded-md text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                    <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Önemli Kavramlar
                     </button>
                 </div>
 
-                <!-- Basitçe Anlat Toggle -->
-                <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-800/80 hover:bg-slate-800 border border-slate-700 px-3 py-1 rounded-full transition shrink-0">
+                <!-- Sadeleştirilmiş Anlatım Toggle -->
+                <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 px-3 py-1 rounded-full transition shrink-0">
                     <input type="checkbox" id="eli5Toggle" class="accent-indigo-500 w-3.5 h-3.5 cursor-pointer">
-                    <span class="text-xs font-medium text-indigo-300 flex items-center gap-1">
-                        <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> <span class="hidden sm:inline">"Basitçe Anlat"</span> ELI5
+                    <span class="text-xs font-medium text-slate-200 flex items-center gap-1.5">
+                        <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> Sade Anlatım
                     </span>
                 </label>
             </div>
@@ -528,15 +524,15 @@
             </div>
 
             <!-- Soru Yazma Kutusu (Mobilde ve masaüstünde her zaman görünür) -->
-            <div class="p-2.5 sm:p-3 md:p-4 border-t border-slate-800/80 bg-slate-900/95 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
+            <div class="p-3 md:p-4 border-t border-slate-800/60 bg-slate-900/90 backdrop-blur-md shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
                 <!-- Seçilen Görsel Önizleme Alanı -->
-                <div id="imagePreviewContainer" class="hidden max-w-4xl mx-auto mb-2.5 p-2 bg-slate-950/90 border border-indigo-500/40 rounded-xl flex items-center justify-between shadow-lg animate-in fade-in">
+                <div id="imagePreviewContainer" class="hidden max-w-4xl mx-auto mb-2.5 p-2.5 bg-slate-950/90 border border-indigo-500/30 rounded-xl flex items-center justify-between shadow-lg animate-in fade-in">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <img id="imagePreviewImg" src="" alt="Yüklenen Görsel" class="w-10 h-10 object-cover rounded-lg border border-indigo-400/30 shrink-0">
                         <div class="truncate text-xs">
                             <span id="imagePreviewName" class="font-medium text-slate-200 block truncate">görsel.jpg</span>
-                            <span class="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
-                                <i data-lucide="sparkles" class="w-3 h-3"></i> Gemini Multimodal ile çözülecek
+                            <span class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Görsel analizi ile çözülecek
                             </span>
                         </div>
                     </div>
@@ -547,13 +543,13 @@
 
                 <form onsubmit="handleChatSubmit(event)" class="max-w-4xl mx-auto flex items-center gap-2 md:gap-3">
                     <!-- Resim / Soru Fotoğrafı Ekleme Butonu -->
-                    <button type="button" onclick="document.getElementById('chatImageInput').click()" title="Fotoğraf veya Soru Görseli Ekle (Kamera / Galeri / Dosya)" class="p-2.5 md:p-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-300 hover:text-indigo-300 transition flex items-center justify-center shrink-0">
+                    <button type="button" onclick="document.getElementById('chatImageInput').click()" title="Fotoğraf veya Soru Görseli Ekle (Kamera / Galeri / Dosya)" class="p-2.5 md:p-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/70 text-slate-300 hover:text-indigo-300 transition flex items-center justify-center shrink-0">
                         <i data-lucide="image-plus" class="w-4 h-4"></i>
                     </button>
                     <input id="chatImageInput" type="file" accept="image/*" class="hidden" onchange="handleChatImageSelect(this)">
 
-                    <input id="chatInput" type="text" placeholder="Ders notlarından sor veya ekran görüntüsü / fotoğraf yapıştır (Ctrl+V)..." class="flex-1 bg-slate-950/90 border border-slate-700/80 rounded-xl px-3.5 md:px-4 py-2.5 md:py-3 text-xs md:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
-                    <button id="sendBtn" type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 md:px-5 py-2.5 md:py-3 rounded-xl font-medium text-xs md:text-sm flex items-center gap-1.5 md:gap-2 transition shadow-lg shadow-indigo-600/20 shrink-0">
+                    <input id="chatInput" type="text" placeholder="Ders notlarınızdan bir soru sorun veya görsel yükleyin..." class="flex-1 bg-slate-950/80 border border-slate-700/70 rounded-xl px-4 py-2.5 md:py-3 text-xs md:text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition shadow-sm">
+                    <button id="sendBtn" type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 md:px-5 py-2.5 md:py-3 rounded-xl font-medium text-xs md:text-sm flex items-center gap-1.5 md:gap-2 transition shadow-md shadow-indigo-600/20 shrink-0">
                         <span class="hidden sm:inline">Gönder</span>
                         <i data-lucide="send" class="w-4 h-4"></i>
                     </button>
@@ -655,7 +651,7 @@
                             <p id="fcBack" class="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-md">
                                 Kartların arkasında ders notlarından çekilen kesin yanıtlar ve sayfa referansları yer alacaktır.
                             </p>
-                            <span id="fcSource" class="text-xs text-indigo-300">Kaynak: Qdrant İndeksi</span>
+                            <span id="fcSource" class="text-xs text-indigo-300">Kaynak: Ders Notları</span>
                         </div>
 
                     </div>
@@ -697,7 +693,7 @@
                     <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg">
                         <span class="text-[11px] md:text-xs text-slate-400">Aktif Materyal</span>
                         <p id="statCoursePdfCount" class="text-xl md:text-2xl font-bold mt-1 text-amber-400">0 PDF</p>
-                        <span class="text-[10px] md:text-[11px] text-slate-400">Qdrant'ta</span>
+                        <span class="text-[10px] md:text-[11px] text-slate-400">Bu derste</span>
                     </div>
                 </div>
 
@@ -860,7 +856,7 @@
                         <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                     </div>
                     <p class="text-xs font-semibold text-slate-200">1. PDF Yükle</p>
-                    <p class="text-[11px] text-slate-400 leading-tight">Sol menüden dersini seçip slaytlarını Qdrant'a yükle.</p>
+                    <p class="text-[11px] text-slate-400 leading-tight">Sol menüden dersini seçip ders notlarını ve slaytlarını yükle.</p>
                 </div>
                 <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 space-y-1">
                     <div class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
@@ -1046,7 +1042,7 @@
             </div>
 
             <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                Bu ders silindiğinde sisteme yüklediğiniz ilişkili tüm PDF dökümanları ve Qdrant vektör indeksleri kalıcı olarak kaldırılacaktır.
+                Bu ders silindiğinde bu derse yüklediğiniz tüm PDF dökümanları ve notlar sistemden kalıcı olarak kaldırılacaktır.
             </p>
 
             <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-800/80">
@@ -1766,19 +1762,21 @@
                 }
 
                 listEl.innerHTML = docs.map(d => `
-                    <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg p-2 text-xs group transition">
-                        <div onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" class="flex items-center gap-2 overflow-hidden flex-1 cursor-pointer" title="PDF'i Önizlemek için tıkla">
-                            <i data-lucide="file-text" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                    <div class="flex items-center justify-between bg-slate-900/60 hover:bg-slate-900 border border-slate-800/60 hover:border-slate-700/80 rounded-xl p-2.5 text-xs group transition">
+                        <div onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" class="flex items-center gap-2.5 overflow-hidden flex-1 cursor-pointer" title="PDF'i Önizlemek için tıkla">
+                            <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </div>
                             <div class="truncate">
-                                <p class="text-slate-200 hover:text-indigo-300 font-medium truncate text-[11px] transition">${escapeHtml(d.filename)}</p>
-                                <p class="text-[9px] text-slate-500">${d.total_pages || 0} Sayfa • ${d.total_chunks || 0} Chunk</p>
+                                <p class="text-slate-200 hover:text-indigo-300 font-medium truncate text-xs transition">${escapeHtml(d.filename)}</p>
+                                <p class="text-[11px] text-slate-400">${d.total_pages || 0} Sayfa</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" title="PDF Sayfalarını İncele" class="text-slate-500 hover:text-indigo-400 p-1 opacity-70 hover:opacity-100 transition">
+                            <button onclick="showSourceSnippetModal('${escapeHtml(d.filename)}', 1, '')" title="PDF Sayfalarını İncele" class="text-slate-400 hover:text-indigo-400 p-1.5 rounded-lg hover:bg-slate-800 transition">
                                 <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button onclick="deletePdfFile('${escapeHtml(d.filename)}')" title="PDF'i Sil" class="text-slate-500 hover:text-rose-400 p-1 opacity-60 hover:opacity-100 transition">
+                            <button onclick="deletePdfFile('${escapeHtml(d.filename)}')" title="PDF'i Sil" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -2338,28 +2336,30 @@
             const chat = chats.find(c => c.id === activeChatId);
 
             if (!chat || chat.messages.length === 0) {
+                const courseLabel = currentCourse ? `<span class="text-indigo-400 font-semibold">${escapeHtml(currentCourse)}</span> dersi seçili.` : 'Henüz ders seçilmedi.';
                 container.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-center p-4 md:p-8 max-w-lg mx-auto space-y-4">
-                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-indigo-950/60 border border-indigo-800/50 flex items-center justify-center text-indigo-400 shadow-xl">
-                            <i data-lucide="bot" class="w-6 h-6 md:w-7 md:h-7"></i>
+                    <div class="h-full flex flex-col items-center justify-center text-center p-4 md:p-8 max-w-lg mx-auto space-y-5">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <i data-lucide="sparkles" class="w-6 h-6"></i>
                         </div>
-                        <div class="space-y-1">
-                            <h2 class="text-sm md:text-base font-bold text-slate-100">StudyRAG Çalışma Asistanı Hazır</h2>
-                            <p class="text-xs text-slate-400">
-                                <strong class="text-indigo-300">${escapeHtml(currentCourse)}</strong> dersinin PDF'lerinden arama yapar, sayfa referanslarıyla doğrulanmış yanıtlar sunar.
-                            </p>
-                            <p class="text-[11px] text-emerald-400 flex items-center justify-center gap-1.5 pt-1">
-                                <i data-lucide="camera" class="w-3.5 h-3.5"></i> Fotoğraf veya ekran görüntüsü yapıştırarak (Ctrl+V) soru sorabilir, PDF yüklemeden de konu anlatımı isteyebilirsiniz!
+                        <div class="space-y-1.5">
+                            <h2 class="text-base md:text-lg font-semibold text-slate-100">Nasıl yardımcı olabilirim?</h2>
+                            <p class="text-xs text-slate-400 leading-relaxed max-w-md">
+                                ${courseLabel} Ders notlarınızla ilgili soru sorabilir, özet isteyebilir veya sınav hazırlığı yapabilirsiniz.
                             </p>
                         </div>
-                        <div class="grid grid-cols-1 gap-2 w-full pt-2">
-                            <button onclick="sendQuickPrompt('Ders notlarına göre bu dersin en kritik sınav konuları nelerdir?')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
-                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
-                                <span>En kritik sınav konuları nelerdir?</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full pt-1">
+                            <button onclick="sendQuickPrompt('Ders notlarına göre bu dersin en kritik sınav konularını özetle.')" class="p-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 border border-slate-800/80 hover:border-slate-700 text-left text-xs text-slate-300 hover:text-white transition flex flex-col gap-1">
+                                <span class="font-medium text-slate-200 flex items-center gap-1.5">
+                                    <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-indigo-400"></i> Kritik Sınav Konuları
+                                </span>
+                                <span class="text-[11px] text-slate-400">En önemli başlıkları maddeler halinde çıkar</span>
                             </button>
-                            <button onclick="sendQuickPrompt('Temel kavramları ve tanımları detaylıca açıkla.')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
-                                <i data-lucide="book-marked" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-                                <span>Temel kavramları ve tanımları listele</span>
+                            <button onclick="sendQuickPrompt('Temel kavramları ve tanımları detaylıca açıkla.')" class="p-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 border border-slate-800/80 hover:border-slate-700 text-left text-xs text-slate-300 hover:text-white transition flex flex-col gap-1">
+                                <span class="font-medium text-slate-200 flex items-center gap-1.5">
+                                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-amber-400"></i> Temel Tanımlar
+                                </span>
+                                <span class="text-[11px] text-slate-400">Önemli terimleri ve sayfa referanslarını listele</span>
                             </button>
                         </div>
                     </div>
@@ -2386,37 +2386,39 @@
                     `;
                 } else {
                     const sourcesHtml = (msg.sources && msg.sources.length > 0) ? `
-                        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/60 mt-2">
+                        <div class="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-800/50 mt-3">
+                            <span class="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
+                                <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak:
+                            </span>
                             ${msg.sources.map(s => `
-                                <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/60 rounded-lg px-2.5 py-1 text-[11px] flex items-center gap-1.5 text-slate-300 transition text-left cursor-pointer group" title="Alıntıyı ve sayfayı incelemek için tıkla">
-                                    <i data-lucide="bookmark" class="w-3 h-3 text-indigo-400 group-hover:scale-110 transition-transform"></i>
-                                    <span class="truncate max-w-[130px] font-medium">${escapeHtml(s.document_name)}</span>
-                                    <span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded text-[10px] font-bold">S. ${s.page_number}</span>
+                                <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/70 hover:bg-slate-850 border border-slate-800/80 hover:border-indigo-500/50 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-slate-300 hover:text-white transition cursor-pointer group shadow-sm" title="Sayfayı aç">
+                                    <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
+                                    <span class="text-[11px] text-indigo-400 font-mono font-medium">s. ${s.page_number}</span>
                                 </button>
                             `).join('')}
                         </div>
                     ` : '';
 
                     const msgActionsHtml = `
-                        <div class="flex items-center gap-3 pt-2 text-[11px] text-slate-400 border-t border-slate-800/40 mt-2">
-                            <button type="button" onclick="copyMessageText(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-indigo-400 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800/60 transition cursor-pointer" title="Cevabı Kopyala">
+                        <div class="flex items-center gap-2 pt-2 text-xs text-slate-400 border-t border-slate-800/40 mt-3">
+                            <button type="button" onclick="copyMessageText(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-slate-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-800/60 transition cursor-pointer" title="Cevabı Kopyala">
                                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                                 <span>Kopyala</span>
                             </button>
-                            <button type="button" onclick="toggleSpeechMessage(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-emerald-400 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800/60 transition cursor-pointer" title="Cevabı Sesli Dinle">
+                            <button type="button" onclick="toggleSpeechMessage(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-slate-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-800/60 transition cursor-pointer" title="Cevabı Sesli Dinle">
                                 <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
-                                <span>Sesli Dinle</span>
+                                <span>Sesli Oku</span>
                             </button>
                         </div>
                     `;
 
                     return `
-                        <div class="flex gap-2.5 md:gap-3 max-w-3xl">
-                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                                <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                        <div class="flex gap-3 max-w-3xl">
+                            <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-indigo-400">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
                             </div>
                             <div class="space-y-2 flex-1 min-w-0">
-                                <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                                <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl rounded-tl-sm p-4 text-xs md:text-sm leading-relaxed text-slate-200 shadow-sm">
                                     <div class="prose prose-invert max-w-none space-y-2 break-words">
                                         ${formatMarkdownText(msg.text)}
                                     </div>
@@ -2474,17 +2476,17 @@
             const container = document.getElementById('chatMessages');
             const loadingId = 'loading_' + Date.now();
             container.innerHTML += `
-                <div id="${loadingId}" class="flex gap-2.5 md:gap-3 max-w-3xl">
-                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                <div id="${loadingId}" class="flex gap-3 max-w-3xl">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-indigo-400">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
                     </div>
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm px-3.5 md:px-4 py-2.5 md:py-3 text-xs text-slate-400 flex items-center gap-2">
+                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl rounded-tl-sm px-4 py-3 text-xs text-slate-300 flex items-center gap-2.5 shadow-sm">
                         <span class="flex gap-1 items-center">
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse"></span>
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse-2"></span>
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse-3"></span>
                         </span>
-                        <span>${userImage ? "Görsel ve ders notları inceleniyor..." : "Qdrant'tan aranıyor ve Gemini yanıtlıyor..."}</span>
+                        <span>${userImage ? "Görsel analiz ediliyor ve notlar taranıyor..." : "Ders notları taranıyor ve yanıt hazırlanıyor..."}</span>
                     </div>
                 </div>
             `;
@@ -2563,12 +2565,14 @@
                                 const parsed = JSON.parse(jsonStr);
                                 if (parsed.sources) {
                                     sources = parsed.sources;
-                                    if (sources.length > 0) {
-                                        sourcesEl.innerHTML = sources.map(s => `
-                                            <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/60 rounded-lg px-2.5 py-1 text-[11px] flex items-center gap-1.5 text-slate-300 transition text-left cursor-pointer group" title="Alıntıyı incelemek için tıkla">
-                                                <i data-lucide="bookmark" class="w-3 h-3 text-indigo-400 group-hover:scale-110 transition-transform"></i>
-                                                <span class="truncate max-w-[130px] font-medium">${escapeHtml(s.document_name)}</span>
-                                                <span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded text-[10px] font-bold">S. ${s.page_number}</span>
+                                        sourcesEl.innerHTML = `
+                                            <span class="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
+                                                <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak:
+                                            </span>
+                                        ` + sources.map(s => `
+                                            <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-950/70 hover:bg-slate-850 border border-slate-800/80 hover:border-indigo-500/50 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-slate-300 hover:text-white transition cursor-pointer group shadow-sm" title="Sayfayı aç">
+                                                <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
+                                                <span class="text-[11px] text-indigo-400 font-mono font-medium">s. ${s.page_number}</span>
                                             </button>
                                         `).join('');
                                         sourcesEl.classList.remove('hidden');
@@ -2697,10 +2701,10 @@
 
             const statusText = focusWeak 
                 ? `🎯 Hata Yaptığınız Konular İnceleniyor...` 
-                : `Gemini PDF Notlarınızı İnceliyor...`;
+                : `Ders Notlarınız İnceleniyor...`;
             const statusSub = focusWeak
                 ? `Önceki yanlışlarınız ağırlıklı olmak üzere ${count} adet telafi sorusu hazırlanıyor.`
-                : `Pydantic şeması ile ${count} adet ${diff} seviye soru hazırlanıyor.`;
+                : `${count} adet ${diff.toLowerCase()} seviye sınav sorusu hazırlanıyor.`;
 
             container.innerHTML = `
                 <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 md:p-10 text-center space-y-3">
@@ -3133,7 +3137,7 @@
             fcFront.innerHTML = `
                 <div class="flex flex-col items-center justify-center gap-3 py-6">
                     <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400"></i>
-                    <p class="text-sm font-semibold text-slate-200">Gemini Notlarınızı İnceliyor...</p>
+                    <p class="text-sm font-semibold text-slate-200">Ders Notlarınız İnceleniyor...</p>
                     <p class="text-xs text-slate-400 font-normal">Sınavda çıkabilecek en kritik kavramlar çıkarılıyor</p>
                 </div>
             `;
