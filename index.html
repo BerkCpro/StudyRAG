@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StudyRAG - Akıllı Ders Çalışma Asistanı</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            min-height: 100dvh;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Flashcard 3D Dönme Efekti */
+        .perspective { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Özel Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        /* Scrollbar Gizleme */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animasyonlar */
+        @keyframes pulseDot {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        .dot-pulse { animation: pulseDot 1.4s infinite ease-in-out; }
+        .dot-pulse-2 { animation: pulseDot 1.4s infinite ease-in-out 0.2s; }
+        .dot-pulse-3 { animation: pulseDot 1.4s infinite ease-in-out 0.4s; }
+
+        /* Sol Panel Sürükleyerek Genişletme/Küçültme Tutacağı */
+        .sidebar-resizer {
+            width: 8px;
+            cursor: col-resize;
+            position: absolute;
+            top: 0;
+            right: -4px;
+            bottom: 0;
+            z-index: 40;
+            touch-action: none;
+            transition: background-color 0.2s ease;
+        }
+        .sidebar-resizer:hover, .sidebar-resizer.is-resizing {
+            background-color: rgba(99, 102, 241, 0.6);
+        }
+        .sidebar-resizer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 28px;
+            border-radius: 9999px;
+            background-color: rgba(148, 163, 184, 0.4);
+            transition: background-color 0.2s;
+        }
+        .sidebar-resizer:hover::after, .sidebar-resizer.is-resizing::after {
+            background-color: #ffffff;
+        }
+
+        /* Dokunmatik cihazlarda pürüzsüz kaydırma */
+        .touch-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full h-[100dvh] min-h-0 flex overflow-hidden antialiased select-none relative">
+
+    <!-- Mobil Karartma Overlay'i (Backdrop) -->
+    <div id="mobileBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-300"></div>
+
+    <!-- ================= SOL MENÜ (SIDEBAR) ================= -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 bg-slate-900 border-r border-slate-800/80 flex flex-col justify-between shrink-0 shadow-2xl transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 md:z-auto">
+        
+        <!-- Sürükleyip Genişletme / Daraltma Tutacağı (Masaüstü) -->
+        <div id="sidebarResizer" class="sidebar-resizer hidden md:block" title="Genişliği ayarlamak için sürükleyin (Çift tıklama: Sıfırla)"></div>
+
+        <!-- Üst Kısım: Logo & Yeni Sohbet & Sohbet Geçmişi & Katlanabilir Materyaller -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Logo & Başlık & Kapatma Butonu -->
+            <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <i data-lucide="brain-circuit" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
+                            StudyRAG
+                            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v1.0</span>
+                        </h1>
+                        <span class="text-[11px] text-slate-400 font-medium">Akıllı Çalışma Asistanı</span>
+                    </div>
+                </div>
+
+                <!-- Sol Menüyü Daraltma/Kapatma Butonu -->
+                <button onclick="toggleSidebar(false)" title="Menüyü Kapat" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Yeni Sohbet Butonu -->
+            <div class="p-3">
+                <button onclick="createNewChat()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium text-xs py-2.5 px-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition group">
+                    <i data-lucide="plus" class="w-4 h-4 transition-transform group-hover:rotate-90"></i>
+                    <span>Yeni Sohbet Başlat</span>
+                </button>
+            </div>
+
+            <!-- Katlanabilir / Küçülebilir Çalışma Alanı & PDF Paneli -->
+            <div class="px-3 pb-2 border-b border-slate-800/80">
+                <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl overflow-hidden transition-all duration-300" id="materialsAccordion">
+                    
+                    <!-- Başlık & Toggle Butonu (Tıklanınca küçülür/büyür) -->
+                    <button onclick="toggleMaterialsPanel()" class="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-slate-800/40 transition">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="folder-git-2" class="w-4 h-4 text-indigo-400"></i>
+                            <span class="text-xs font-semibold text-slate-200">Çalışma Alanı & Materyal</span>
+                            <span id="coursePdfBadge" class="text-[10px] bg-slate-800 text-indigo-300 px-1.5 py-0.2 rounded-full">0 PDF</span>
+                        </div>
+                        <i id="materialsToggleIcon" data-lucide="chevron-up" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
+                    </button>
+
+                    <!-- Genişleyen İçerik (Ders seçimi, PDF yükle, PDF listesi) -->
+                    <div id="materialsContent" class="p-3 pt-1 space-y-3 border-t border-slate-800/60">
+                        
+                        <!-- Ders Seçimi -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Aktif Ders</label>
+                                <button onclick="promptNewCourse()" class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5">
+                                    <i data-lucide="plus" class="w-3 h-3"></i> Yeni Ders
+                                </button>
+                            </div>
+                            <select id="courseSelect" onchange="onCourseChange()" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="CEN3004 - Operating Systems">CEN3004 - Operating Systems</option>
+                                <option value="CEN3002 - Database Systems">CEN3002 - Database Systems</option>
+                                <option value="Microprocessors">Microprocessors</option>
+                                <option value="Advanced Programming">Advanced Programming</option>
+                            </select>
+                        </div>
+
+                        <!-- PDF Yükleme Butonu -->
+                        <div>
+                            <label class="border border-dashed border-slate-700 hover:border-indigo-500 bg-slate-900/60 hover:bg-slate-900 rounded-lg p-2.5 flex flex-col items-center justify-center cursor-pointer transition group text-center">
+                                <div class="flex items-center gap-1.5 text-slate-300 group-hover:text-indigo-300">
+                                    <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-400"></i>
+                                    <span class="text-xs font-medium">Bu Derse PDF Ekle</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-0.5">Qdrant vektör tabanına indekslenir</span>
+                                <input id="pdfFileInput" type="file" accept=".pdf" class="hidden" onchange="handleRealPdfUpload(this)">
+                            </label>
+
+                            <!-- Yükleme Göstergesi -->
+                            <div id="uploadProgressBox" class="hidden mt-2 bg-indigo-950/70 border border-indigo-700/80 rounded-xl p-2.5 shadow-lg">
+                                <div class="flex items-center justify-between text-[11px] text-indigo-300">
+                                    <span class="flex items-center gap-1.5 font-medium truncate">
+                                        <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-indigo-400 shrink-0"></i>
+                                        <span id="uploadPhaseText" class="truncate">İndeksleniyor...</span>
+                                    </span>
+                                    <div class="flex items-center gap-1 shrink-0 ml-1">
+                                        <span id="uploadStatusText" class="text-indigo-300 font-semibold text-[10px] bg-indigo-900/60 px-1.5 py-0.5 rounded">Gemini</span>
+                                        <button type="button" onclick="document.getElementById('uploadProgressBox').classList.add('hidden')" class="text-slate-400 hover:text-white p-0.5 rounded transition" title="Kapat">
+                                            <i data-lucide="x" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PDF Listesi (Seçili derse özgü) -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Dersin Dökümanları</span>
+                                <span id="pdfCountLabel" class="text-[10px] text-slate-500">0 Dosya</span>
+                            </div>
+                            <div id="coursePdfList" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                <div class="text-[11px] text-slate-500 italic text-center py-2">
+                                    Henüz bu derse PDF yüklenmedi.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sohbetler (Chat History) Başlığı & Listesi -->
+            <div class="flex-1 flex flex-col p-3 overflow-hidden">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        Sohbet Geçmişi
+                    </span>
+                    <span id="chatCountBadge" class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full">0</span>
+                </div>
+                
+                <!-- Sohbet Listesi -->
+                <div id="chatHistoryList" class="flex-1 overflow-y-auto space-y-1 pr-1">
+                    <!-- Dinamik Sohbet Maddeleri -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Alt Kısım: Kullanıcı Profili -->
+        <div class="p-3 border-t border-slate-800/80 bg-slate-900/60 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-800 border border-indigo-500/40 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    B
+                </div>
+                <div class="truncate">
+                    <p class="text-xs font-semibold text-slate-200 truncate">Berk Cezik</p>
+                    <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> FastAPI Aktif
+                    </p>
+                </div>
+            </div>
+            <button onclick="clearAllDataPrompt()" title="Sohbetleri Sıfırla" class="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ================= ANA İÇERİK ALANI ================= -->
+    <main class="flex-1 flex flex-col h-full h-[100dvh] min-h-0 bg-slate-950 overflow-hidden min-w-0">
+        
+        <!-- Üst Sekme Barı (Masaüstünde Tek Satır, Mobilde Şık İki Katmanlı) -->
+        <header class="border-b border-slate-800/80 px-3 md:px-6 py-2.5 md:py-0 md:h-14 flex flex-col md:flex-row md:items-center md:justify-between bg-slate-900/60 backdrop-blur-sm gap-2.5 md:gap-3 shrink-0">
+            
+            <!-- Mobilde Üst Satır: Menü Butonu + Logo + Aktif Ders Rozeti -->
+            <div class="flex items-center justify-between w-full md:w-auto gap-2">
+                <div class="flex items-center gap-2">
+                    <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Sol Menüyü Aç/Kapat" class="p-2 rounded-xl text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 transition flex items-center justify-center shrink-0">
+                        <i data-lucide="panel-left" class="w-4 h-4 text-indigo-400"></i>
+                    </button>
+                    <!-- Mobilde Marka Logosu -->
+                    <div class="flex items-center gap-1.5 md:hidden">
+                        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-md">
+                            <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-white"></i>
+                        </div>
+                        <span class="font-bold text-sm tracking-tight text-white">StudyRAG</span>
+                    </div>
+                </div>
+
+                <!-- Aktif Ders Rozeti -->
+                <div class="flex items-center gap-1.5 text-xs shrink-0">
+                    <button onclick="toggleSidebar(true)" title="Dersi değiştirmek için tıklayın" class="flex items-center gap-1.5 bg-indigo-950/70 hover:bg-indigo-900/70 border border-indigo-800/70 px-2.5 py-1 rounded-lg text-indigo-300 transition">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+                        <span id="headerCourseName" class="font-medium text-xs max-w-[130px] sm:max-w-[180px] md:max-w-[200px] truncate">CEN3004 - Operating Systems</span>
+                    </button>
+                    <span class="hidden sm:flex bg-slate-900 border border-slate-800 px-2 py-1 rounded-md text-slate-400 items-center gap-1.5 text-[11px]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Qdrant
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sekmeler (Mobilde 4 Eşit Sütun, Masaüstünde Yan Yana Butonlar) -->
+            <div class="grid grid-cols-4 md:flex items-center gap-1 md:gap-1.5 bg-slate-950/50 md:bg-transparent p-1 md:p-0 rounded-xl md:rounded-none border md:border-0 border-slate-800/80 w-full md:w-auto">
+                <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-md shadow-indigo-600/20 transition">
+                    <i data-lucide="message-square-text" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>Sohbet<span class="hidden lg:inline"> & Özet</span></span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+                    <i data-lucide="check-square" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>Quiz</span>
+                </button>
+                <button onclick="switchTab('flashcards')" id="tab-btn-flashcards" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>Kartlar<span class="hidden lg:inline"> / Flashcards</span></span>
+                </button>
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">
+                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>Analiz</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ================= SEKME 1: RAG SOHBET VE ÖZET ================= -->
+        <section id="tab-chat" class="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
+            
+            <!-- Hızlı Komutlar & Basitçe Anlat (ELI5) Toggle -->
+            <div class="bg-slate-900/60 border-b border-slate-800/80 px-3 md:px-6 py-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                    <span class="text-xs text-slate-400 font-medium shrink-0 hidden sm:inline">Hızlı:</span>
+                    <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 px-2.5 md:px-3 py-1 rounded-md text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                        <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-indigo-400"></i> Genel Özet
+                    </button>
+                    <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 px-2.5 md:px-3 py-1 rounded-md text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Önemli Kavramlar
+                    </button>
+                </div>
+
+                <!-- Basitçe Anlat Toggle -->
+                <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-800/80 hover:bg-slate-800 border border-slate-700 px-3 py-1 rounded-full transition shrink-0">
+                    <input type="checkbox" id="eli5Toggle" class="accent-indigo-500 w-3.5 h-3.5 cursor-pointer">
+                    <span class="text-xs font-medium text-indigo-300 flex items-center gap-1">
+                        <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> <span class="hidden sm:inline">"Basitçe Anlat"</span> ELI5
+                    </span>
+                </label>
+            </div>
+
+            <!-- Mesaj Geçmişi Alanı -->
+            <div id="chatMessages" class="flex-1 min-h-0 overflow-y-auto p-3.5 md:p-6 space-y-4 md:space-y-6">
+                <!-- Dinamik olarak JS tarafından doldurulacak -->
+            </div>
+
+            <!-- Soru Yazma Kutusu (Mobilde ve masaüstünde her zaman görünür) -->
+            <div class="p-2.5 sm:p-3 md:p-4 border-t border-slate-800/80 bg-slate-900/95 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
+                <form onsubmit="handleChatSubmit(event)" class="max-w-4xl mx-auto flex gap-2 md:gap-3">
+                    <input id="chatInput" type="text" placeholder="Ders notlarından bir soru sor veya özet iste..." class="flex-1 bg-slate-950/90 border border-slate-700/80 rounded-xl px-3.5 md:px-4 py-2.5 md:py-3 text-xs md:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
+                    <button id="sendBtn" type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 md:px-5 py-2.5 md:py-3 rounded-xl font-medium text-xs md:text-sm flex items-center gap-1.5 md:gap-2 transition shadow-lg shadow-indigo-600/20 shrink-0">
+                        <span class="hidden sm:inline">Gönder</span>
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= SEKME 2: QUIZ ÜRETİCİ ================= -->
+        <section id="tab-quiz" class="hidden flex-1 overflow-y-auto p-4 md:p-6">
+            <div class="max-w-4xl mx-auto space-y-4 md:space-y-6">
+                
+                <!-- Quiz Ayar Paneli -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-end justify-between gap-3 md:gap-4 shadow-xl">
+                    <div class="grid grid-cols-2 sm:flex sm:items-end gap-3 flex-1">
+                        <div class="space-y-1 col-span-2 sm:col-span-1">
+                            <label class="text-xs text-slate-400 font-medium">Soru Tipi</label>
+                            <select id="quizType" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 block w-full sm:w-44 focus:border-indigo-500">
+                                <option value="mixed">Karışık (Tüm Tipler)</option>
+                                <option value="mcq">Çoktan Seçmeli (Test)</option>
+                                <option value="tf">Doğru / Yanlış</option>
+                                <option value="fill">Boşluk Doldurma</option>
+                                <option value="open">Açık Uçlu (Klasik)</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-slate-400 font-medium">Zorluk Seviyesi</label>
+                            <select id="quizDifficulty" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 block w-full sm:w-32 focus:border-indigo-500">
+                                <option value="Orta">Orta (Vize)</option>
+                                <option value="Kolay">Kolay</option>
+                                <option value="Zor">Zor</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-slate-400 font-medium">Soru Sayısı</label>
+                            <input id="quizCount" type="number" value="4" min="1" max="10" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 w-full sm:w-20 block focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <button id="generateQuizBtn" onclick="generateQuizFromBackend()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-600/20 shrink-0">
+                        <i data-lucide="wand-2" class="w-4 h-4"></i>
+                        <span>PDF'ten Yeni Quiz Üret</span>
+                    </button>
+                </div>
+
+                <!-- Quiz Soruları Listesi -->
+                <div id="quizContainer" class="space-y-4">
+                    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 md:p-12 text-center space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-950/60 border border-indigo-800/50 flex items-center justify-center mx-auto text-indigo-400">
+                            <i data-lucide="help-circle" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-slate-200">Henüz Quiz Oluşturulmadı</h3>
+                        <p class="text-xs text-slate-400 max-w-md mx-auto">
+                            Seçili dersin yüklenen PDF'lerinden sınav hazırlamak için yukarıdaki <strong class="text-indigo-300">"PDF'ten Yeni Quiz Üret"</strong> butonuna tıklayın.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SEKME 3: FLASHCARDS ================= -->
+        <section id="tab-flashcards" class="hidden flex-1 overflow-y-auto p-4 md:p-6 flex flex-col items-center justify-center">
+            <div class="max-w-xl w-full space-y-4 md:space-y-6 text-center">
+                
+                <div class="flex items-center justify-between gap-2">
+                    <div class="text-left">
+                        <h2 class="text-sm md:text-base font-bold text-slate-100">Akıllı Flashcard Tekrarı</h2>
+                        <p class="text-[11px] md:text-xs text-slate-400">Karta tıklayarak çevirebilirsiniz.</p>
+                    </div>
+                    <button id="generateFcBtn" onclick="generateFlashcardsFromBackend()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 md:px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 md:gap-2 transition shadow-lg shadow-indigo-600/20 shrink-0">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Kart Üret</span>
+                    </button>
+                </div>
+
+                <!-- 3D Flip Card -->
+                <div onclick="flipCard()" class="perspective cursor-pointer h-64 sm:h-72 w-full">
+                    <div id="flashcardInner" class="transform-style-3d relative w-full h-full">
+                        
+                        <!-- Ön Yüz (Kavram / Soru) -->
+                        <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-800/90 border border-slate-700 rounded-3xl p-6 md:p-8 flex flex-col justify-between items-center shadow-2xl">
+                            <span id="fcBadge" class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full font-medium">Hazır Kart</span>
+                            <h3 id="fcFront" class="text-base sm:text-lg md:text-xl font-bold text-slate-100 max-w-md leading-snug">
+                                Ders notlarından flashcard üretmek için "Kart Üret" butonuna tıklayın.
+                            </h3>
+                            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                                <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-indigo-400"></i> Çevirmek için tıkla
+                            </span>
+                        </div>
+
+                        <!-- Arka Yüz (Tanım + Sayfa No) -->
+                        <div class="backface-hidden rotate-y-180 absolute inset-0 bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-500/50 rounded-3xl p-6 md:p-8 flex flex-col justify-between items-center shadow-2xl">
+                            <span id="fcAnswerBadge" class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-medium">Cevap & Açıklama</span>
+                            <p id="fcBack" class="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-md">
+                                Kartların arkasında ders notlarından çekilen kesin yanıtlar ve sayfa referansları yer alacaktır.
+                            </p>
+                            <span id="fcSource" class="text-xs text-indigo-300">Kaynak: Qdrant İndeksi</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Kart Kontrolleri -->
+                <div class="flex items-center justify-center gap-3 md:gap-4">
+                    <button onclick="nextCard(false)" class="flex-1 sm:flex-none bg-rose-950/60 hover:bg-rose-900/60 border border-rose-700/50 text-rose-200 px-4 md:px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i> Zorlandım
+                    </button>
+                    <button onclick="nextCard(true)" class="flex-1 sm:flex-none bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-700/50 text-emerald-200 px-4 md:px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+                        <i data-lucide="check" class="w-4 h-4"></i> Öğrendim
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SEKME 4: DASHBOARD & ZAYIF KONU ANALİZİ ================= -->
+        <section id="tab-dashboard" class="hidden flex-1 overflow-y-auto p-4 md:p-6">
+            <div class="max-w-5xl mx-auto space-y-4 md:space-y-6">
+                
+                <!-- Üst İstatistik Kartları -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4">
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg">
+                        <span class="text-[11px] md:text-xs text-slate-400">Çözülen Soru</span>
+                        <p id="statTotalSolved" class="text-xl md:text-2xl font-bold mt-1 text-white">0</p>
+                        <span class="text-[10px] md:text-[11px] text-slate-500">Quiz yanıtları</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg">
+                        <span class="text-[11px] md:text-xs text-slate-400">Başarı Oranı</span>
+                        <p id="statSuccessRate" class="text-xl md:text-2xl font-bold mt-1 text-indigo-400">%0</p>
+                        <span id="statCorrectWrong" class="text-[10px] md:text-[11px] text-slate-400">0 D / 0 Y</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg">
+                        <span class="text-[11px] md:text-xs text-slate-400">En Çok Yanlış Sayfa</span>
+                        <p id="statWeakestPage" class="text-xs md:text-sm font-bold mt-1 text-rose-400 truncate">Kayıt yok</p>
+                        <span class="text-[10px] md:text-[11px] text-slate-500">Hedef tekrar</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-lg">
+                        <span class="text-[11px] md:text-xs text-slate-400">Aktif Materyal</span>
+                        <p id="statCoursePdfCount" class="text-xl md:text-2xl font-bold mt-1 text-amber-400">0 PDF</p>
+                        <span class="text-[10px] md:text-[11px] text-slate-400">Qdrant'ta</span>
+                    </div>
+                </div>
+
+                <!-- Detaylı Analiz & Zayıf Konular -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    
+                    <!-- Sol: Yanlış Yapılan Sayfalar Tablosu -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-3 md:space-y-4 shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-xs md:text-sm flex items-center gap-2 text-slate-100">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+                                Zayıf Sayfa Tespiti
+                            </h3>
+                            <button onclick="refreshDashboardStats()" class="text-slate-400 hover:text-indigo-400 p-1 rounded" title="Yenile">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div id="weakPagesList" class="space-y-2.5 text-xs">
+                            <div class="text-slate-500 text-center py-6 italic">
+                                Henüz quiz çözülmedi. Yanlış yapılan sayfalar burada gösterilir.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sağ: Çalışma Taktikleri & Hızlı Eylemler -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-3 md:space-y-4 shadow-lg">
+                        <h3 class="font-bold text-xs md:text-sm flex items-center gap-2 text-slate-100">
+                            <i data-lucide="target" class="w-4 h-4 text-indigo-400"></i>
+                            Sınava Yönelik Hızlı Tekrar Taktikleri
+                        </h3>
+
+                        <div class="space-y-2.5 md:space-y-3 text-xs text-slate-300">
+                            <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+                                <span class="font-semibold text-indigo-300">1. Konu Anlatımı için "Basitçe Anlat"</span>
+                                <p class="text-slate-400">Karmaşık terimleri anlamakta zorlandığınızda üstteki ELI5 modunu açarak soru sorun.</p>
+                            </div>
+                            <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+                                <span class="font-semibold text-emerald-300">2. Aktif Hatırlama (Active Recall)</span>
+                                <p class="text-slate-400">Flashcards sekmesini kullanarak her gün 5 dakika kavram tekrarı yapın.</p>
+                            </div>
+                            <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+                                <span class="font-semibold text-amber-300">3. Vize Seviyesi Quiz Çözümü</span>
+                                <p class="text-slate-400">Sınav öncesi Quiz sekmesinden "Karışık" soru tipiyle kendinizi test edin.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= JAVASCRIPT ETKİLEŞİMLERİ & API ENTEGRASYONU ================= -->
+    <script>
+        // Lucide İkonlarını Başlat
+        lucide.createIcons();
+
+        // -------------------------------------------------------------
+        // DURUM YÖNETİMİ (STATE & LOCAL STORAGE)
+        // -------------------------------------------------------------
+        let currentUserId = localStorage.getItem('study_user_id');
+        if (!currentUserId) {
+            currentUserId = 'user_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+            localStorage.setItem('study_user_id', currentUserId);
+        }
+
+        let currentCourse = localStorage.getItem('study_current_course') || 'CEN3004 - Operating Systems';
+        let isMaterialsOpen = localStorage.getItem('study_materials_open') !== 'false';
+        let isSidebarOpen = window.innerWidth >= 768 ? (localStorage.getItem('study_sidebar_open') !== 'false') : false;
+        let sidebarWidth = parseInt(localStorage.getItem('study_sidebar_width')) || 320;
+        let chats = JSON.parse(localStorage.getItem('study_chats') || '[]');
+        let activeChatId = localStorage.getItem('study_active_chat_id') || null;
+        let generatedCards = [];
+        let currentCardIndex = 0;
+
+        // Sayfa yüklendiğinde başlat
+        window.addEventListener('DOMContentLoaded', () => {
+            initCourseDropdown();
+            initMaterialsAccordion();
+            initSidebarResizer();
+            applySidebarState();
+            initChats();
+            fetchDocumentsForCurrentCourse();
+            refreshDashboardStats();
+        });
+
+        window.addEventListener('resize', () => {
+            applySidebarState();
+        });
+
+        // -------------------------------------------------------------
+        // 0. SOL MENÜ AÇMA / KAPATMA / KÜÇÜLTME & RESIZE (DESKTOP & MOBİL)
+        // -------------------------------------------------------------
+        function applySidebarState() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobileBackdrop');
+            if (!sidebar) return;
+
+            const isMobile = window.innerWidth < 768;
+
+            if (isMobile) {
+                // Mobil Cihazlar: Kayan Çekmece (Drawer)
+                sidebar.style.width = '';
+                sidebar.style.minWidth = '';
+                sidebar.style.maxWidth = '';
+                sidebar.classList.remove('opacity-0', 'border-r-0', 'overflow-hidden');
+
+                if (isSidebarOpen) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0', 'w-[85vw]', 'max-w-[320px]');
+                    if (backdrop) backdrop.classList.remove('hidden');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('translate-x-0');
+                    if (backdrop) backdrop.classList.add('hidden');
+                }
+            } else {
+                // Masaüstü Cihazlar: Ayarlanabilir Genişlikli Kenar Çubuğu
+                if (backdrop) backdrop.classList.add('hidden');
+                sidebar.classList.remove('-translate-x-full', 'translate-x-0', 'w-[85vw]', 'max-w-[320px]');
+
+                if (isSidebarOpen) {
+                    sidebar.style.width = sidebarWidth + 'px';
+                    sidebar.style.minWidth = sidebarWidth + 'px';
+                    sidebar.style.maxWidth = sidebarWidth + 'px';
+                    sidebar.classList.remove('opacity-0', 'border-r-0', 'overflow-hidden');
+                    sidebar.classList.add('opacity-100');
+                } else {
+                    sidebar.style.width = '0px';
+                    sidebar.style.minWidth = '0px';
+                    sidebar.style.maxWidth = '0px';
+                    sidebar.classList.add('opacity-0', 'border-r-0', 'overflow-hidden');
+                    sidebar.classList.remove('opacity-100');
+                }
+            }
+        }
+
+        function toggleSidebar(forceState) {
+            if (typeof forceState === 'boolean') {
+                isSidebarOpen = forceState;
+            } else {
+                isSidebarOpen = !isSidebarOpen;
+            }
+            if (window.innerWidth >= 768) {
+                localStorage.setItem('study_sidebar_open', isSidebarOpen);
+            }
+            applySidebarState();
+            setTimeout(() => lucide.createIcons(), 200);
+        }
+
+        function initSidebarResizer() {
+            const resizer = document.getElementById('sidebarResizer');
+            const sidebar = document.getElementById('sidebar');
+            if (!resizer || !sidebar) return;
+
+            let isResizing = false;
+
+            resizer.addEventListener('mousedown', (e) => {
+                if (window.innerWidth < 768) return;
+                isResizing = true;
+                resizer.classList.add('is-resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                sidebar.classList.remove('transition-all', 'duration-300'); // Sürüklerken animasyonu kapat (akıcı 60fps)
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                // Min 220px, Max 500px sınırları
+                let newWidth = Math.max(220, Math.min(500, e.clientX));
+                sidebarWidth = newWidth;
+                sidebar.style.width = newWidth + 'px';
+                sidebar.style.minWidth = newWidth + 'px';
+                sidebar.style.maxWidth = newWidth + 'px';
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isResizing) return;
+                isResizing = false;
+                resizer.classList.remove('is-resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                sidebar.classList.add('transition-all', 'duration-300');
+                localStorage.setItem('study_sidebar_width', sidebarWidth);
+            });
+
+            // Resizer'a çift tıklanınca varsayılan 320px genişliğe dön
+            resizer.addEventListener('dblclick', () => {
+                if (window.innerWidth < 768) return;
+                sidebarWidth = 320;
+                localStorage.setItem('study_sidebar_width', 320);
+                applySidebarState();
+            });
+        }
+
+        // -------------------------------------------------------------
+        // 1. ÇALIŞMA ALANI & MATERYAL PANELİ (COLLAPSIBLE / ACCORDION)
+        // -------------------------------------------------------------
+        function initCourseDropdown() {
+            const select = document.getElementById('courseSelect');
+            const storedCourses = JSON.parse(localStorage.getItem('study_custom_courses') || '[]');
+            
+            storedCourses.forEach(c => {
+                if (![...select.options].some(o => o.value === c)) {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    select.appendChild(opt);
+                }
+            });
+
+            select.value = currentCourse;
+            updateHeaderCourseBadge();
+        }
+
+        function updateHeaderCourseBadge() {
+            document.getElementById('headerCourseName').textContent = currentCourse;
+        }
+
+        function onCourseChange() {
+            currentCourse = document.getElementById('courseSelect').value;
+            localStorage.setItem('study_current_course', currentCourse);
+            updateHeaderCourseBadge();
+            fetchDocumentsForCurrentCourse();
+            if (window.innerWidth < 768) {
+                toggleSidebar(false);
+            }
+        }
+
+        function promptNewCourse() {
+            const courseName = prompt("Yeni Çalışma Alanı (Ders Adı) giriniz:\nÖrnek: CEN3005 - Software Engineering");
+            if (!courseName || !courseName.trim()) return;
+            const trimmed = courseName.trim();
+
+            const select = document.getElementById('courseSelect');
+            if (![...select.options].some(o => o.value === trimmed)) {
+                const opt = document.createElement('option');
+                opt.value = trimmed;
+                opt.textContent = trimmed;
+                select.appendChild(opt);
+                
+                const storedCourses = JSON.parse(localStorage.getItem('study_custom_courses') || '[]');
+                storedCourses.push(trimmed);
+                localStorage.setItem('study_custom_courses', JSON.stringify(storedCourses));
+            }
+
+            select.value = trimmed;
+            onCourseChange();
+        }
+
+        function initMaterialsAccordion() {
+            const content = document.getElementById('materialsContent');
+            const icon = document.getElementById('materialsToggleIcon');
+            if (!isMaterialsOpen) {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleMaterialsPanel() {
+            const content = document.getElementById('materialsContent');
+            const icon = document.getElementById('materialsToggleIcon');
+            isMaterialsOpen = !isMaterialsOpen;
+            localStorage.setItem('study_materials_open', isMaterialsOpen);
+
+            if (isMaterialsOpen) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 2. GERÇEK PDF YÖNETİMİ (UPLOAD, LIST, DELETE)
+        // -------------------------------------------------------------
+        async function fetchDocumentsForCurrentCourse() {
+            const listEl = document.getElementById('coursePdfList');
+            const badgeEl = document.getElementById('coursePdfBadge');
+            const countLabel = document.getElementById('pdfCountLabel');
+            const statPdf = document.getElementById('statCoursePdfCount');
+
+            try {
+                const res = await fetch(`/documents?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    }
+                });
+                if (!res.ok) throw new Error('Dökümanlar yüklenemedi');
+                const data = await res.json();
+                const docs = data.documents || [];
+
+                badgeEl.textContent = `${docs.length} PDF`;
+                countLabel.textContent = `${docs.length} Dosya`;
+                if (statPdf) statPdf.textContent = `${docs.length} PDF`;
+
+                if (docs.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="text-[11px] text-slate-500 italic text-center py-3 bg-slate-900/40 rounded-lg border border-slate-800/40">
+                            Bu derse henüz PDF yüklenmedi.
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = docs.map(d => `
+                    <div class="flex items-center justify-between bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg p-2 text-xs group transition">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i data-lucide="file-text" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                            <div class="truncate">
+                                <p class="text-slate-200 font-medium truncate text-[11px]">${escapeHtml(d.filename)}</p>
+                                <p class="text-[9px] text-slate-500">${d.total_pages || 0} Sayfa • ${d.total_chunks || 0} Chunk</p>
+                            </div>
+                        </div>
+                        <button onclick="deletePdfFile('${escapeHtml(d.filename)}')" title="PDF'i Sil" class="text-slate-500 hover:text-rose-400 p-1 opacity-60 hover:opacity-100 transition shrink-0">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                lucide.createIcons();
+            } catch (err) {
+                console.error("PDF listeleme hatası:", err);
+            }
+        }
+
+        async function handleRealPdfUpload(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const progressBox = document.getElementById('uploadProgressBox');
+            const statusText = document.getElementById('uploadStatusText');
+            const phaseText = document.getElementById('uploadPhaseText');
+
+            // Aktif dersi dropdown ile eşle
+            const selectEl = document.getElementById('courseSelect');
+            if (selectEl && selectEl.value) {
+                currentCourse = selectEl.value;
+                localStorage.setItem('study_current_course', currentCourse);
+                updateHeaderCourseBadge();
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('course_name', currentCourse);
+            formData.append('user_id', currentUserId);
+
+            progressBox.classList.remove('hidden');
+            if (phaseText) phaseText.textContent = `${file.name.slice(0, 16)}...`;
+            if (statusText) statusText.textContent = 'Yükleniyor...';
+
+            let timer = setTimeout(() => {
+                if (statusText && !progressBox.classList.contains('hidden')) {
+                    statusText.textContent = 'Gemini Vektörleri...';
+                }
+            }, 2000);
+
+            try {
+                const res = await fetch('/upload-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    },
+                    body: formData
+                });
+
+                clearTimeout(timer);
+
+                if (!res.ok) {
+                    let errMsg = 'Yükleme başarısız oldu';
+                    try {
+                        const errorData = await res.json();
+                        errMsg = errorData.detail || errMsg;
+                    } catch (_) {
+                        try {
+                            errMsg = (await res.text()) || errMsg;
+                        } catch (_) {}
+                    }
+                    throw new Error(errMsg);
+                }
+
+                if (phaseText) phaseText.textContent = 'İndeksleme Tamamlandı!';
+                if (statusText) statusText.textContent = 'Başarılı ✓';
+                
+                await fetchDocumentsForCurrentCourse();
+                setTimeout(() => progressBox.classList.add('hidden'), 1500);
+            } catch (err) {
+                clearTimeout(timer);
+                if (phaseText) phaseText.textContent = 'Hata: ' + err.message.slice(0, 20);
+                if (statusText) statusText.textContent = 'Başarısız ✗';
+                alert("PDF Yükleme Hatası: " + err.message);
+                setTimeout(() => progressBox.classList.add('hidden'), 3500);
+            } finally {
+                input.value = '';
+            }
+        }
+
+        async function deletePdfFile(filename) {
+            if (!confirm(`'${filename}' dökümanını bu dersten silmek istediğinize emin misiniz?`)) return;
+            try {
+                const res = await fetch(`/documents/${encodeURIComponent(filename)}?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    }
+                });
+                if (res.ok) {
+                    await fetchDocumentsForCurrentCourse();
+                } else {
+                    alert("Silme işlemi başarısız oldu.");
+                }
+            } catch (err) {
+                console.error("Silme hatası:", err);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 3. FARKLI SOHBETLER (CHAT HISTORY) YÖNETİMİ
+        // -------------------------------------------------------------
+        function initChats() {
+            if (chats.length === 0) {
+                createNewChat(false);
+            } else {
+                if (!activeChatId || !chats.some(c => c.id === activeChatId)) {
+                    activeChatId = chats[0].id;
+                }
+                renderChatList();
+                renderActiveChatMessages();
+            }
+        }
+
+        function createNewChat(switchToIt = true) {
+            const newChat = {
+                id: 'chat_' + Date.now(),
+                title: 'Yeni Sohbet',
+                course: currentCourse,
+                createdAt: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+                messages: []
+            };
+
+            chats.unshift(newChat);
+            saveChatsToStorage();
+
+            if (switchToIt) {
+                activeChatId = newChat.id;
+                localStorage.setItem('study_active_chat_id', activeChatId);
+                renderChatList();
+                renderActiveChatMessages();
+                switchTab('chat');
+                if (window.innerWidth < 768) {
+                    toggleSidebar(false);
+                }
+            }
+        }
+
+        function selectChat(chatId) {
+            activeChatId = chatId;
+            localStorage.setItem('study_active_chat_id', activeChatId);
+            renderChatList();
+            renderActiveChatMessages();
+            if (window.innerWidth < 768) {
+                toggleSidebar(false);
+            }
+        }
+
+        function deleteChat(e, chatId) {
+            e.stopPropagation();
+            if (chats.length <= 1) {
+                chats = [];
+                createNewChat(true);
+                return;
+            }
+            chats = chats.filter(c => c.id !== chatId);
+            if (activeChatId === chatId) {
+                activeChatId = chats[0].id;
+                localStorage.setItem('study_active_chat_id', activeChatId);
+            }
+            saveChatsToStorage();
+            renderChatList();
+            renderActiveChatMessages();
+        }
+
+        function saveChatsToStorage() {
+            localStorage.setItem('study_chats', JSON.stringify(chats));
+            document.getElementById('chatCountBadge').textContent = chats.length;
+        }
+
+        function renderChatList() {
+            const listEl = document.getElementById('chatHistoryList');
+            document.getElementById('chatCountBadge').textContent = chats.length;
+
+            listEl.innerHTML = chats.map(c => {
+                const isActive = c.id === activeChatId;
+                const activeClasses = isActive 
+                    ? 'bg-indigo-600/20 border-indigo-500/50 text-white' 
+                    : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:bg-slate-850 hover:text-white';
+
+                return `
+                    <div onclick="selectChat('${c.id}')" class="flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer group transition ${activeClasses}">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i data-lucide="message-square" class="w-3.5 h-3.5 ${isActive ? 'text-indigo-400' : 'text-slate-500'} shrink-0"></i>
+                            <div class="truncate">
+                                <p class="font-medium truncate text-[11px]">${escapeHtml(c.title)}</p>
+                                <p class="text-[9px] text-slate-500">${c.createdAt} • ${escapeHtml(c.course || '')}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteChat(event, '${c.id}')" title="Sohbeti Sil" class="text-slate-500 hover:text-rose-400 p-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function renderActiveChatMessages() {
+            const container = document.getElementById('chatMessages');
+            const chat = chats.find(c => c.id === activeChatId);
+
+            if (!chat || chat.messages.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-4 md:p-8 max-w-lg mx-auto space-y-4">
+                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-indigo-950/60 border border-indigo-800/50 flex items-center justify-center text-indigo-400 shadow-xl">
+                            <i data-lucide="bot" class="w-6 h-6 md:w-7 md:h-7"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h2 class="text-sm md:text-base font-bold text-slate-100">StudyRAG Çalışma Asistanı Hazır</h2>
+                            <p class="text-xs text-slate-400">
+                                <strong class="text-indigo-300">${escapeHtml(currentCourse)}</strong> dersinin PDF'lerinden arama yapar, sayfa referanslarıyla doğrulanmış yanıtlar sunar.
+                            </p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2 w-full pt-2">
+                            <button onclick="sendQuickPrompt('Ders notlarına göre bu dersin en kritik sınav konuları nelerdir?')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                <span>En kritik sınav konuları nelerdir?</span>
+                            </button>
+                            <button onclick="sendQuickPrompt('Temel kavramları ve tanımları sayfa numaralarıyla listele.')" class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-indigo-500/50 text-left text-xs text-slate-300 hover:text-white transition flex items-center gap-2">
+                                <i data-lucide="book-marked" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+                                <span>Temel kavramları ve tanımları listele</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = chat.messages.map(msg => {
+                if (msg.role === 'user') {
+                    return `
+                        <div class="flex justify-end">
+                            <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm px-3.5 md:px-4 py-2.5 max-w-xl text-xs md:text-sm shadow-md leading-relaxed">
+                                ${escapeHtml(msg.text)}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const sourcesHtml = (msg.sources && msg.sources.length > 0) ? `
+                        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/60 mt-2">
+                            ${msg.sources.map(s => `
+                                <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] flex items-center gap-1.5 text-slate-300" title="${escapeHtml(s.snippet || '')}">
+                                    <i data-lucide="bookmark" class="w-3 h-3 text-indigo-400"></i>
+                                    <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
+                                    <span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded text-[10px] font-bold">S. ${s.page_number}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '';
+
+                    return `
+                        <div class="flex gap-2.5 md:gap-3 max-w-3xl">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                            </div>
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                                    <div class="prose prose-invert max-w-none space-y-2 break-words">
+                                        ${formatMarkdownText(msg.text)}
+                                    </div>
+                                    ${sourcesHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            lucide.createIcons();
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // -------------------------------------------------------------
+        // 4. CHAT GÖNDERME (FASTAPI /chat-stream CANLI AKIŞ)
+        // -------------------------------------------------------------
+        async function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            await executeChatMessage(text);
+        }
+
+        function sendQuickPrompt(promptText) {
+            switchTab('chat');
+            executeChatMessage(promptText);
+        }
+
+        async function executeChatMessage(userText) {
+            const chat = chats.find(c => c.id === activeChatId);
+            if (!chat) return;
+
+            if (chat.messages.length === 0) {
+                chat.title = userText.slice(0, 30) + (userText.length > 30 ? '...' : '');
+                chat.course = currentCourse;
+                renderChatList();
+            }
+
+            chat.messages.push({ role: 'user', text: userText });
+            saveChatsToStorage();
+            renderActiveChatMessages();
+
+            const container = document.getElementById('chatMessages');
+            const loadingId = 'loading_' + Date.now();
+            container.innerHTML += `
+                <div id="${loadingId}" class="flex gap-2.5 md:gap-3 max-w-3xl">
+                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm px-3.5 md:px-4 py-2.5 md:py-3 text-xs text-slate-400 flex items-center gap-2">
+                        <span class="flex gap-1 items-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse-2"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 dot-pulse-3"></span>
+                        </span>
+                        <span>Qdrant'tan aranıyor ve Gemini yanıtlıyor...</span>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            container.scrollTop = container.scrollHeight;
+
+            const eli5 = document.getElementById('eli5Toggle').checked;
+
+            let fullText = '';
+            let sources = [];
+            let isSuccess = false;
+
+            // 1. ADIM: Canlı Akış (Streaming SSE) Dene
+            try {
+                const response = await fetch('/chat-stream', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    },
+                    body: JSON.stringify({
+                        question: userText,
+                        course_name: currentCourse,
+                        eli5_mode: eli5,
+                        user_id: currentUserId
+                    })
+                });
+
+                if (response.ok && response.body) {
+                    document.getElementById(loadingId)?.remove();
+
+                    const assistantMsgId = 'msg_' + Date.now();
+                    container.innerHTML += `
+                        <div id="${assistantMsgId}" class="flex gap-2.5 md:gap-3 max-w-3xl">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                            </div>
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                                    <div id="${assistantMsgId}_text" class="prose prose-invert max-w-none space-y-2 break-words">
+                                        <span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse align-middle"></span>
+                                    </div>
+                                    <div id="${assistantMsgId}_sources" class="hidden flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/60 mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    container.scrollTop = container.scrollHeight;
+
+                    const textEl = document.getElementById(`${assistantMsgId}_text`);
+                    const sourcesEl = document.getElementById(`${assistantMsgId}_sources`);
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed.startsWith('data:')) continue;
+                            const jsonStr = trimmed.slice(5).trim();
+                            if (!jsonStr) continue;
+
+                            try {
+                                const parsed = JSON.parse(jsonStr);
+                                if (parsed.sources) {
+                                    sources = parsed.sources;
+                                    if (sources.length > 0) {
+                                        sourcesEl.innerHTML = sources.map(s => `
+                                            <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] flex items-center gap-1.5 text-slate-300" title="${escapeHtml(s.snippet || '')}">
+                                                <i data-lucide="bookmark" class="w-3 h-3 text-indigo-400"></i>
+                                                <span class="truncate max-w-[130px] font-medium">${escapeHtml(s.document_name)}</span>
+                                                <span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded text-[10px] font-bold">S. ${s.page_number}</span>
+                                            </div>
+                                        `).join('');
+                                        sourcesEl.classList.remove('hidden');
+                                        lucide.createIcons();
+                                    }
+                                }
+                                if (parsed.text) {
+                                    fullText += parsed.text;
+                                    textEl.innerHTML = formatMarkdownText(fullText) + '<span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle"></span>';
+                                    container.scrollTop = container.scrollHeight;
+                                }
+                                if (parsed.error) {
+                                    fullText += `\n\n⚠️ **Hata:** ${parsed.error}`;
+                                    textEl.innerHTML = formatMarkdownText(fullText);
+                                }
+                            } catch (e) {
+                                console.error('SSE parse error:', e);
+                            }
+                        }
+                    }
+
+                    if (fullText.trim().length > 0) {
+                        textEl.innerHTML = formatMarkdownText(fullText);
+                        isSuccess = true;
+                    }
+                }
+            } catch (streamError) {
+                console.warn("Canlı akış tünel/ağ hatası verdi, standart JSON moduna geçiliyor...", streamError);
+            }
+
+            // 2. ADIM: Eğer canlı akış Dev Tunnels veya proxy tarafından kesildiyse, otomatik olarak standart /chat endpoint'ine geç
+            if (!isSuccess) {
+                try {
+                    const fallbackRes = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-User-Id': currentUserId
+                        },
+                        body: JSON.stringify({
+                            question: userText,
+                            course_name: currentCourse,
+                            eli5_mode: eli5,
+                            user_id: currentUserId
+                        })
+                    });
+
+                    document.getElementById(loadingId)?.remove();
+
+                    if (!fallbackRes.ok) {
+                        let errMsg = 'Cevap alınamadı';
+                        try {
+                            const errData = await fallbackRes.json();
+                            errMsg = errData.detail || errMsg;
+                        } catch (_) {}
+                        throw new Error(errMsg);
+                    }
+
+                    const data = await fallbackRes.json();
+                    fullText = data.answer || '';
+                    sources = data.sources || [];
+                    isSuccess = true;
+
+                    const assistantMsgId = 'msg_' + Date.now();
+                    const sourcesHtml = (sources && sources.length > 0) ? `
+                        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/60 mt-2">
+                            ${sources.map(s => `
+                                <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] flex items-center gap-1.5 text-slate-300" title="${escapeHtml(s.snippet || '')}">
+                                    <i data-lucide="bookmark" class="w-3 h-3 text-indigo-400"></i>
+                                    <span class="truncate max-w-[130px] font-medium">${escapeHtml(s.document_name)}</span>
+                                    <span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded text-[10px] font-bold">S. ${s.page_number}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '';
+
+                    container.innerHTML += `
+                        <div id="${assistantMsgId}" class="flex gap-2.5 md:gap-3 max-w-3xl">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                            </div>
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                                    <div class="prose prose-invert max-w-none space-y-2 break-words">
+                                        ${formatMarkdownText(fullText)}
+                                    </div>
+                                    ${sourcesHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    container.scrollTop = container.scrollHeight;
+
+                } catch (fallbackError) {
+                    document.getElementById(loadingId)?.remove();
+                    chat.messages.push({
+                        role: 'assistant',
+                        text: `⚠️ **Hata:** ${fallbackError.message}\n\nLütfen sol menüden bu ders için bir PDF yüklendiğinden emin olun.`
+                    });
+                    saveChatsToStorage();
+                    renderActiveChatMessages();
+                    return;
+                }
+            }
+
+            if (isSuccess && fullText) {
+                chat.messages.push({
+                    role: 'assistant',
+                    text: fullText,
+                    sources: sources
+                });
+                saveChatsToStorage();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 5. QUIZ ÜRETİCİ & ÇÖZÜMÜ
+        // -------------------------------------------------------------
+        async function generateQuizFromBackend() {
+            const btn = document.getElementById('generateQuizBtn');
+            const container = document.getElementById('quizContainer');
+            const qType = document.getElementById('quizType').value;
+            const diff = document.getElementById('quizDifficulty').value;
+            const count = parseInt(document.getElementById('quizCount').value) || 4;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Üretiliyor...</span>`;
+            lucide.createIcons();
+
+            container.innerHTML = `
+                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 md:p-10 text-center space-y-3">
+                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400 mx-auto"></i>
+                    <p class="text-sm font-semibold text-slate-200">Gemini PDF Notlarınızı İnceliyor...</p>
+                    <p class="text-xs text-slate-400">Pydantic şeması ile ${count} adet ${diff} seviye soru hazırlanıyor.</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/generate-quiz', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    },
+                    body: JSON.stringify({
+                        question_type: qType,
+                        difficulty: diff,
+                        count: count,
+                        course_name: currentCourse,
+                        user_id: currentUserId
+                    })
+                });
+
+                if (!res.ok) {
+                    let errMsg = 'Quiz üretilemedi';
+                    try {
+                        const err = await res.json();
+                        errMsg = err.detail || errMsg;
+                    } catch (_) {
+                        try {
+                            const raw = await res.text();
+                            errMsg = raw.slice(0, 140) || errMsg;
+                        } catch (_) {}
+                    }
+                    throw new Error(errMsg);
+                }
+
+                const data = await res.json();
+                const questions = data.questions || [];
+
+                if (questions.length === 0) {
+                    container.innerHTML = `<div class="p-6 text-center text-rose-400 text-xs">Soru üretilemedi.</div>`;
+                    return;
+                }
+
+                container.innerHTML = questions.map((q, idx) => renderQuizCard(q, idx)).join('');
+                lucide.createIcons();
+
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="p-6 bg-slate-900/90 border border-slate-800 rounded-2xl text-center space-y-3">
+                        <i data-lucide="alert-circle" class="w-8 h-8 text-amber-400 mx-auto"></i>
+                        <p class="text-sm font-semibold text-slate-200">Quiz Hazırlanamadı</p>
+                        <p class="text-xs text-slate-400/90 max-w-md mx-auto leading-relaxed">${escapeHtml(err.message)}</p>
+                        <button onclick="toggleSidebar(true)" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2 rounded-xl transition font-medium shadow-md">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i> Sol Menüden PDF Yükle
+                        </button>
+                    </div>
+                `;
+                lucide.createIcons();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="wand-2" class="w-4 h-4"></i><span>PDF'ten Yeni Quiz Üret</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        function renderQuizCard(q, idx) {
+            let optionsHtml = '';
+            
+            if (q.question_type === 'mcq' && q.options && q.options.length > 0) {
+                optionsHtml = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-2">
+                        ${q.options.map((opt, optIdx) => `
+                            <button onclick="checkMcqAnswer(this, '${escapeHtml(opt)}', '${escapeHtml(q.correct_answer)}', '${escapeHtml(q.source_document)}', ${q.page_number}, 'explanation_${idx}')" class="border border-slate-800 hover:border-slate-700 bg-slate-950/70 p-3 rounded-xl text-left transition flex items-center gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-[10px] shrink-0">${String.fromCharCode(65 + optIdx)}</span>
+                                <span class="text-slate-200">${escapeHtml(opt)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (q.question_type === 'tf') {
+                optionsHtml = `
+                    <div class="flex gap-2.5 text-xs pt-2">
+                        <button onclick="checkMcqAnswer(this, 'Doğru', '${escapeHtml(q.correct_answer)}', '${escapeHtml(q.source_document)}', ${q.page_number}, 'explanation_${idx}')" class="flex-1 py-2.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:bg-slate-900 transition font-medium">Doğru (True)</button>
+                        <button onclick="checkMcqAnswer(this, 'Yanlış', '${escapeHtml(q.correct_answer)}', '${escapeHtml(q.source_document)}', ${q.page_number}, 'explanation_${idx}')" class="flex-1 py-2.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:bg-slate-900 transition font-medium">Yanlış (False)</button>
+                    </div>
+                `;
+            } else {
+                optionsHtml = `
+                    <div class="space-y-2 pt-2">
+                        <button onclick="toggleElement('explanation_${idx}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i> Doğru Cevabı & Çözümü Gör
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-3 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">
+                            Soru ${idx + 1} • ${q.question_type.toUpperCase()}
+                        </span>
+                        <span class="text-[11px] text-slate-400">
+                            Kaynak: ${escapeHtml(q.source_document)} (S. ${q.page_number})
+                        </span>
+                    </div>
+                    <p class="text-xs md:text-sm font-medium text-slate-100 leading-relaxed">${escapeHtml(q.question_text)}</p>
+                    ${optionsHtml}
+                    
+                    <div id="explanation_${idx}" class="hidden p-3 bg-slate-950/80 border border-indigo-900/50 rounded-xl text-xs space-y-1">
+                        <p class="text-emerald-400 font-semibold">Doğru Cevap: ${escapeHtml(q.correct_answer)}</p>
+                        <p class="text-slate-300">${escapeHtml(q.explanation)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function checkMcqAnswer(btn, selected, correct, docName, pageNo, explanationId) {
+            const isCorrect = selected.trim().toLowerCase() === correct.trim().toLowerCase();
+            const parent = btn.parentElement;
+            
+            [...parent.querySelectorAll('button')].forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btn.className = "border border-emerald-500/80 bg-emerald-950/40 p-3 rounded-xl text-left text-emerald-200 flex items-center gap-2.5";
+            } else {
+                btn.className = "border border-rose-500/80 bg-rose-950/40 p-3 rounded-xl text-left text-rose-200 flex items-center gap-2.5";
+            }
+
+            document.getElementById(explanationId)?.classList.remove('hidden');
+
+            try {
+                await fetch('/submit-answer', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    },
+                    body: JSON.stringify({
+                        is_correct: isCorrect,
+                        source_document: docName,
+                        page_number: pageNo,
+                        user_id: currentUserId
+                    })
+                });
+                refreshDashboardStats();
+            } catch (e) {
+                console.error("Quiz sonucu gönderilemedi:", e);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 6. FLASHCARDS
+        // -------------------------------------------------------------
+        async function generateFlashcardsFromBackend() {
+            const btn = document.getElementById('generateFcBtn');
+            const fcBadge = document.getElementById('fcBadge');
+            const fcFront = document.getElementById('fcFront');
+            const inner = document.getElementById('flashcardInner');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Üretiliyor...</span>`;
+            if (window.lucide) lucide.createIcons();
+
+            // Karta hemen şık bir yüklenme durumu koy
+            inner.classList.remove('rotate-y-180');
+            fcBadge.textContent = "Hazırlanıyor...";
+            fcFront.innerHTML = `
+                <div class="flex flex-col items-center justify-center gap-3 py-6">
+                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400"></i>
+                    <p class="text-sm font-semibold text-slate-200">Gemini Notlarınızı İnceliyor...</p>
+                    <p class="text-xs text-slate-400 font-normal">Sınavda çıkabilecek en kritik kavramlar çıkarılıyor</p>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch(`/generate-flashcards?count=5&course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    },
+                    body: JSON.stringify({
+                        count: 5,
+                        course_name: currentCourse,
+                        user_id: currentUserId
+                    })
+                });
+
+                if (!res.ok) {
+                    let errMsg = 'Flashcard üretilemedi';
+                    try {
+                        const err = await res.json();
+                        errMsg = err.detail || errMsg;
+                    } catch (_) {
+                        try {
+                            const raw = await res.text();
+                            errMsg = raw.slice(0, 120) || errMsg;
+                        } catch (_) {}
+                    }
+                    throw new Error(errMsg);
+                }
+
+                const data = await res.json();
+                generatedCards = data.cards || [];
+
+                if (generatedCards.length === 0) {
+                    throw new Error("Ders notlarından kavram kartı üretilemedi.");
+                }
+
+                currentCardIndex = 0;
+                displayCurrentCard();
+            } catch (err) {
+                console.error("Flashcard hatası:", err);
+                fcBadge.textContent = "Bilgi";
+                fcFront.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-2 py-4">
+                        <i data-lucide="alert-circle" class="w-7 h-7 text-amber-400"></i>
+                        <p class="text-xs sm:text-sm font-semibold text-amber-200 max-w-sm text-center leading-relaxed">${escapeHtml(err.message)}</p>
+                        <button onclick="toggleSidebar(true)" class="mt-2 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5 shadow">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i> PDF Yükle
+                        </button>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span>Kart Üret</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function displayCurrentCard() {
+            if (generatedCards.length === 0) return;
+            const card = generatedCards[currentCardIndex];
+            
+            const inner = document.getElementById('flashcardInner');
+            inner.classList.remove('rotate-y-180');
+
+            setTimeout(() => {
+                document.getElementById('fcBadge').textContent = `Kart ${currentCardIndex + 1} / ${generatedCards.length} • ${currentCourse}`;
+                document.getElementById('fcFront').textContent = card.front;
+                document.getElementById('fcBack').textContent = card.back;
+                document.getElementById('fcSource').textContent = `Kaynak: ${card.source_document} (Sayfa ${card.page_number})`;
+            }, 150);
+        }
+
+        function flipCard() {
+            document.getElementById('flashcardInner').classList.toggle('rotate-y-180');
+        }
+
+        function nextCard(learned) {
+            if (generatedCards.length === 0) return;
+            currentCardIndex = (currentCardIndex + 1) % generatedCards.length;
+            displayCurrentCard();
+        }
+
+        // -------------------------------------------------------------
+        // 7. DASHBOARD İSTATİSTİKLERİ
+        // -------------------------------------------------------------
+        async function refreshDashboardStats() {
+            try {
+                const res = await fetch(`/dashboard-stats?user_id=${encodeURIComponent(currentUserId)}`, {
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-User-Id': currentUserId
+                    }
+                });
+                if (!res.ok) return;
+                const stats = await res.json();
+
+                const total = stats.total_solved || 0;
+                const correct = stats.correct || 0;
+                const wrong = stats.wrong || 0;
+                const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+                document.getElementById('statTotalSolved').textContent = total;
+                document.getElementById('statSuccessRate').textContent = `%${rate}`;
+                document.getElementById('statCorrectWrong').textContent = `${correct} D / ${wrong} Y`;
+
+                const weakPages = stats.weak_pages || {};
+                const keys = Object.keys(weakPages);
+                const weakListEl = document.getElementById('weakPagesList');
+                const statWeakest = document.getElementById('statWeakestPage');
+
+                if (keys.length === 0) {
+                    weakListEl.innerHTML = `<div class="text-slate-500 text-center py-6 italic">Henüz quiz çözülmedi. Yanlış yapılan sayfalar burada gösterilir.</div>`;
+                    statWeakest.textContent = "Kayıt yok";
+                } else {
+                    const sorted = keys.sort((a, b) => weakPages[b] - weakPages[a]);
+                    statWeakest.textContent = sorted[0];
+
+                    weakListEl.innerHTML = sorted.map((k, i) => `
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-medium text-rose-300 truncate max-w-[220px]">${i + 1}. ${escapeHtml(k)}</span>
+                                <span class="text-rose-400 font-bold shrink-0">${weakPages[k]} Yanlış</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-rose-500 h-full" style="width: ${Math.min(weakPages[k] * 20, 100)}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error("Dashboard yüklenemedi:", err);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 8. SEKME DEĞİŞTİRME & YARDIMCILAR
+        // -------------------------------------------------------------
+        function switchTab(tabName) {
+            const tabs = ['chat', 'quiz', 'flashcards', 'dashboard'];
+            tabs.forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                const btn = document.getElementById('tab-btn-' + t);
+                btn.className = "tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition";
+            });
+
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-btn-' + tabName);
+            activeBtn.className = "tab-btn flex items-center justify-center gap-1 sm:gap-1.5 px-2 md:px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-md shadow-indigo-600/20 transition";
+
+            if (tabName === 'dashboard') {
+                refreshDashboardStats();
+            }
+        }
+
+        function toggleElement(id) {
+            document.getElementById(id)?.classList.toggle('hidden');
+        }
+
+        function clearAllDataPrompt() {
+            if (confirm("Tüm sohbet geçmişini sıfırlamak istediğinize emin misiniz?")) {
+                localStorage.removeItem('study_chats');
+                localStorage.removeItem('study_active_chat_id');
+                chats = [];
+                createNewChat(true);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatMarkdownText(text) {
+            if (!text) return '';
+            let formatted = escapeHtml(text);
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            formatted = formatted.replace(/\[Sayfa\s+(\d+)\]/gi, '<span class="text-indigo-400 font-semibold bg-indigo-500/10 px-1 py-0.5 rounded text-[11px]">[Sayfa $1]</span>');
+            formatted = formatted.replace(/\n\n/g, '<br><br>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            return formatted;
+        }
+
+        // Mobil klavye açıldığında veya ekran boyutu değiştiğinde sohbeti otomatik en alta kaydır
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const container = document.getElementById('chatMessages');
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            });
+        }
+
+        // Flashcards için PC Klavye Kısayolları (Boşluk = Kartı Çevir, Sağ/Sol Ok = İlerle)
+        window.addEventListener('keydown', (e) => {
+            const fcTab = document.getElementById('tab-flashcards');
+            if (!fcTab || fcTab.classList.contains('hidden')) return;
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                nextCard(true);
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                nextCard(false);
+            }
+        });
+
+        // Flashcards için Mobilde Kaydırma (Swipe) Desteği
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const fcArea = document.getElementById('tab-flashcards');
+        if (fcArea) {
+            fcArea.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            fcArea.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchEndX - touchStartX;
+                if (Math.abs(diff) > 50) {
+                    if (diff < 0) nextCard(true);
+                    else nextCard(false);
+                }
+            }, { passive: true });
+        }
+    </script>
+</body>
+</html>
