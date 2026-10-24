@@ -498,24 +498,26 @@
         <section id="tab-chat" class="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
             
             <!-- Hızlı Komutlar & Basitçe Anlat Toggle -->
-            <div class="bg-slate-900/60 border-b border-slate-800/60 px-3 md:px-6 py-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
-                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                    <span class="text-xs text-slate-400 font-medium shrink-0 hidden sm:inline">Hızlı:</span>
-                    <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
-                        <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-indigo-400"></i> Genel Özet
-                    </button>
-                    <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Önemli Kavramlar
-                    </button>
-                </div>
+            <div class="bg-slate-900/60 border-b border-slate-800/60 px-3 md:px-6 py-2 shrink-0">
+                <div class="max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                        <span class="text-xs text-slate-400 font-medium shrink-0 hidden sm:inline">Hızlı:</span>
+                        <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                            <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-indigo-400"></i> Genel Özet
+                        </button>
+                        <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 px-2.5 md:px-3 py-1 rounded-lg text-slate-200 flex items-center gap-1.5 transition shrink-0">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Önemli Kavramlar
+                        </button>
+                    </div>
 
-                <!-- Sadeleştirilmiş Anlatım Toggle -->
-                <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 px-3 py-1 rounded-full transition shrink-0">
-                    <input type="checkbox" id="eli5Toggle" class="accent-indigo-500 w-3.5 h-3.5 cursor-pointer">
-                    <span class="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                        <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> Sade Anlatım
-                    </span>
-                </label>
+                    <!-- Sadeleştirilmiş Anlatım Toggle -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 px-3 py-1 rounded-full transition shrink-0">
+                        <input type="checkbox" id="eli5Toggle" class="accent-indigo-500 w-3.5 h-3.5 cursor-pointer">
+                        <span class="text-xs font-medium text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-400"></i> Sade Anlatım
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <!-- Mesaj Geçmişi Alanı -->
@@ -526,7 +528,7 @@
             <!-- Soru Yazma Kutusu (Mobilde ve masaüstünde her zaman görünür) -->
             <div class="p-3 md:p-4 border-t border-slate-800/60 bg-slate-900/90 backdrop-blur-md shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
                 <!-- Seçilen Görsel Önizleme Alanı -->
-                <div id="imagePreviewContainer" class="hidden max-w-4xl mx-auto mb-2.5 p-2.5 bg-slate-950/90 border border-indigo-500/30 rounded-xl flex items-center justify-between shadow-lg animate-in fade-in">
+                <div id="imagePreviewContainer" class="hidden max-w-4xl xl:max-w-5xl mx-auto mb-2.5 p-2.5 bg-slate-950/90 border border-indigo-500/30 rounded-xl flex items-center justify-between shadow-lg animate-in fade-in">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <img id="imagePreviewImg" src="" alt="Yüklenen Görsel" class="w-10 h-10 object-cover rounded-lg border border-indigo-400/30 shrink-0">
                         <div class="truncate text-xs">
@@ -541,7 +543,7 @@
                     </button>
                 </div>
 
-                <form onsubmit="handleChatSubmit(event)" class="max-w-4xl mx-auto flex items-center gap-2 md:gap-3">
+                <form onsubmit="handleChatSubmit(event)" class="max-w-4xl xl:max-w-5xl mx-auto flex items-center gap-2 md:gap-3">
                     <!-- Resim / Soru Fotoğrafı Ekleme Butonu -->
                     <button type="button" onclick="document.getElementById('chatImageInput').click()" title="Fotoğraf veya Soru Görseli Ekle (Kamera / Galeri / Dosya)" class="p-2.5 md:p-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/70 text-slate-300 hover:text-indigo-300 transition flex items-center justify-center shrink-0">
                         <i data-lucide="image-plus" class="w-4 h-4"></i>
@@ -2379,7 +2381,7 @@
                     ` : '';
 
                     return `
-                        <div class="flex justify-end">
+                        <div class="w-full max-w-4xl xl:max-w-5xl mx-auto flex justify-end">
                             <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm px-3.5 md:px-4 py-2.5 max-w-xl text-xs md:text-sm shadow-md leading-relaxed">
                                 ${imageHtml}
                                 <span>${escapeHtml(msg.text)}</span>
@@ -2415,7 +2417,7 @@
                     `;
 
                     return `
-                        <div class="flex gap-3 max-w-3xl">
+                        <div class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-3">
                             <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-indigo-400">
                                 <i data-lucide="sparkles" class="w-4 h-4"></i>
                             </div>
@@ -2478,7 +2480,7 @@
             const container = document.getElementById('chatMessages');
             const loadingId = 'loading_' + Date.now();
             container.innerHTML += `
-                <div id="${loadingId}" class="flex gap-3 max-w-3xl">
+                <div id="${loadingId}" class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-3">
                     <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-indigo-400">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
                     </div>
@@ -2525,7 +2527,7 @@
 
                     const assistantMsgId = 'msg_' + Date.now();
                     container.innerHTML += `
-                        <div id="${assistantMsgId}" class="flex gap-2.5 md:gap-3 max-w-3xl">
+                        <div id="${assistantMsgId}" class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-2.5 md:gap-3">
                             <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
                                 <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
                             </div>
