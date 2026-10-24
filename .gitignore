@@ -11,6 +11,8 @@ ENV/
 
 # Qdrant & SQLite Local Data
 qdrant_data/
+qdrant_storage/
+study_storage.json
 *.db
 *.sqlite3
 

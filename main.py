@@ -40,20 +40,121 @@ from google import genai
 from google.genai import types
 
 # ==========================================
-# 1. SABİT AYARLAR
+# 1. SABİT AYARLAR VE KALICI DEPOLAMA
 # ==========================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6KlANRxnfnM_uT_hqwWtKLWV9RT7txe6EttKtRp4b_G6A")
 GEMINI_MODEL = "gemini-3.5-flash-lite"
 EMBEDDING_MODEL = "gemini-embedding-001"
 COLLECTION_NAME = "study_rag_collection"
 
-# Global istemciler ve geçici (In-Memory) durum takibi
+# Kalıcı veri yolları (Deploy ve yeniden başlatmalarda PDF ve istatistik kaybını önler)
+STORAGE_FILE = "study_storage.json"
+QDRANT_STORAGE_PATH = os.getenv("QDRANT_STORAGE_PATH", "./qdrant_storage")
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+# Global istemciler ve durum takibi
 qdrant_client: QdrantClient = None
 gemini_client: genai.Client = None
 
 # Yüklenen PDF'lerin ve çözülen soruların kullanıcı bazlı takibi
 uploaded_documents = []
 quiz_stats = {}
+
+
+def load_storage():
+    """study_storage.json dosyasından dökümanları ve quiz istatistiklerini diskten yükler."""
+    global uploaded_documents, quiz_stats
+    if os.path.exists(STORAGE_FILE):
+        try:
+            with open(STORAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                uploaded_documents = data.get("uploaded_documents", [])
+                quiz_stats = data.get("quiz_stats", {})
+                print(f"[STORAGE] {len(uploaded_documents)} döküman ve {len(quiz_stats)} kullanıcı istatistiği diskten yüklendi.", flush=True)
+        except Exception as e:
+            print(f"[STORAGE ERR] Yüklenirken hata: {e}", flush=True)
+
+
+def save_storage():
+    """uploaded_documents ve quiz_stats verilerini kalıcı olarak diske kaydeder."""
+    try:
+        data = {
+            "uploaded_documents": uploaded_documents,
+            "quiz_stats": quiz_stats
+        }
+        with open(STORAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[STORAGE ERR] Kaydedilirken hata: {e}", flush=True)
+
+
+def sync_documents_from_qdrant():
+    """Qdrant vektör tabanında mevcut noktaları tarayarak uploaded_documents listesini otomatik senkronize eder."""
+    global uploaded_documents
+    if not qdrant_client:
+        return
+    try:
+        collections = qdrant_client.get_collections().collections
+        if not any(c.name == COLLECTION_NAME for c in collections):
+            return
+
+        offset = None
+        seen_docs = {}
+        # Qdrant'taki noktaları tara
+        while True:
+            records, next_offset = qdrant_client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=100,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False
+            )
+            for r in records:
+                p = r.payload or {}
+                uid = p.get("user_id", "default_user")
+                fname = p.get("document_name")
+                cname = p.get("course_name", "Genel Ders")
+                pno = p.get("page_number", 1)
+                if not fname:
+                    continue
+                key = (uid, fname, cname)
+                if key not in seen_docs:
+                    seen_docs[key] = {
+                        "user_id": uid,
+                        "filename": fname,
+                        "course_name": cname,
+                        "pages": set(),
+                        "chunks": 0
+                    }
+                seen_docs[key]["pages"].add(pno)
+                seen_docs[key]["chunks"] += 1
+
+            if not next_offset:
+                break
+            offset = next_offset
+
+        recovered_count = 0
+        for (uid, fname, cname), info in seen_docs.items():
+            exists = any(
+                d.get("user_id") == uid and d.get("filename") == fname and d.get("course_name", "").strip().lower() == cname.strip().lower()
+                for d in uploaded_documents
+            )
+            if not exists:
+                uploaded_documents.append({
+                    "user_id": uid,
+                    "filename": fname,
+                    "course_name": cname,
+                    "total_pages": max(info["pages"]) if info["pages"] else len(info["pages"]),
+                    "total_chunks": info["chunks"]
+                })
+                recovered_count += 1
+
+        if recovered_count > 0:
+            print(f"[STORAGE] Qdrant indeksinden {recovered_count} döküman kurtarıldı ve eşitlendi.", flush=True)
+            save_storage()
+    except Exception as e:
+        print(f"[STORAGE WARN] Qdrant senkronizasyonu atlandı: {e}", flush=True)
 
 
 def get_user_quiz_stats(uid: str):
@@ -73,23 +174,41 @@ def get_user_quiz_stats(uid: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global qdrant_client, gemini_client
-    print("[INFO] Qdrant (:memory:) ve Gemini istemcisi baslatiliyor...", flush=True)
 
-    # 1. Qdrant'ı RAM'de başlat (Boyut: 3072 - gemini-embedding-001 standardı)
-    qdrant_client = QdrantClient(":memory:")
-    qdrant_client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
-    )
+    # 1. Qdrant istemcisini başlat (Cloud varsa Cloud, yoksa kalıcı disk depolama)
+    if QDRANT_URL:
+        print(f"[INFO] Qdrant Cloud'a bağlanılıyor: {QDRANT_URL}...", flush=True)
+        qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+    else:
+        print(f"[INFO] Kalıcı yerel Qdrant deposu başlatılıyor: {QDRANT_STORAGE_PATH}...", flush=True)
+        os.makedirs(QDRANT_STORAGE_PATH, exist_ok=True)
+        qdrant_client = QdrantClient(path=QDRANT_STORAGE_PATH)
+
+    try:
+        collections = qdrant_client.get_collections().collections
+        if not any(c.name == COLLECTION_NAME for c in collections):
+            qdrant_client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+            )
+            print(f"[INFO] Koleksiyon '{COLLECTION_NAME}' oluşturuldu.", flush=True)
+    except Exception as e:
+        print(f"[WARN] Koleksiyon başlatma kontrolü: {e}", flush=True)
 
     # 2. Gemini İstemcisini başlat
     gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
-    print(f"[OK] Sistem hazir! Model: {GEMINI_MODEL}", flush=True)
-    print("-> Arayuz: http://127.0.0.1:8000", flush=True)
+    # 3. Diskten dökümanları ve istatistikleri yükle, Qdrant ile senkronize et
+    load_storage()
+    sync_documents_from_qdrant()
+
+    print(f"[OK] Sistem hazır! Model: {GEMINI_MODEL}", flush=True)
+    print("-> Arayüz: http://127.0.0.1:8000", flush=True)
     print("-> Swagger Docs: http://127.0.0.1:8000/docs", flush=True)
     yield
-    print("[STOP] Sistem kapatiliyor...", flush=True)
+    # Kapanırken de en güncel durumu diske yaz
+    save_storage()
+    print("[STOP] Sistem kapatılıyor...", flush=True)
 
 
 app = FastAPI(
@@ -337,6 +456,9 @@ async def upload_pdf(
     else:
         uploaded_documents.append(doc_info)
 
+    # Değişiklikleri diske kalıcı olarak yaz
+    save_storage()
+
     print(f"[UPLOAD OK] '{file.filename}' ({course_name}) [User: {uid}] -> {len(doc)} sayfa, {len(points)} parca basariyla eklendi.", flush=True)
 
     return {"message": "PDF başarıyla indekslendi!", "document": doc_info}
@@ -411,6 +533,10 @@ async def delete_document(
     user_docs = [d for d in uploaded_documents if d.get("user_id", "default_user") == uid]
     if target_course:
         user_docs = [d for d in user_docs if d.get("course_name", "").strip().lower() == target_course]
+
+    # Değişiklikleri diske kalıcı olarak yaz
+    save_storage()
+
     return {"message": f"'{filename}' başarıyla silindi.", "documents": user_docs}
 
 
@@ -685,6 +811,9 @@ async def submit_answer(
         u_stats["wrong"] += 1
         key = f"{submission.source_document} (Sayfa {submission.page_number})"
         u_stats["weak_pages"][key] = u_stats["weak_pages"].get(key, 0) + 1
+
+    # İstatistikleri kalıcı olarak diske yaz
+    save_storage()
 
     return {"status": "recorded", "stats": u_stats}
 

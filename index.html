@@ -97,21 +97,42 @@
         html.light aside,
         html.light header,
         html.light .bg-slate-900,
+        html.light .bg-slate-900\/40,
         html.light .bg-slate-900\/60,
         html.light .bg-slate-900\/70,
-        html.light .bg-slate-900\/80 {
+        html.light .bg-slate-900\/80,
+        html.light .bg-slate-900\/90,
+        html.light .bg-slate-900\/95 {
             background-color: #ffffff !important;
             border-color: #e2e8f0 !important;
         }
         html.light .bg-slate-950,
+        html.light .bg-slate-950\/30,
         html.light .bg-slate-950\/50,
         html.light .bg-slate-950\/60,
         html.light .bg-slate-950\/70,
-        html.light .bg-slate-950\/80 {
+        html.light .bg-slate-950\/80,
+        html.light .bg-slate-950\/85,
+        html.light .bg-slate-950\/90 {
             background-color: #f1f5f9 !important; /* Slate-100 */
             border-color: #e2e8f0 !important;
         }
+        html.light .bg-slate-800,
+        html.light .bg-slate-800\/40,
+        html.light .bg-slate-800\/50,
+        html.light .bg-slate-800\/60,
+        html.light .bg-slate-800\/70,
+        html.light .bg-slate-800\/80,
+        html.light .bg-slate-800\/90,
+        html.light .bg-slate-700,
+        html.light .bg-slate-700\/80 {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
         html.light .border-slate-800,
+        html.light .border-slate-800\/40,
+        html.light .border-slate-800\/50,
         html.light .border-slate-800\/60,
         html.light .border-slate-800\/80,
         html.light .border-slate-700,
@@ -131,6 +152,27 @@
         html.light .text-slate-500 {
             color: #94a3b8 !important;
         }
+        /* Başlıklar ve beyaz yazılı elemanlar */
+        html.light h1.text-white,
+        html.light h2.text-white,
+        html.light h3.text-white,
+        html.light p.text-white,
+        html.light #statTotalSolved {
+            color: #0f172a !important;
+        }
+        html.light span.text-white:not([class*="bg-indigo"]):not([class*="bg-violet"]):not([class*="bg-gradient"]) {
+            color: #0f172a !important;
+        }
+        /* Hover durumları */
+        html.light .hover\:text-white:hover {
+            color: #0f172a !important;
+        }
+        html.light .hover\:bg-slate-800:hover,
+        html.light .hover\:bg-slate-800\/40:hover,
+        html.light .hover\:bg-slate-900:hover {
+            background-color: #e2e8f0 !important;
+        }
+        /* Form elemanları */
         html.light input,
         html.light select,
         html.light textarea {
@@ -138,12 +180,76 @@
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
         }
-        html.light .prose {
+        html.light input::placeholder,
+        html.light textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+        html.light select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        /* Markdown & AI Mesajları & Prose-Invert Düzeltmesi */
+        html.light .prose,
+        html.light .prose-invert,
+        html.light .prose-invert * {
             color: #1e293b !important;
         }
-        html.light .prose strong {
+        html.light .prose strong,
+        html.light .prose-invert strong {
             color: #4338ca !important;
         }
+        html.light .prose code,
+        html.light .prose-invert code {
+            background-color: #e0e7ff !important;
+            color: #3730a3 !important;
+            border-radius: 4px;
+        }
+        html.light .prose pre,
+        html.light .prose-invert pre,
+        html.light pre {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        /* KaTeX Matematik Formülleri */
+        html.light .katex,
+        html.light .katex * {
+            color: #0f172a !important;
+        }
+        /* Flashcard Ön ve Arka Yüz Stilleri */
+        html.light #flashcardInner > div:first-child {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+        }
+        html.light #flashcardInner > div:last-child {
+            background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%) !important;
+            border-color: #c7d2fe !important;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12) !important;
+        }
+        html.light #fcFront {
+            color: #0f172a !important;
+        }
+        html.light #fcBack {
+            color: #1e293b !important;
+        }
+        html.light #fcSource {
+            color: #4f46e5 !important;
+        }
+        /* Modallar */
+        html.light #profileModal > div,
+        html.light #onboardingModal > div {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+        }
+        html.light #modalFullUserId {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #047857 !important;
+        }
+        /* Kaydırma Çubuğu */
         html.light ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
