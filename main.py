@@ -9,19 +9,19 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Windows SSL / ASN1 sertifika hatasını çözen yerleşik (harici paket gerektirmeyen) yama
-def _patched_load_windows_store_certs(self, storename, purpose):
-    try:
-        for cert, encoding, trust in ssl.enum_certificates(storename):
-            if encoding == "x509_asn" and (trust is True or purpose.oid in trust):
-                try:
-                    self.load_verify_locations(cadata=ssl.DER_cert_to_PEM_cert(cert))
-                except Exception:
-                    pass
-    except Exception:
-        pass
+    # Windows SSL / ASN1 sertifika hatasını çözen yerleşik (harici paket gerektirmeyen) yama
+    def _patched_load_windows_store_certs(self, storename, purpose):
+        try:
+            for cert, encoding, trust in ssl.enum_certificates(storename):
+                if encoding == "x509_asn" and (trust is True or purpose.oid in trust):
+                    try:
+                        self.load_verify_locations(cadata=ssl.DER_cert_to_PEM_cert(cert))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
-ssl.SSLContext._load_windows_store_certs = _patched_load_windows_store_certs
+    ssl.SSLContext._load_windows_store_certs = _patched_load_windows_store_certs
 
 import uuid
 import json
@@ -335,14 +335,14 @@ async def get_documents(
     uid = (x_user_id or user_id or "default_user").strip()
     user_docs = [d for d in uploaded_documents if d.get("user_id", "default_user") == uid]
 
-    if course_name:
+    if course_name and course_name.strip():
         target = course_name.strip().lower()
         filtered = [d for d in user_docs if d.get("course_name", "").strip().lower() == target]
         return {"documents": filtered}
     return {"documents": user_docs}
 
 
-# 2.1 PDF Silme Endpoint'i
+# 2.1 PDF Silme Endpoint'i (Garantili Silme & İzolasyon)
 @app.delete("/documents/{filename}")
 async def delete_document(
     filename: str,
@@ -352,22 +352,24 @@ async def delete_document(
 ):
     global uploaded_documents
     uid = (x_user_id or user_id or "default_user").strip()
+    target_course = course_name.strip().lower() if (course_name and course_name.strip()) else None
+
+    # Qdrant'tan vektörleri sil
     try:
         must_conditions = [
             FieldCondition(key="document_name", match=MatchValue(value=filename)),
             FieldCondition(key="user_id", match=MatchValue(value=uid))
         ]
-        if course_name:
-            must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=course_name)))
-        
         qdrant_client.delete(
             collection_name=COLLECTION_NAME,
             points_selector=Filter(must=must_conditions)
         )
     except Exception as e:
-        print(f"Qdrant silme uyarısı: {e}")
+        print(f"[WARN] Qdrant silme: {e}", flush=True)
 
-    target_course = course_name.strip().lower() if course_name else None
+    # In-memory listeden sil:
+    # 1. Önce ders adıyla tam eşleşeni kaldırmayı dene
+    initial_count = len(uploaded_documents)
     uploaded_documents = [
         d for d in uploaded_documents
         if not (
@@ -376,6 +378,16 @@ async def delete_document(
             (not target_course or d.get("course_name", "").strip().lower() == target_course)
         )
     ]
+    # 2. Eğer ders ismi hafif farklı kaldığı için silinemediyse bile, o kullanıcının dökümanını kesin olarak sil
+    if len(uploaded_documents) == initial_count:
+        uploaded_documents = [
+            d for d in uploaded_documents
+            if not (
+                d.get("user_id", "default_user") == uid and
+                d.get("filename") == filename
+            )
+        ]
+
     user_docs = [d for d in uploaded_documents if d.get("user_id", "default_user") == uid]
     if target_course:
         user_docs = [d for d in user_docs if d.get("course_name", "").strip().lower() == target_course]
@@ -388,28 +400,18 @@ def build_chat_context_and_prompt(request: ChatRequest):
     uid = (request.user_id or "default_user").strip()
 
     must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if request.course_name:
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=request.course_name)))
+    if request.course_name and request.course_name.strip():
+        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=request.course_name.strip())))
 
     query_filter = Filter(must=must_conditions)
 
-    # Genel özet ve geniş kapsam için limit 8'e yükseltildi
+    # Genel özet ve geniş kapsam için limit 8
     search_results = qdrant_client.query_points(
         collection_name=COLLECTION_NAME,
         query=query_vector,
         query_filter=query_filter,
         limit=8
     ).points
-
-    # Eğer seçili ders filtresiyle sonuç bulunamadıysa (yazım farkı veya ders adı varyasyonları), sadece aynı kullanıcının dökümanlarında ara
-    if not search_results and request.course_name:
-        user_only_filter = Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=uid))])
-        search_results = qdrant_client.query_points(
-            collection_name=COLLECTION_NAME,
-            query=query_vector,
-            query_filter=user_only_filter,
-            limit=8
-        ).points
 
     if not search_results:
         raise HTTPException(status_code=404, detail="Yüklenen dökümanlar arasında bu soruyla ilgili içerik bulunamadı. Lütfen sol menüden PDF yüklediğinizden emin olun.")
@@ -536,17 +538,9 @@ async def generate_quiz(
         limit=50
     )
 
-    # Eğer seçili ders adıyla bulunamadıysa (harf farkı vb.), aynı kullanıcının dökümanlarından çek
-    if not scroll_result and request.course_name:
-        user_only_filter = Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=uid))])
-        scroll_result, _ = qdrant_client.scroll(
-            collection_name=COLLECTION_NAME,
-            scroll_filter=user_only_filter,
-            limit=50
-        )
-
     if not scroll_result:
-        raise HTTPException(status_code=404, detail="Quiz üretmek için önce en az bir PDF yüklemelisiniz.")
+        course_msg = f"'{request.course_name}' dersi için" if request.course_name else "Bu çalışma alanı için"
+        raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF yüklenmedi. Lütfen sol menüden bu derse en az bir PDF ekleyin.")
 
     # Rastgele en fazla 5 parça seç
     sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
@@ -609,23 +603,16 @@ async def generate_flashcards(
 
     scroll_filter = Filter(must=must_conditions)
 
+    # Qdrant'tan parçaları çek (seçili ders filtreli)
     scroll_result, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=scroll_filter,
         limit=50
     )
 
-    # Ders filtresi eşleşmezse kullanıcının genel koleksiyonundan seç
-    if not scroll_result and target_course:
-        user_only_filter = Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=uid))])
-        scroll_result, _ = qdrant_client.scroll(
-            collection_name=COLLECTION_NAME,
-            scroll_filter=user_only_filter,
-            limit=50
-        )
-
     if not scroll_result:
-        raise HTTPException(status_code=404, detail="Flashcard üretmek için önce sol menüden bir PDF yüklemelisiniz.")
+        course_msg = f"'{target_course}' dersi için" if target_course else "Bu çalışma alanı için"
+        raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF yüklenmedi. Lütfen sol menüden bu derse en az bir PDF ekleyin.")
 
     sampled_points = random.sample(scroll_result, min(len(scroll_result), 4))
     context_text = "\n\n---\n\n".join(
@@ -693,4 +680,6 @@ async def get_dashboard_stats(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
