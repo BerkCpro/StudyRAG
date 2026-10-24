@@ -1817,14 +1817,16 @@
             formData.append('user_id', currentUserId);
 
             progressBox.classList.remove('hidden');
-            if (phaseText) phaseText.textContent = `${file.name.slice(0, 16)}...`;
+            if (phaseText) phaseText.textContent = `${file.name.slice(0, 18)}...`;
             if (statusText) statusText.textContent = 'Yükleniyor...';
 
-            let timer = setTimeout(() => {
-                if (statusText && !progressBox.classList.contains('hidden')) {
-                    statusText.textContent = 'Gemini Vektörleri...';
-                }
-            }, 2000);
+            const timers = [
+                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Sayfalar Ayrıştırılıyor...'; }, 2000),
+                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Anlamsal Analiz Yapılıyor...'; }, 6000),
+                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Ders Hafızası Güncelleniyor...'; }, 14000),
+                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Son Aşamalar Tamamlanıyor...'; }, 24000)
+            ];
+            const clearAllTimers = () => timers.forEach(t => clearTimeout(t));
 
             try {
                 const res = await fetch('/upload-pdf', {
@@ -1836,7 +1838,7 @@
                     body: formData
                 });
 
-                clearTimeout(timer);
+                clearAllTimers();
 
                 if (!res.ok) {
                     let errMsg = 'Yükleme başarısız oldu';
@@ -1857,10 +1859,10 @@
                 await fetchDocumentsForCurrentCourse();
                 setTimeout(() => progressBox.classList.add('hidden'), 1500);
             } catch (err) {
-                clearTimeout(timer);
-                if (phaseText) phaseText.textContent = 'Hata: ' + err.message.slice(0, 20);
+                clearAllTimers();
+                if (phaseText) phaseText.textContent = 'Hata: ' + err.message.slice(0, 24);
                 if (statusText) statusText.textContent = 'Başarısız ✗';
-                alert("PDF Yükleme Hatası: " + err.message);
+                alert("Ders Notu Yükleme Hatası: " + err.message);
                 setTimeout(() => progressBox.classList.add('hidden'), 3500);
             } finally {
                 input.value = '';
