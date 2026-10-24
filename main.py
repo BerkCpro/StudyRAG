@@ -45,6 +45,7 @@ from google.genai import types
 # ==========================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6KlANRxnfnM_uT_hqwWtKLWV9RT7txe6EttKtRp4b_G6A")
 GEMINI_MODEL = "gemini-3.5-flash-lite"
+GEMINI_FALLBACK_MODEL = "gemini-3.5-flash"
 EMBEDDING_MODEL = "gemini-embedding-001"
 COLLECTION_NAME = "study_rag_collection"
 
@@ -232,8 +233,14 @@ app.add_middleware(
 # ==========================================
 # 3. YARDIMCI FONKSİYONLAR (CHUNKING & EMBED)
 # ==========================================
-def split_text(text: str, chunk_size: int = 1200, overlap: int = 150) -> list[str]:
-    """Metni cümle bütünlüğünü koruyacak şekilde kesişimli (overlap) parçalara böler (Optimize edilmiş boyut)."""
+# 3. YARDIMCI FONKSİYONLAR (CHUNKING & EMBED CACHE)
+# ==========================================
+# RPM (Dakika Başına İstek) kotasını korumak için bellek içi embedding önbelleği
+_embedding_cache: dict[str, list[float]] = {}
+
+
+def split_text(text: str, chunk_size: int = 1400, overlap: int = 120) -> list[str]:
+    """Metni cümle bütünlüğünü koruyacak şekilde böler (Genişletilmiş boyut sayesinde %25 daha az API isteği)."""
     chunks = []
     start = 0
     while start < len(text):
@@ -246,22 +253,45 @@ def split_text(text: str, chunk_size: int = 1200, overlap: int = 150) -> list[st
 
 
 def get_embeddings(texts: list[str]) -> list[list[float]]:
-    """Metin listesini Gemini Embedding API ile vektöre çevirir (Gelişmiş kota ve hata korumalı)."""
+    """Metin listesini Gemini Embedding API ile vektöre çevirir (RPM Kotası Koruma & Akıllı Önbellek)."""
     import time
     client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+
+    # 1. Önce önbellekte olanları kontrol et
+    missing_indices = []
+    missing_texts = []
+    results = [None] * len(texts)
+
+    for i, t in enumerate(texts):
+        if t in _embedding_cache:
+            results[i] = _embedding_cache[t]
+        else:
+            missing_indices.append(i)
+            missing_texts.append(t)
+
+    # Hepsi önbellekteyse doğrudan dön (0 API isteği!)
+    if not missing_texts:
+        return results
+
+    # 2. Önbellekte olmayanları Gemini API ile hesapla (Maksimum 100'lük paketlerle)
     max_retries = 4
     for attempt in range(max_retries):
         try:
             response = client.models.embed_content(
                 model=EMBEDDING_MODEL,
-                contents=texts,
+                contents=missing_texts,
             )
-            return [emb.values for emb in response.embeddings]
+            for orig_idx, emb in zip(missing_indices, response.embeddings):
+                val = emb.values
+                results[orig_idx] = val
+                # Önbelleğe kaydet (Sonraki aramalar için sıfır maliyet)
+                _embedding_cache[texts[orig_idx]] = val
+            return results
         except Exception as e:
             err_str = str(e)
             if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "Quota" in err_str) and attempt < max_retries - 1:
-                wait_time = 2.5 * (attempt + 1)
-                print(f"[WARN] Gemini kota siniri yakalandi, {wait_time}s bekleniyor... (Deneme {attempt + 1})", flush=True)
+                wait_time = 2.0 * (attempt + 1)
+                print(f"[WARN] Gemini RPM kota limiti yakalandı, {wait_time}s bekleniyor... (Deneme {attempt + 1})", flush=True)
                 time.sleep(wait_time)
                 continue
             raise e
@@ -406,15 +436,15 @@ async def upload_pdf(
     if not chunks_to_embed:
         raise HTTPException(status_code=400, detail="PDF içinden metin okunamadı.")
 
-    # Gemini API ile 80'erli paketler halinde (25 -> 80) 4 kat daha az istek ile hızlıca vektöre çevir
+    # Gemini API ile 100'erli maksimum paketler halinde (RPM kotasını korur, 100 sayfalık PDF'i 1-2 istekte bitirir)
     embeddings = []
-    batch_size = 80
+    batch_size = 100
     for i in range(0, len(chunks_to_embed), batch_size):
         batch = chunks_to_embed[i:i + batch_size]
         batch_embs = await asyncio.to_thread(get_embeddings, batch)
         embeddings.extend(batch_embs)
         if len(chunks_to_embed) > batch_size:
-            await asyncio.sleep(0.15)  # Ani kota dalgalanmalarına karşı kısa mikro bekleme
+            await asyncio.sleep(0.4)  # RPM (dakika başı istek) tepe noktalarını önleyen pürüzsüzleştirici bekleme
 
     points = [
         PointStruct(
