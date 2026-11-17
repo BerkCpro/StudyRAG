@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="light dark">
     <title>StudyRAG - Akıllı Ders Çalışma Asistanı</title>
+    <!-- Site Favicon / App Icon (Teal StudyRAG Emblem) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314b8a6'/%3E%3Cpath d='M8 10a2 2 0 0 1 2-2h4a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H8V10zm16 0a2 2 0 0 0-2-2h-4a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7V10z' fill='%2304201c'/%3E%3Ccircle cx='16' cy='9' r='2' fill='%23ffffff'/%3E%3C/svg%3E">
 
     <!-- FOUC Prevention Script (Modern Web Guidance) -->
     <script>
@@ -18,9 +20,73 @@
         } catch(e) {}
     </script>
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS with Centralized Teal Palette Mapping -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: "class" };</script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        bg: "var(--bg)",
+                        surface: "var(--surface)",
+                        "surface-2": "var(--surface-2)",
+                        border: "var(--border)",
+                        text: "var(--text)",
+                        "text-muted": "var(--text-muted)",
+                        accent: {
+                            DEFAULT: "var(--accent)",
+                            hover: "var(--accent-hover)",
+                            contrast: "var(--accent-contrast)",
+                            soft: "var(--accent-soft)",
+                        },
+                        reward: "var(--reward)",
+                        success: "var(--success)",
+                        danger: "var(--danger)",
+                        indigo: {
+                            50: "var(--accent-soft)",
+                            100: "var(--accent-soft)",
+                            200: "var(--accent-soft)",
+                            300: "var(--accent-hover)",
+                            400: "var(--accent-hover)",
+                            500: "var(--accent)",
+                            600: "var(--accent)",
+                            700: "var(--accent-hover)",
+                            800: "var(--accent)",
+                            900: "var(--surface-2)",
+                            950: "var(--surface)",
+                        },
+                        violet: {
+                            50: "var(--accent-soft)",
+                            100: "var(--accent-soft)",
+                            200: "var(--accent-soft)",
+                            300: "var(--accent-hover)",
+                            400: "var(--accent)",
+                            500: "var(--accent)",
+                            600: "var(--accent)",
+                            700: "var(--accent-hover)",
+                            800: "var(--accent)",
+                            900: "var(--surface-2)",
+                            950: "var(--surface)",
+                        },
+                        purple: {
+                            50: "var(--accent-soft)",
+                            100: "var(--accent-soft)",
+                            200: "var(--accent-soft)",
+                            300: "var(--accent-hover)",
+                            400: "var(--accent)",
+                            500: "var(--accent)",
+                            600: "var(--accent)",
+                            700: "var(--accent-hover)",
+                            800: "var(--accent)",
+                            900: "var(--surface-2)",
+                            950: "var(--surface)",
+                        }
+                    }
+                }
+            }
+        };
+    </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- KaTeX CSS & JS for Math / Technical Formulas -->
@@ -39,11 +105,46 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
         
-        :root {
-            color-scheme: light dark;
-            --brand-primary: #6366f1;
-            --brand-primary-hover: #4f46e5;
-            --brand-accent: #8b5cf6;
+        :root, html.dark {
+            color-scheme: dark;
+            --bg: #0b1210;
+            --surface: #111b18;
+            --surface-2: #16241f;
+            --border: #22332d;
+            --text: #e8f1ee;
+            --text-muted: #8fa59d;
+            --accent: #14b8a6;
+            --accent-hover: #2dd4bf;
+            --accent-contrast: #04201c;
+            --accent-soft: rgba(20, 184, 166, 0.12);
+            --reward: #f59e0b;
+            --success: #22c55e;
+            --danger: #ef4444;
+
+            --brand-primary: var(--accent);
+            --brand-primary-hover: var(--accent-hover);
+            --brand-accent: var(--accent-hover);
+        }
+
+        html.light {
+            color-scheme: light;
+            --bg: #f4faf8;
+            --surface: #ffffff;
+            --surface-2: #ecf5f2;
+            --border: #d5e4df;
+            --text: #0f1f1b;
+            --text-muted: #587068;
+            --accent: #0f9488;
+            --accent-hover: #0d7f75;
+            --accent-contrast: #ffffff;
+            --accent-soft: rgba(15, 148, 136, 0.10);
+            --reward: #f59e0b;
+            --success: #22c55e;
+            --danger: #ef4444;
+
+            --brand-primary: var(--accent);
+            --brand-primary-hover: var(--accent-hover);
+            --brand-accent: var(--accent-hover);
         }
 
         html, body {
@@ -53,6 +154,8 @@
             font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
             transition: background-color 0.2s ease, color 0.2s ease;
         }
 
@@ -68,8 +171,8 @@
         /* Modern Subtle Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(113, 113, 122, 0.3); border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(113, 113, 122, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.25); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.45); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -79,9 +182,9 @@
             0%, 100% { opacity: 0.3; transform: scale(0.85); }
             50% { opacity: 1; transform: scale(1.15); }
         }
-        .dot-pulse { animation: pulseDot 1.4s infinite ease-in-out; }
-        .dot-pulse-2 { animation: pulseDot 1.4s infinite ease-in-out 0.2s; }
-        .dot-pulse-3 { animation: pulseDot 1.4s infinite ease-in-out 0.4s; }
+        .dot-pulse { animation: pulseDot 1.4s infinite ease-in-out; background-color: var(--accent); }
+        .dot-pulse-2 { animation: pulseDot 1.4s infinite ease-in-out 0.2s; background-color: var(--accent); }
+        .dot-pulse-3 { animation: pulseDot 1.4s infinite ease-in-out 0.4s; background-color: var(--accent); }
 
         /* Sidebar Resizer */
         .sidebar-resizer {
@@ -96,7 +199,7 @@
             transition: background-color 0.15s ease;
         }
         .sidebar-resizer:hover, .sidebar-resizer.is-resizing {
-            background-color: rgba(99, 102, 241, 0.5);
+            background-color: var(--accent);
         }
         .sidebar-resizer::after {
             content: '';
@@ -111,7 +214,7 @@
             transition: background-color 0.15s;
         }
         .sidebar-resizer:hover::after, .sidebar-resizer.is-resizing::after {
-            background-color: #6366f1;
+            background-color: var(--accent-hover);
         }
 
         .touch-scroll { -webkit-overflow-scrolling: touch; }
@@ -122,105 +225,105 @@
         }
         html.light body,
         html.light main {
-            background-color: #f8fafc !important;
-            color: #0f172a !important;
+            background-color: var(--bg) !important;
+            color: var(--text) !important;
         }
         html.light aside {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light header {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
 
         /* Generic Backgrounds - Substring Selectors */
         html.light [class*="bg-zinc-950"],
         html.light [class*="bg-slate-950"] {
-            background-color: #f8fafc !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--bg) !important;
+            border-color: var(--border) !important;
         }
         html.light [class*="bg-zinc-900"],
         html.light [class*="bg-slate-900"] {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light [class*="bg-zinc-800"],
         html.light [class*="bg-slate-800"],
         html.light [class*="bg-zinc-700"],
         html.light [class*="bg-slate-700"] {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
 
         /* Sol Menü: PDF Yükleme Dropzone, Yeni Sohbet & Profil */
         html.light #sidebar label:has(#pdfFileInput),
         html.light #sidebar label[class*="border-dashed"] {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #sidebar label:has(#pdfFileInput):hover,
         html.light #sidebar label[class*="border-dashed"]:hover {
-            background-color: #eef2ff !important;
-            border-color: #818cf8 !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--accent) !important;
         }
         html.light #sidebar label:has(#pdfFileInput) span,
         html.light #sidebar label[class*="border-dashed"] span {
-            color: #0f172a !important;
+            color: var(--text) !important;
         }
         html.light #sidebar label:has(#pdfFileInput) span:last-child,
         html.light #sidebar label[class*="border-dashed"] span:last-child {
-            color: #64748b !important;
+            color: var(--text-muted) !important;
         }
         html.light #sidebar label:has(#pdfFileInput) div,
         html.light #sidebar label[class*="border-dashed"] div {
-            background-color: #e2e8f0 !important;
-            color: #475569 !important;
+            background-color: var(--surface) !important;
+            color: var(--text-muted) !important;
         }
 
         html.light #sidebar button[onclick="createNewChat()"] {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #sidebar button[onclick="createNewChat()"]:hover {
-            background-color: #e2e8f0 !important;
-            color: #0f172a !important;
+            background-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #sidebar .shrink-0.bg-zinc-950\/60,
         html.light #sidebar .p-3:has(#profileStudentName) {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light #sidebar .p-3:has(#profileStudentName) button:hover {
-            background-color: #f1f5f9 !important;
+            background-color: var(--surface-2) !important;
         }
 
         /* Üst Hızlı Öneri Çubuğu (Stüdyo Önerileri) */
         html.light #tab-chat > div:first-child,
         html.light #tab-chat > .bg-zinc-900\/40 {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light #tab-chat > div:first-child button,
         html.light #tab-chat > .bg-zinc-900\/40 button {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #1e293b !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #tab-chat > div:first-child button:hover,
         html.light #tab-chat > .bg-zinc-900\/40 button:hover {
-            background-color: #eef2ff !important;
-            border-color: #818cf8 !important;
-            color: #3730a3 !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
         html.light #tab-chat > div:first-child label:has(#eli5Toggle),
         html.light #tab-chat > .bg-zinc-900\/40 label:has(#eli5Toggle) {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #1e293b !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
 
         /* Kenarlıklar */
@@ -228,7 +331,7 @@
         html.light [class*="border-slate-800"],
         html.light [class*="border-zinc-700"],
         html.light [class*="border-slate-700"] {
-            border-color: #e2e8f0 !important;
+            border-color: var(--border) !important;
         }
 
         /* Metin Renkleri */
@@ -237,19 +340,19 @@
         html.light .text-slate-100,
         html.light .text-zinc-200,
         html.light .text-slate-200 {
-            color: #0f172a !important;
+            color: var(--text) !important;
         }
         html.light .text-zinc-300,
         html.light .text-slate-300 {
-            color: #1e293b !important;
+            color: var(--text) !important;
         }
         html.light .text-zinc-400,
         html.light .text-slate-400 {
-            color: #475569 !important;
+            color: var(--text-muted) !important;
         }
         html.light .text-zinc-500,
         html.light .text-slate-500 {
-            color: #64748b !important;
+            color: var(--text-muted) !important;
         }
 
         /* Başlıklar ve Metrikler */
@@ -258,86 +361,86 @@
         html.light h3.text-white,
         html.light p.text-white,
         html.light #statTotalSolved {
-            color: #0f172a !important;
+            color: var(--text) !important;
         }
 
         /* Form Elemanları */
         html.light input,
         html.light select,
         html.light textarea {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
+            background-color: var(--surface) !important;
+            color: var(--text) !important;
+            border-color: var(--border) !important;
         }
         html.light input::placeholder,
         html.light textarea::placeholder {
-            color: #94a3b8 !important;
+            color: var(--text-muted) !important;
         }
         html.light select option {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
+            background-color: var(--surface) !important;
+            color: var(--text) !important;
         }
 
         /* Sekmeler (Tab Pills) */
         html.light .tab-btn:not(.bg-indigo-600) {
-            color: #475569 !important;
+            color: var(--text-muted) !important;
         }
         html.light .tab-btn:not(.bg-indigo-600):hover {
-            color: #0f172a !important;
-            background-color: #f1f5f9 !important;
+            color: var(--text) !important;
+            background-color: var(--surface-2) !important;
         }
 
         /* Markdown & AI Yanıtı */
         html.light .prose,
         html.light .prose-invert,
         html.light .prose-invert * {
-            color: #1e293b !important;
+            color: var(--text) !important;
         }
         html.light strong,
         html.light b,
         html.light .prose strong,
         html.light .prose-invert strong {
-            color: #3730a3 !important;
+            color: var(--accent) !important;
         }
         html.light em,
         html.light i {
-            color: #312e81 !important;
+            color: var(--text) !important;
         }
         html.light .prose code,
         html.light .prose-invert code,
         html.light code {
-            background-color: #eef2ff !important;
-            color: #3730a3 !important;
-            border: 1px solid #c7d2fe !important;
+            background-color: var(--accent-soft) !important;
+            color: var(--accent) !important;
+            border: 1px solid var(--border) !important;
         }
         html.light pre {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #1e293b !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
 
         /* Inline Alıntılar [Sayfa X] */
         html.light span[class*="text-indigo-400"],
         html.light span[class*="text-indigo-700"] {
-            color: #4338ca !important;
-            background-color: #e0e7ff !important;
-            border-color: #c7d2fe !important;
+            color: var(--accent) !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--border) !important;
         }
 
         /* Sohbet Altındaki Kaynak Butonları */
         html.light #chatMessages button[onclick*="showSourceSnippetModal"] {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-            color: #1e293b !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #chatMessages button[onclick*="showSourceSnippetModal"]:hover {
-            background-color: #e0e7ff !important;
-            border-color: #818cf8 !important;
-            color: #3730a3 !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
         html.light #chatMessages button[onclick*="showSourceSnippetModal"] span[class*="text-indigo"] {
-            color: #4338ca !important;
-            background-color: #e0e7ff !important;
+            color: var(--accent) !important;
+            background-color: var(--accent-soft) !important;
             padding: 1px 6px;
             border-radius: 4px;
         }
@@ -345,12 +448,12 @@
         /* Kopyala & Sesli Dinle Butonları */
         html.light #chatMessages button[onclick*="copyMessageText"],
         html.light #chatMessages button[onclick*="toggleSpeechMessage"] {
-            color: #475569 !important;
+            color: var(--text-muted) !important;
         }
         html.light #chatMessages button[onclick*="copyMessageText"]:hover,
         html.light #chatMessages button[onclick*="toggleSpeechMessage"]:hover {
-            color: #0f172a !important;
-            background-color: #e2e8f0 !important;
+            color: var(--text) !important;
+            background-color: var(--surface-2) !important;
         }
 
         /* Alt Composer */
@@ -358,56 +461,56 @@
             background-color: transparent !important;
         }
         html.light #chatInput {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
 
         /* Quiz Çoktan Seçmeli Seçenekleri */
         html.light #quizContainer button {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #quizContainer button:hover:not(:disabled) {
-            background-color: #f8fafc !important;
-            border-color: #818cf8 !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--accent) !important;
         }
         html.light #quizContainer button span[class*="rounded-full"] {
-            background-color: #f1f5f9 !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
+            background-color: var(--surface-2) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
         }
 
         /* Flashcard Ön ve Arka Yüzleri */
         html.light #flashcardInner > div:first-child {
-            background: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background: var(--surface) !important;
+            border-color: var(--border) !important;
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08) !important;
         }
         html.light #flashcardInner > div:last-child {
-            background: #f8faff !important;
-            border-color: #c7d2fe !important;
-            box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.12) !important;
+            background: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            box-shadow: 0 10px 30px -5px rgba(20, 184, 166, 0.12) !important;
         }
-        html.light #fcFront { color: #0f172a !important; }
-        html.light #fcBack { color: #1e293b !important; }
-        html.light #fcSource { color: #4338ca !important; font-weight: 600; }
+        html.light #fcFront { color: var(--text) !important; }
+        html.light #fcBack { color: var(--text) !important; }
+        html.light #fcSource { color: var(--accent) !important; font-weight: 600; }
 
         
         /* Günlük Çalışma Planlayıcısı & Sınav Kartı */
         html.light #dailyFocusBanner {
-            background: linear-gradient(to right, #eef2ff, #f8fafc, #f5f3ff) !important;
-            border-color: #c7d2fe !important;
+            background: var(--surface-2) !important;
+            border-color: var(--border) !important;
         }
         html.light #dailyFocusContent > div {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light #examDateModal > div {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         
         /* Print & Cheat Sheet Stilleri */
@@ -529,28 +632,28 @@
             font-size: 11px !important;
             font-weight: 700 !important;
             border-radius: 6px !important;
-            background-color: rgba(99, 102, 241, 0.25) !important;
-            color: #c7d2fe !important;
-            border: 1px solid rgba(129, 140, 248, 0.5) !important;
+            background-color: var(--accent-soft) !important;
+            color: var(--accent) !important;
+            border: 1px solid var(--accent) !important;
             cursor: pointer !important;
             user-select: none !important;
             vertical-align: middle !important;
             transition: all 0.15s ease !important;
         }
         #mindmapSvg .mindmap-page-badge:hover {
-            background-color: #6366f1 !important;
-            color: #ffffff !important;
-            border-color: #a5b4fc !important;
+            background-color: var(--accent) !important;
+            color: var(--accent-contrast) !important;
+            border-color: var(--accent-hover) !important;
             transform: scale(1.08) !important;
         }
         html.light #mindmapSvg .mindmap-page-badge {
-            background-color: #e0e7ff !important;
-            color: #4338ca !important;
-            border-color: #818cf8 !important;
+            background-color: var(--accent-soft) !important;
+            color: var(--accent) !important;
+            border-color: var(--accent) !important;
         }
         html.light #mindmapSvg .mindmap-page-badge:hover {
-            background-color: #4f46e5 !important;
-            color: #ffffff !important;
+            background-color: var(--accent) !important;
+            color: var(--accent-contrast) !important;
         }
         html.light #tab-mindmap .bg-zinc-900\/90,
         html.light #tab-mindmap .bg-zinc-900\/60,
@@ -631,15 +734,15 @@
             margin-bottom: 0.25rem;
         }
         .markdown-body blockquote {
-            border-left: 3px solid #6366f1;
+            border-left: 3px solid var(--accent);
             padding-left: 0.75rem;
-            color: #a1a1aa;
+            color: var(--text-muted);
             margin: 0.75rem 0;
             font-style: italic;
         }
         .markdown-body hr {
             border: 0;
-            border-top: 1px solid #3f3f46;
+            border-top: 1px solid var(--border);
             margin: 1rem 0;
         }
         .markdown-body table {
@@ -649,83 +752,83 @@
             font-size: 0.8rem;
         }
         .markdown-body th, .markdown-body td {
-            border: 1px solid #3f3f46;
+            border: 1px solid var(--border);
             padding: 0.45rem 0.65rem;
             text-align: left;
         }
         .markdown-body th {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: var(--surface-2);
             font-weight: 600;
-            color: #fafafa;
+            color: var(--text);
         }
         .markdown-body code:not(pre code) {
-            background-color: rgba(39, 39, 42, 0.8);
-            border: 1px solid rgba(63, 63, 70, 0.6);
-            color: #a5b4fc;
+            background-color: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--accent);
             padding: 0.15rem 0.35rem;
             border-radius: 0.375rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.825em;
         }
         .markdown-body pre {
-            background-color: #09090b;
-            border: 1px solid #27272a;
+            background-color: var(--surface-2);
+            border: 1px solid var(--border);
             border-radius: 0.75rem;
             padding: 0.85rem;
             margin: 0.75rem 0;
             overflow-x: auto;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.8rem;
-            color: #c7d2fe;
+            color: var(--text);
             line-height: 1.5;
         }
         html.light .markdown-body {
-            color: #18181b !important;
+            color: var(--text) !important;
         }
         html.light .markdown-body h1,
         html.light .markdown-body h2,
         html.light .markdown-body h3,
         html.light .markdown-body h4 {
-            color: #09090b !important;
+            color: var(--text) !important;
         }
         html.light .markdown-body blockquote {
-            color: #52525b !important;
-            border-left-color: #6366f1 !important;
+            color: var(--text-muted) !important;
+            border-left-color: var(--accent) !important;
         }
         html.light .markdown-body hr {
-            border-top-color: #e4e4e7 !important;
+            border-top-color: var(--border) !important;
         }
         html.light .markdown-body th,
         html.light .markdown-body td {
-            border-color: #e4e4e7 !important;
+            border-color: var(--border) !important;
         }
         html.light .markdown-body th {
-            background-color: #f4f4f5 !important;
-            color: #09090b !important;
+            background-color: var(--surface-2) !important;
+            color: var(--text) !important;
         }
         html.light .markdown-body code:not(pre code) {
-            background-color: #f4f4f5 !important;
-            border-color: #e4e4e7 !important;
-            color: #4f46e5 !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--border) !important;
+            color: var(--accent) !important;
         }
         html.light .markdown-body pre {
-            background-color: #fafafa !important;
-            border-color: #e4e4e7 !important;
-            color: #312e81 !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #chatSuggestionChips {
-            background-color: #ffffff !important;
-            border-color: #e2e8f0 !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
         }
         html.light #chatSuggestionChips button {
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-            color: #1e293b !important;
+            background-color: var(--surface-2) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
         }
         html.light #chatSuggestionChips button:hover {
-            background-color: #eef2ff !important;
-            border-color: #818cf8 !important;
-            color: #3730a3 !important;
+            background-color: var(--accent-soft) !important;
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
         }
 
         /* Custom Select & Option Styling for Modern Dark/Light Mode */
@@ -749,7 +852,7 @@
 <body class="bg-zinc-950 text-zinc-100 h-full h-[100dvh] min-h-0 flex overflow-hidden antialiased select-none relative">
 
     <!-- Mobile Pull-To-Refresh Indicator -->
-    <div id="pullToRefreshPill" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-indigo-600/95 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 transform -translate-y-24 transition-all duration-200 pointer-events-none backdrop-blur-md border border-indigo-400/40">
+    <div id="pullToRefreshPill" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-accent text-accent-contrast text-xs font-semibold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 transform -translate-y-24 transition-all duration-200 pointer-events-none backdrop-blur-md border border-accent-hover/40">
         <i id="pullRefreshIcon" data-lucide="arrow-down" class="w-4 h-4 transition-transform duration-200"></i>
         <span id="pullRefreshText">Yenilemek için çekin</span>
     </div>
@@ -768,14 +871,18 @@
             
             <!-- Logo & Marka Başlığı -->
             <div class="p-4 border-b border-zinc-800/70 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25">
-                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                    </div>
+                <button onclick="switchTab('home')" class="flex items-center gap-2.5 text-left group cursor-pointer" title="Ana Ekrana Dön">
+                    <svg class="w-8 h-8 rounded-xl shrink-0 shadow-sm" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="var(--accent)"/>
+                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)"/>
+                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z" fill="var(--accent-contrast)"/>
+                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)"/>
+                    </svg>
                     <div>
-                        <h1 class="font-bold text-sm tracking-tight text-white">StudyRAG</h1>
+                        <h1 class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition">StudyRAG</h1>
                     </div>
-                </div>
+                </button>
 
                 <!-- Sol Menüyü Kapat Butonu -->
                 <button onclick="toggleSidebar(false)" title="Menüyü Kapat" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition md:hidden cursor-pointer">
@@ -923,47 +1030,74 @@
     <main class="flex-1 flex flex-col h-full min-h-0 min-w-0 overflow-hidden relative">
         
         <!-- ÜST ÇALIŞMA ARAÇ ÇUBUĞU (STUDIO HEADER) -->
-        <header class="h-14 border-b border-zinc-800/80 bg-zinc-900/70 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 gap-2">
+        <header class="h-14 border-b border-border bg-surface/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 gap-2">
             
-            <!-- Sol Kısım: Sidebar Toggle & Ders Başlığı -->
+            <!-- Sol Kısım: Sidebar Toggle & StudyRAG Logo Button (Tıklayınca Ana Ekrana) -->
             <div class="flex items-center gap-2 min-w-0">
-                <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Sol Menüyü Aç/Kapat" class="p-2 rounded-xl text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700 transition flex items-center justify-center shrink-0 border border-zinc-700/50 cursor-pointer">
-                    <i data-lucide="panel-left" class="w-4 h-4 text-indigo-400"></i>
+                <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Sol Menüyü Aç/Kapat" class="p-2 rounded-xl text-text-muted hover:text-text bg-surface-2 hover:bg-border transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
+                    <i data-lucide="panel-left" class="w-4 h-4 text-accent"></i>
+                </button>
+                <button onclick="switchTab('home')" class="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-surface-2 transition group cursor-pointer" title="Ana Ekrana Dön">
+                    <svg class="w-6 h-6 rounded-lg shrink-0 shadow-sm" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="var(--accent)"/>
+                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)"/>
+                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z" fill="var(--accent-contrast)"/>
+                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)"/>
+                    </svg>
+                    <span class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition hidden sm:inline">StudyRAG</span>
                 </button>
                 <span id="headerCourseName" class="hidden"></span>
             </div>
 
             <!-- Orta Kısım: Modern Segmentli Çalışma Hub'ları (Tabs) -->
-            <div id="headerTabsContainer" class="flex items-center p-1 bg-zinc-950/80 border border-zinc-800/80 rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-1">
-                <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/30 transition shrink-0 cursor-pointer">
+            <div id="headerTabsContainer" class="flex items-center p-1 bg-surface-2 border border-border rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-1">
+                <button onclick="switchTab('home')" id="tab-btn-home" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                    <span>Ana Ekran</span>
+                </button>
+                <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="message-square-text" class="w-3.5 h-3.5"></i>
                     <span>Sohbet</span>
                 </button>
-                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
                     <span>Quiz</span>
                 </button>
-                <button onclick="switchTab('flashcards')" id="tab-btn-flashcards" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('flashcards')" id="tab-btn-flashcards" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                     <span>Flashcard</span>
                 </button>
-                <button onclick="switchTab('mindmap')" id="tab-btn-mindmap" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition shrink-0 cursor-pointer" title="Dersin Zihin Haritası">
+                <button onclick="switchTab('mindmap')" id="tab-btn-mindmap" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer" title="Dersin Zihin Haritası">
                     <i data-lucide="network" class="w-3.5 h-3.5"></i>
                     <span>Zihin Haritası</span>
                 </button>
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
                     <span>Gelişim</span>
                 </button>
             </div>
 
-            <!-- Sağ Kısım: Tema Butonu -->
+            <!-- Sağ Kısım: Tema Değiştirici & Profil / Sync ID Butonu -->
             <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir" class="p-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center justify-center shrink-0 border border-zinc-700/50 cursor-pointer">
-                    <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+                <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir" class="p-2 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
+                    <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-reward"></i>
+                </button>
+                <button onclick="openProfileModal()" id="headerProfileBtn" title="Öğrenci Profili & Cihaz / Sync ID" class="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition border border-border cursor-pointer">
+                    <div id="headerAvatar" class="w-5 h-5 rounded-lg bg-accent text-accent-contrast font-bold text-[11px] flex items-center justify-center shrink-0">
+                        Ö
+                    </div>
+                    <span id="headerStudentName" class="text-xs font-medium hidden sm:inline max-w-[90px] truncate">Öğrenci</span>
                 </button>
             </div>
         </header>
+
+        <!-- ================= SEKME 0: YENİ ANA EKRAN (STUDDY İLHAMLI HOME) ================= -->
+        <section id="tab-home" class="flex-1 flex flex-col h-full min-h-0 overflow-y-auto relative touch-scroll p-4 sm:p-6 md:p-8 bg-bg">
+            <div id="homeContainer" class="max-w-3xl w-full mx-auto my-auto py-6 sm:py-8 space-y-6 sm:space-y-7 flex flex-col items-center">
+                <!-- JS renderHomeScreen() ile doldurulacak -->
+            </div>
+        </section>
 
         <!-- ================= SEKME 1: NOTEBOOKLM STİLİ SOHBET & DERS ASİSTANI ================= -->
         <section id="tab-chat" class="flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
@@ -1743,6 +1877,7 @@
             initPullToRefresh();
             initClipboardAndDragDrop();
             updateMindmapCourseBadge();
+            switchTab('home');
         });
 
         window.addEventListener('resize', () => {
@@ -1862,12 +1997,17 @@
             const studentName = localStorage.getItem('study_student_name') || 'Öğrenci';
             const nameEl = document.getElementById('profileStudentName');
             const avatarEl = document.getElementById('profileAvatar');
+            const headerNameEl = document.getElementById('headerStudentName');
+            const headerAvatarEl = document.getElementById('headerAvatar');
             const idLabel = document.getElementById('profileIdLabel');
             const fullIdEl = document.getElementById('modalFullUserId');
             const inputName = document.getElementById('inputStudentName');
 
             if (nameEl) nameEl.textContent = studentName;
-            if (avatarEl) avatarEl.textContent = studentName.trim() ? studentName.trim()[0].toUpperCase() : 'Ö';
+            if (headerNameEl) headerNameEl.textContent = studentName;
+            const initial = studentName.trim() ? studentName.trim()[0].toUpperCase() : 'Ö';
+            if (avatarEl) avatarEl.textContent = initial;
+            if (headerAvatarEl) headerAvatarEl.textContent = initial;
             if (idLabel) idLabel.textContent = '#' + currentUserId.slice(-6);
             if (fullIdEl) fullIdEl.textContent = currentUserId;
             if (inputName) inputName.value = studentName;
@@ -2308,19 +2448,19 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #4f46e5;
+            border-bottom: 2px solid #0f9488;
             padding-bottom: 10px;
             margin-bottom: 16px;
         }
         .title {
             font-size: 16pt;
             font-weight: 800;
-            color: #1e1b4b;
+            color: #0f1f1b;
             margin: 0 0 4px 0;
         }
         .subtitle {
             font-size: 9pt;
-            color: #4f46e5;
+            color: #0f9488;
             font-weight: 600;
         }
         .meta {
@@ -2382,8 +2522,8 @@
             background-color: #f8fafc;
         }
         blockquote {
-            border-left: 3.5px solid #4f46e5;
-            background-color: #f8faff;
+            border-left: 3.5px solid #0f9488;
+            background-color: #ecf5f2;
             margin: 8px 0;
             padding: 6px 12px;
             border-radius: 0 6px 6px 0;
@@ -2721,7 +2861,7 @@
                         font-weight: 600;
                     }
                     .mindmap-page-badge {
-                        color: #818cf8 !important;
+                        color: ${isDark ? '#2dd4bf' : '#0f9488'} !important;
                         font-size: 11px !important;
                         font-weight: bold !important;
                     }
@@ -2935,6 +3075,485 @@
             if (modal) modal.classList.add('hidden');
 
             renderProfileWidget();
+        }
+
+        // -------------------------------------------------------------
+        // 0. MODÜLER ANA EKRAN (HOME SCREEN) YÖNETİMİ
+        // -------------------------------------------------------------
+        const HOME_MODES = [
+            {
+                id: 'chat',
+                label: 'Sohbet',
+                desc: 'Notlarına soru sor, konuyu tartış',
+                icon: 'message-square',
+                placeholder: 'Örn: Termodinamiğin 2. yasasını açıkla...',
+                btnText: 'Sor',
+                allowImage: true,
+                allowSpeech: true,
+                onStart: async (text, imageBase64, imageMime) => {
+                    switchTab('chat');
+                    if (text || imageBase64) {
+                        await executeChatMessage(text || 'Bu konuyu özetle ve açıkla.', imageBase64, imageMime);
+                    } else {
+                        focusChatInput();
+                    }
+                }
+            },
+            {
+                id: 'quiz',
+                label: 'Quiz',
+                desc: 'Çoktan seçmeli pratik yap',
+                icon: 'check-square',
+                placeholder: 'Hangi konudan soru hazırlayayım? (Boş bırakırsan tüm ders)',
+                btnText: 'Quiz Başlat',
+                allowImage: false,
+                allowSpeech: false,
+                onStart: async (text) => {
+                    switchTab('quiz');
+                    generateQuizFromBackend();
+                }
+            },
+            {
+                id: 'flashcards',
+                label: 'Flashcard',
+                desc: 'Kartlarla hızlı tekrar et',
+                icon: 'layers',
+                placeholder: 'Hangi konuya odaklansın? (Boş bırakırsan tüm ders)',
+                btnText: 'Kartları Üret',
+                allowImage: false,
+                allowSpeech: false,
+                onStart: async (text) => {
+                    switchTab('flashcards');
+                    generateFlashcardsFromBackend();
+                }
+            },
+            {
+                id: 'mindmap',
+                label: 'Zihin Haritası',
+                desc: 'Konu ağacını görselleştir',
+                icon: 'network',
+                placeholder: 'Odak konusu (opsiyonel, örn: Kinetik Teori)',
+                btnText: 'Harita Oluştur',
+                allowImage: false,
+                allowSpeech: false,
+                onStart: async (text) => {
+                    switchTab('mindmap');
+                    const focusInput = document.getElementById('mindmapFocusInput');
+                    if (focusInput && text) {
+                        focusInput.value = text;
+                    }
+                    generateMindmap(false);
+                }
+            }
+        ];
+
+        let currentHomeMode = localStorage.getItem('study_home_mode') || 'chat';
+        let homeSelectedImageBase64 = null;
+        let homeSelectedImageMime = 'image/jpeg';
+        let pendingFirstCourseFile = null;
+
+        function selectHomeMode(modeId) {
+            currentHomeMode = modeId;
+            localStorage.setItem('study_home_mode', modeId);
+            renderHomeScreen();
+            const homeInput = document.getElementById('homeMainInput');
+            if (homeInput) homeInput.focus();
+        }
+
+        function renderHomeScreen() {
+            const container = document.getElementById('homeContainer');
+            if (!container) return;
+
+            const courses = getSavedUserCourses();
+            const studentName = escapeHtml(localStorage.getItem('study_student_name') || 'Öğrenci');
+
+            // --- DURUM A: İLK KULLANICI DENEYİMİ (HİÇ DERS YOKSA) ---
+            if (courses.length === 0) {
+                container.innerHTML = `
+                    <div class="w-full max-w-xl mx-auto text-center space-y-6 animate-in fade-in py-8">
+                        <div class="space-y-2">
+                            <div class="w-14 h-14 mx-auto rounded-2xl bg-accent-soft text-accent flex items-center justify-center shadow-sm">
+                                <i data-lucide="sparkles" class="w-7 h-7"></i>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-text">
+                                StudyRAG'e hoş geldin, <span class="text-accent">${studentName}</span>!
+                            </h2>
+                            <p class="text-xs sm:text-sm text-text-muted">
+                                Başlamak için bir ders oluştur ve ders notlarını (PDF) yükle.
+                            </p>
+                        </div>
+
+                        <!-- Tek Geniş Kart -->
+                        <div class="bg-surface border border-border rounded-2xl p-6 sm:p-7 shadow-lg space-y-5 text-left">
+                            <div class="space-y-1.5">
+                                <label for="firstCourseNameInput" class="text-xs font-semibold text-text flex items-center gap-1.5">
+                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent"></i> Ders Adı
+                                </label>
+                                <input type="text" id="firstCourseNameInput" placeholder='Örn: "Fizik 101" veya "Organik Kimya"'
+                                    class="w-full bg-surface-2 border border-border rounded-xl px-3.5 py-2.5 text-xs text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-semibold text-text flex items-center gap-1.5">
+                                    <i data-lucide="file-up" class="w-3.5 h-3.5 text-accent"></i> Ders Notu (PDF)
+                                </label>
+                                <label for="firstCoursePdfInput" class="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-accent/60 bg-surface-2 rounded-xl p-6 cursor-pointer group transition">
+                                    <input type="file" id="firstCoursePdfInput" accept="application/pdf" class="hidden" onchange="handleFirstCoursePdfSelected(this)">
+                                    <div class="w-10 h-10 rounded-xl bg-surface group-hover:bg-accent-soft text-text-muted group-hover:text-accent flex items-center justify-center transition mb-2">
+                                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                                    </div>
+                                    <span id="firstCoursePdfLabel" class="text-xs font-semibold text-text text-center">PDF Seç veya Buraya Sürükle</span>
+                                    <span class="text-[11px] text-text-muted mt-0.5">Yalnızca PDF dosyaları desteklenir</span>
+                                </label>
+                            </div>
+
+                            <button id="firstCourseStartBtn" onclick="handleFirstTimeSetupStart()" class="w-full bg-accent text-accent-contrast hover:bg-accent-hover font-semibold text-xs py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                <span>Başla</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // --- DURUM B: STANDART HOME EKRANI (DERSLER MEVCUT) ---
+            const activeMode = HOME_MODES.find(m => m.id === currentHomeMode) || HOME_MODES[0];
+            const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
+
+            // 1. Büyük Karşılama Başlığı
+            const titleHtml = `
+                <div class="text-center space-y-2">
+                    <h2 class="text-2xl sm:text-4xl font-medium tracking-tight text-text">
+                        Bugün ne çalışmak istiyorsun, <span class="font-bold text-accent">${studentName}</span>?
+                    </h2>
+                </div>
+            `;
+
+            // 2. Mod Seçim Kartları (2x2 mobilde, 4 yan yana masaüstünde)
+            const modeCardsHtml = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 w-full">
+                    ${HOME_MODES.map(m => {
+                        const isSelected = m.id === currentHomeMode;
+                        const containerClasses = isSelected
+                            ? 'border-accent bg-accent-soft text-text ring-2 ring-accent/30 shadow-md'
+                            : 'border-border bg-surface text-text hover:bg-surface-2 hover:border-accent/40 shadow-sm';
+                        const iconBgClasses = isSelected
+                            ? 'bg-accent text-accent-contrast'
+                            : 'bg-surface-2 text-text-muted group-hover:text-accent';
+
+                        return `
+                            <button onclick="selectHomeMode('${m.id}')" class="p-3.5 sm:p-4 rounded-2xl border text-left transition-all flex flex-col items-start gap-2.5 group cursor-pointer relative ${containerClasses}">
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center transition shadow-sm ${iconBgClasses}">
+                                        <i data-lucide="${m.icon}" class="w-4 h-4"></i>
+                                    </div>
+                                    ${isSelected ? '<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>' : ''}
+                                </div>
+                                <div class="min-w-0 w-full">
+                                    <span class="font-bold text-xs sm:text-sm text-text block truncate">${escapeHtml(m.label)}</span>
+                                    <span class="text-[11px] text-text-muted block truncate mt-0.5 leading-snug">${escapeHtml(m.desc)}</span>
+                                </div>
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            // 3. Tek Akıllı Giriş Kutusu
+            const imagePreviewHtml = homeSelectedImageBase64 ? `
+                <div class="flex items-center gap-2 mb-2 p-1.5 bg-surface-2 border border-border rounded-xl w-fit">
+                    <img src="${homeSelectedImageBase64}" class="w-7 h-7 object-cover rounded-lg border border-border">
+                    <span class="text-[11px] text-text-muted font-medium">Görsel eklendi</span>
+                    <button onclick="clearHomeSelectedImage()" class="text-text-muted hover:text-danger p-0.5 rounded cursor-pointer">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            ` : '';
+
+            // Ders seçenekleri dropdown
+            const courseOptions = courses.map(c => `
+                <option value="${escapeHtml(c)}" ${c === currentCourse ? 'selected' : ''}>${escapeHtml(c)}</option>
+            `).join('');
+
+            // Başla butonu durumu
+            const startBtnDisabled = !hasPdfs;
+            const startBtnTitle = !hasPdfs ? 'Önce bir PDF eklemelisin' : '';
+
+            const inputBoxHtml = `
+                <div class="w-full bg-surface border border-border rounded-2xl p-3.5 sm:p-4 shadow-xl focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
+                    ${imagePreviewHtml}
+                    <div class="relative">
+                        <textarea id="homeMainInput" rows="2" placeholder="${escapeHtml(activeMode.placeholder)}"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleHomeStart(); }"
+                            class="w-full bg-transparent text-xs sm:text-sm text-text placeholder-text-muted focus:outline-none resize-none leading-relaxed"></textarea>
+                    </div>
+
+                    <!-- Alt Kontroller & Başla Butonu -->
+                    <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-border mt-2">
+                        <!-- Sol: Ders Seçimi & PDF Ekle & Ek Araçlar -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Hızlı Ders Seçici -->
+                            <div class="relative flex items-center">
+                                <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent absolute left-2.5 pointer-events-none"></i>
+                                <select onchange="handleHomeCourseChange(this.value)" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border pl-7 pr-6 py-1.5 rounded-xl font-medium cursor-pointer transition focus:outline-none focus:border-accent">
+                                    ${courseOptions}
+                                </select>
+                                <i data-lucide="chevron-down" class="w-3 h-3 text-text-muted absolute right-2 pointer-events-none"></i>
+                            </div>
+
+                            <!-- + PDF Ekle Butonu -->
+                            <button onclick="triggerHomePdfUpload()" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border px-2.5 py-1.5 rounded-xl font-medium flex items-center gap-1 transition cursor-pointer" title="Bu derse PDF notu yükle">
+                                <i data-lucide="file-plus" class="w-3.5 h-3.5 text-accent"></i>
+                                <span>+ PDF Ekle</span>
+                            </button>
+
+                            <!-- Sohbet moduna özel: Görsel Ekle ve Mikrofon -->
+                            ${activeMode.allowImage ? `
+                                <label for="homeImageInput" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Soru veya Not Görseli Yükle">
+                                    <input type="file" id="homeImageInput" accept="image/*" class="hidden" onchange="handleHomeImageSelect(this)">
+                                    <i data-lucide="image" class="w-3.5 h-3.5 text-accent"></i>
+                                </label>
+                            ` : ''}
+
+                            ${activeMode.allowSpeech ? `
+                                <button onclick="toggleHomeSpeechRecognition()" id="homeSpeechBtn" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Sesli Soru Sor">
+                                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <!-- Sağ: Başla Butonu & PDF Uyarısı -->
+                        <div class="flex flex-col sm:items-end">
+                            <button id="homeStartBtn" onclick="handleHomeStart()" ${startBtnDisabled ? 'disabled' : ''}
+                                title="${startBtnTitle}"
+                                class="bg-accent text-accent-contrast hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs sm:text-sm px-5 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer">
+                                <span>${escapeHtml(activeMode.btnText)}</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                            ${!hasPdfs ? `<span class="text-[10px] text-danger font-medium mt-1">Önce bir PDF ekle</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 4. İnce Durum Şeridi (Sınav geri sayımı, zayıf sayfalar, bekleyen kartlar)
+            const stripText = getExamStripSummary();
+            const statusStripHtml = `
+                <div class="w-full flex items-center justify-center">
+                    <button onclick="openExamDateModal()" class="inline-flex items-center gap-2 text-xs text-text-muted hover:text-text bg-surface border border-border hover:border-accent/50 px-3.5 py-1.5 rounded-full transition shadow-sm cursor-pointer" title="Sınav tarihi ve çalışma planını yönet">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i>
+                        <span>${escapeHtml(stripText)}</span>
+                    </button>
+                </div>
+            `;
+
+            // 5. "Devam Et" Bölümü (Son 2-3 oturum/ders)
+            const recentSessions = (Array.isArray(chats) ? chats : [])
+                .filter(c => c.messages && c.messages.length > 0)
+                .slice(0, 3);
+
+            let recentSectionHtml = '';
+            if (recentSessions.length > 0) {
+                recentSectionHtml = `
+                    <div class="w-full space-y-2.5 pt-2">
+                        <div class="flex items-center justify-between px-1">
+                            <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-accent"></i> Devam et
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            ${recentSessions.map(c => `
+                                <button onclick="resumeRecentChat('${c.id}')" class="p-3 rounded-xl bg-surface hover:bg-surface-2 border border-border hover:border-accent/40 text-left transition flex items-center gap-2.5 group cursor-pointer shadow-sm">
+                                    <div class="w-7 h-7 rounded-lg bg-surface-2 text-text-muted group-hover:text-accent flex items-center justify-center shrink-0">
+                                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-xs font-medium text-text group-hover:text-accent truncate transition">${escapeHtml(c.title || 'Çalışma Oturumu')}</p>
+                                        <p class="text-[10px] text-text-muted truncate">${escapeHtml(c.course || 'Genel')} • ${escapeHtml(c.createdAt || '')}</p>
+                                    </div>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="w-full max-w-2xl mx-auto space-y-6 sm:space-y-7 flex flex-col items-center animate-in fade-in">
+                    ${titleHtml}
+                    ${modeCardsHtml}
+                    ${inputBoxHtml}
+                    ${statusStripHtml}
+                    ${recentSectionHtml}
+                </div>
+            `;
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function handleHomeStart() {
+            const activeMode = HOME_MODES.find(m => m.id === currentHomeMode) || HOME_MODES[0];
+            const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
+
+            if (!hasPdfs) {
+                alert("Lütfen önce bu derse bir PDF ders notu ekleyiniz.");
+                triggerHomePdfUpload();
+                return;
+            }
+
+            const inputEl = document.getElementById('homeMainInput');
+            const text = inputEl ? inputEl.value.trim() : '';
+
+            const startBtn = document.getElementById('homeStartBtn');
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Yükleniyor...</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
+
+            try {
+                await activeMode.onStart(text, homeSelectedImageBase64, homeSelectedImageMime);
+                if (inputEl) inputEl.value = '';
+                homeSelectedImageBase64 = null;
+            } catch (err) {
+                console.error("Home start hatası:", err);
+            } finally {
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = `<span>${escapeHtml(activeMode.btnText)}</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
+        function resumeRecentChat(chatId) {
+            selectChat(chatId);
+            switchTab('chat');
+        }
+
+        function handleHomeCourseChange(newCourseName) {
+            const courseSelect = document.getElementById('courseSelect');
+            if (courseSelect) {
+                courseSelect.value = newCourseName;
+            }
+            onCourseChange();
+            renderHomeScreen();
+        }
+
+        function triggerHomePdfUpload() {
+            const pdfInput = document.getElementById('pdfFileInput');
+            if (pdfInput) {
+                pdfInput.click();
+            }
+        }
+
+        function handleHomeImageSelect(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            homeSelectedImageMime = file.type || 'image/jpeg';
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                homeSelectedImageBase64 = e.target.result;
+                renderHomeScreen();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearHomeSelectedImage() {
+            homeSelectedImageBase64 = null;
+            renderHomeScreen();
+        }
+
+        let homeSpeechRecognition = null;
+        function toggleHomeSpeechRecognition() {
+            const btn = document.getElementById('homeSpeechBtn');
+            const input = document.getElementById('homeMainInput');
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Tarayıcınız ses tanıma özelliğini desteklemiyor.");
+                return;
+            }
+
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (homeSpeechRecognition) {
+                homeSpeechRecognition.stop();
+                homeSpeechRecognition = null;
+                if (btn) btn.classList.remove('text-accent', 'animate-pulse');
+                return;
+            }
+
+            homeSpeechRecognition = new SpeechRec();
+            homeSpeechRecognition.lang = 'tr-TR';
+            homeSpeechRecognition.continuous = false;
+            homeSpeechRecognition.interimResults = false;
+
+            homeSpeechRecognition.onstart = () => {
+                if (btn) btn.classList.add('text-accent', 'animate-pulse');
+            };
+
+            homeSpeechRecognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                if (input) {
+                    input.value = (input.value ? input.value + ' ' : '') + transcript;
+                }
+            };
+
+            homeSpeechRecognition.onend = () => {
+                homeSpeechRecognition = null;
+                if (btn) btn.classList.remove('text-accent', 'animate-pulse');
+            };
+
+            homeSpeechRecognition.onerror = () => {
+                homeSpeechRecognition = null;
+                if (btn) btn.classList.remove('text-accent', 'animate-pulse');
+            };
+
+            homeSpeechRecognition.start();
+        }
+
+        function handleFirstCoursePdfSelected(input) {
+            if (!input.files || !input.files[0]) return;
+            pendingFirstCourseFile = input.files[0];
+            const label = document.getElementById('firstCoursePdfLabel');
+            if (label) {
+                label.textContent = `Seçilen: ${pendingFirstCourseFile.name}`;
+            }
+        }
+
+        async function handleFirstTimeSetupStart() {
+            const nameInput = document.getElementById('firstCourseNameInput');
+            const courseName = nameInput ? nameInput.value.trim() : '';
+            if (!courseName) {
+                alert("Lütfen bir ders adı giriniz (örn: Fizik 101).");
+                if (nameInput) nameInput.focus();
+                return;
+            }
+
+            let courses = getSavedUserCourses();
+            if (!courses.includes(courseName)) {
+                courses.push(courseName);
+                saveUserCourses(courses);
+            }
+
+            currentCourse = courseName;
+            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            initCourseDropdown();
+            onCourseChange();
+
+            // Eğer PDF seçildiyse yüklemeyi tetikle
+            if (pendingFirstCourseFile) {
+                const pdfInput = document.getElementById('pdfFileInput');
+                if (pdfInput) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(pendingFirstCourseFile);
+                    pdfInput.files = dataTransfer.files;
+                    handleRealPdfUpload(pdfInput);
+                }
+                pendingFirstCourseFile = null;
+            }
+
+            renderHomeScreen();
         }
 
         // -------------------------------------------------------------
@@ -3422,6 +4041,9 @@
                             Bu derse henüz PDF yüklenmedi.
                         </div>
                     `;
+                    if (document.getElementById('tab-home') && !document.getElementById('tab-home').classList.contains('hidden')) {
+                        renderHomeScreen();
+                    }
                     return;
                 }
 
@@ -3448,6 +4070,9 @@
                     </div>
                 `).join('');
 
+                if (document.getElementById('tab-home') && !document.getElementById('tab-home').classList.contains('hidden')) {
+                    renderHomeScreen();
+                }
                 lucide.createIcons();
             } catch (err) {
                 console.error("PDF listeleme hatası:", err);
@@ -4756,10 +5381,13 @@
             [...parent.querySelectorAll('button')].forEach(b => b.disabled = true);
 
             if (isCorrect) {
-                btn.className = "border border-emerald-500/80 bg-emerald-950/40 p-3 rounded-xl text-left text-emerald-200 flex items-center gap-2.5 font-medium";
+                btn.className = "border border-emerald-500/80 bg-emerald-950/40 p-3 rounded-xl text-left text-emerald-200 flex items-center justify-between gap-2.5 font-medium";
+                btn.innerHTML = `<span class="flex items-center gap-2.5">${btn.innerHTML}</span><span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white shrink-0 shadow-sm" title="Doğru"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>`;
             } else {
-                btn.className = "border border-rose-500/80 bg-rose-950/40 p-3 rounded-xl text-left text-rose-200 flex items-center gap-2.5 font-medium";
+                btn.className = "border border-rose-500/80 bg-rose-950/40 p-3 rounded-xl text-left text-rose-200 flex items-center justify-between gap-2.5 font-medium";
+                btn.innerHTML = `<span class="flex items-center gap-2.5">${btn.innerHTML}</span><span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500 text-white shrink-0 shadow-sm" title="Yanlış"><i data-lucide="x" class="w-3.5 h-3.5"></i></span>`;
             }
+            if (window.lucide) lucide.createIcons();
 
             document.getElementById(explanationId)?.classList.remove('hidden');
 
@@ -5130,13 +5758,13 @@
         // 8. SEKME DEĞİŞTİRME & YARDIMCILAR
         // -------------------------------------------------------------
         function switchTab(tabName) {
-            const tabs = ['chat', 'quiz', 'flashcards', 'mindmap', 'dashboard'];
+            const tabs = ['home', 'chat', 'quiz', 'flashcards', 'mindmap', 'dashboard'];
             tabs.forEach(t => {
                 const el = document.getElementById('tab-' + t);
                 if (el) el.classList.add('hidden');
                 const btn = document.getElementById('tab-btn-' + t);
                 if (btn) {
-                    btn.className = "tab-btn flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all";
+                    btn.className = "tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface-2 transition shrink-0 cursor-pointer";
                 }
             });
 
@@ -5144,10 +5772,12 @@
             if (activeEl) activeEl.classList.remove('hidden');
             const activeBtn = document.getElementById('tab-btn-' + tabName);
             if (activeBtn) {
-                activeBtn.className = "tab-btn flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/30 transition-all";
+                activeBtn.className = "tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer";
             }
 
-            if (tabName === 'dashboard') {
+            if (tabName === 'home') {
+                renderHomeScreen();
+            } else if (tabName === 'dashboard') {
                 refreshDashboardStats();
                 renderDailyFocusCard();
                 renderMistakesCount();
