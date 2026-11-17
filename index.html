@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="light dark">
     <title>StudyRAG - Akıllı Ders Çalışma Asistanı</title>
     <!-- Site Favicon / App Icon (Teal StudyRAG Emblem) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314b8a6'/%3E%3Cpath d='M8 10a2 2 0 0 1 2-2h4a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H8V10zm16 0a2 2 0 0 0-2-2h-4a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7V10z' fill='%2304201c'/%3E%3Ccircle cx='16' cy='9' r='2' fill='%23ffffff'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314b8a6'/%3E%3Cpath d='M8 10a2 2 0 0 1 2-2h4a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H8V10zm16 0a2 2 0 0 0-2-2h-4a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7V10z' fill='%2304201c'/%3E%3Ccircle cx='16' cy='9' r='2' fill='%23ffffff'/%3E%3C/svg%3E">
 
     <!-- FOUC Prevention Script (Modern Web Guidance) -->
     <script>
@@ -17,7 +19,7 @@
                 document.documentElement.classList.remove("light", "dark");
                 document.documentElement.classList.add(saved);
             }
-        } catch(e) {}
+        } catch (e) { }
     </script>
 
     <!-- Tailwind CSS with Centralized Teal Palette Mapping -->
@@ -104,8 +106,9 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        :root, html.dark {
+
+        :root,
+        html.dark {
             color-scheme: dark;
             --bg: #0b1210;
             --surface: #111b18;
@@ -147,7 +150,8 @@
             --brand-accent: var(--accent-hover);
         }
 
-        html, body {
+        html,
+        body {
             height: 100%;
             height: 100dvh;
             min-height: 100dvh;
@@ -160,31 +164,81 @@
         }
 
         /* 3D Flashcard Stage */
-        .perspective { perspective: 1200px; }
-        .transform-style-3d { 
-            transform-style: preserve-3d; 
-            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        .perspective {
+            perspective: 1200px;
         }
-        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
+
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
 
         /* Modern Subtle Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.25); border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.45); }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(20, 184, 166, 0.25);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(20, 184, 166, 0.45);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
         /* Pulse Animations */
         @keyframes pulseDot {
-            0%, 100% { opacity: 0.3; transform: scale(0.85); }
-            50% { opacity: 1; transform: scale(1.15); }
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.85);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
         }
-        .dot-pulse { animation: pulseDot 1.4s infinite ease-in-out; background-color: var(--accent); }
-        .dot-pulse-2 { animation: pulseDot 1.4s infinite ease-in-out 0.2s; background-color: var(--accent); }
-        .dot-pulse-3 { animation: pulseDot 1.4s infinite ease-in-out 0.4s; background-color: var(--accent); }
+
+        .dot-pulse {
+            animation: pulseDot 1.4s infinite ease-in-out;
+            background-color: var(--accent);
+        }
+
+        .dot-pulse-2 {
+            animation: pulseDot 1.4s infinite ease-in-out 0.2s;
+            background-color: var(--accent);
+        }
+
+        .dot-pulse-3 {
+            animation: pulseDot 1.4s infinite ease-in-out 0.4s;
+            background-color: var(--accent);
+        }
 
         /* Sidebar Resizer */
         .sidebar-resizer {
@@ -198,9 +252,12 @@
             touch-action: none;
             transition: background-color 0.15s ease;
         }
-        .sidebar-resizer:hover, .sidebar-resizer.is-resizing {
+
+        .sidebar-resizer:hover,
+        .sidebar-resizer.is-resizing {
             background-color: var(--accent);
         }
+
         .sidebar-resizer::after {
             content: '';
             position: absolute;
@@ -213,25 +270,32 @@
             background-color: rgba(161, 161, 170, 0.4);
             transition: background-color 0.15s;
         }
-        .sidebar-resizer:hover::after, .sidebar-resizer.is-resizing::after {
+
+        .sidebar-resizer:hover::after,
+        .sidebar-resizer.is-resizing::after {
             background-color: var(--accent-hover);
         }
 
-        .touch-scroll { -webkit-overflow-scrolling: touch; }
+        .touch-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
 
         /* ================= LIGHT MODE OVERRIDES ================= */
         html.light {
             color-scheme: light;
         }
+
         html.light body,
         html.light main {
             background-color: var(--bg) !important;
             color: var(--text) !important;
         }
+
         html.light aside {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
+
         html.light header {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
@@ -243,11 +307,13 @@
             background-color: var(--bg) !important;
             border-color: var(--border) !important;
         }
+
         html.light [class*="bg-zinc-900"],
         html.light [class*="bg-slate-900"] {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
+
         html.light [class*="bg-zinc-800"],
         html.light [class*="bg-slate-800"],
         html.light [class*="bg-zinc-700"],
@@ -264,19 +330,23 @@
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #sidebar label:has(#pdfFileInput):hover,
         html.light #sidebar label[class*="border-dashed"]:hover {
             background-color: var(--accent-soft) !important;
             border-color: var(--accent) !important;
         }
+
         html.light #sidebar label:has(#pdfFileInput) span,
         html.light #sidebar label[class*="border-dashed"] span {
             color: var(--text) !important;
         }
+
         html.light #sidebar label:has(#pdfFileInput) span:last-child,
         html.light #sidebar label[class*="border-dashed"] span:last-child {
             color: var(--text-muted) !important;
         }
+
         html.light #sidebar label:has(#pdfFileInput) div,
         html.light #sidebar label[class*="border-dashed"] div {
             background-color: var(--surface) !important;
@@ -288,39 +358,45 @@
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #sidebar button[onclick="createNewChat()"]:hover {
             background-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #sidebar .shrink-0.bg-zinc-950\/60,
         html.light #sidebar .p-3:has(#profileStudentName) {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
+
         html.light #sidebar .p-3:has(#profileStudentName) button:hover {
             background-color: var(--surface-2) !important;
         }
 
         /* Üst Hızlı Öneri Çubuğu (Stüdyo Önerileri) */
-        html.light #tab-chat > div:first-child,
-        html.light #tab-chat > .bg-zinc-900\/40 {
+        html.light #tab-chat>div:first-child,
+        html.light #tab-chat>.bg-zinc-900\/40 {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
-        html.light #tab-chat > div:first-child button,
-        html.light #tab-chat > .bg-zinc-900\/40 button {
+
+        html.light #tab-chat>div:first-child button,
+        html.light #tab-chat>.bg-zinc-900\/40 button {
             background-color: var(--surface-2) !important;
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
-        html.light #tab-chat > div:first-child button:hover,
-        html.light #tab-chat > .bg-zinc-900\/40 button:hover {
+
+        html.light #tab-chat>div:first-child button:hover,
+        html.light #tab-chat>.bg-zinc-900\/40 button:hover {
             background-color: var(--accent-soft) !important;
             border-color: var(--accent) !important;
             color: var(--accent) !important;
         }
-        html.light #tab-chat > div:first-child label:has(#eli5Toggle),
-        html.light #tab-chat > .bg-zinc-900\/40 label:has(#eli5Toggle) {
+
+        html.light #tab-chat>div:first-child label:has(#eli5Toggle),
+        html.light #tab-chat>.bg-zinc-900\/40 label:has(#eli5Toggle) {
             background-color: var(--surface-2) !important;
             border-color: var(--border) !important;
             color: var(--text) !important;
@@ -342,14 +418,17 @@
         html.light .text-slate-200 {
             color: var(--text) !important;
         }
+
         html.light .text-zinc-300,
         html.light .text-slate-300 {
             color: var(--text) !important;
         }
+
         html.light .text-zinc-400,
         html.light .text-slate-400 {
             color: var(--text-muted) !important;
         }
+
         html.light .text-zinc-500,
         html.light .text-slate-500 {
             color: var(--text-muted) !important;
@@ -372,10 +451,12 @@
             color: var(--text) !important;
             border-color: var(--border) !important;
         }
+
         html.light input::placeholder,
         html.light textarea::placeholder {
             color: var(--text-muted) !important;
         }
+
         html.light select option {
             background-color: var(--surface) !important;
             color: var(--text) !important;
@@ -385,6 +466,7 @@
         html.light .tab-btn:not(.bg-indigo-600) {
             color: var(--text-muted) !important;
         }
+
         html.light .tab-btn:not(.bg-indigo-600):hover {
             color: var(--text) !important;
             background-color: var(--surface-2) !important;
@@ -396,16 +478,19 @@
         html.light .prose-invert * {
             color: var(--text) !important;
         }
+
         html.light strong,
         html.light b,
         html.light .prose strong,
         html.light .prose-invert strong {
             color: var(--accent) !important;
         }
+
         html.light em,
         html.light i {
             color: var(--text) !important;
         }
+
         html.light .prose code,
         html.light .prose-invert code,
         html.light code {
@@ -413,6 +498,7 @@
             color: var(--accent) !important;
             border: 1px solid var(--border) !important;
         }
+
         html.light pre {
             background-color: var(--surface-2) !important;
             border-color: var(--border) !important;
@@ -433,11 +519,13 @@
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #chatMessages button[onclick*="showSourceSnippetModal"]:hover {
             background-color: var(--accent-soft) !important;
             border-color: var(--accent) !important;
             color: var(--accent) !important;
         }
+
         html.light #chatMessages button[onclick*="showSourceSnippetModal"] span[class*="text-indigo"] {
             color: var(--accent) !important;
             background-color: var(--accent-soft) !important;
@@ -450,6 +538,7 @@
         html.light #chatMessages button[onclick*="toggleSpeechMessage"] {
             color: var(--text-muted) !important;
         }
+
         html.light #chatMessages button[onclick*="copyMessageText"]:hover,
         html.light #chatMessages button[onclick*="toggleSpeechMessage"]:hover {
             color: var(--text) !important;
@@ -460,6 +549,7 @@
         html.light form:has(#chatInput) {
             background-color: transparent !important;
         }
+
         html.light #chatInput {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
@@ -472,10 +562,12 @@
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #quizContainer button:hover:not(:disabled) {
             background-color: var(--surface-2) !important;
             border-color: var(--accent) !important;
         }
+
         html.light #quizContainer button span[class*="rounded-full"] {
             background-color: var(--surface-2) !important;
             color: var(--text) !important;
@@ -483,47 +575,64 @@
         }
 
         /* Flashcard Ön ve Arka Yüzleri */
-        html.light #flashcardInner > div:first-child {
+        html.light #flashcardInner>div:first-child {
             background: var(--surface) !important;
             border-color: var(--border) !important;
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08) !important;
         }
-        html.light #flashcardInner > div:last-child {
+
+        html.light #flashcardInner>div:last-child {
             background: var(--surface-2) !important;
             border-color: var(--border) !important;
             box-shadow: 0 10px 30px -5px rgba(20, 184, 166, 0.12) !important;
         }
-        html.light #fcFront { color: var(--text) !important; }
-        html.light #fcBack { color: var(--text) !important; }
-        html.light #fcSource { color: var(--accent) !important; font-weight: 600; }
 
-        
+        html.light #fcFront {
+            color: var(--text) !important;
+        }
+
+        html.light #fcBack {
+            color: var(--text) !important;
+        }
+
+        html.light #fcSource {
+            color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+
         /* Günlük Çalışma Planlayıcısı & Sınav Kartı */
         html.light #dailyFocusBanner {
             background: var(--surface-2) !important;
             border-color: var(--border) !important;
         }
-        html.light #dailyFocusContent > div {
+
+        html.light #dailyFocusContent>div {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
-        html.light #examDateModal > div {
+
+        html.light #examDateModal>div {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
-        
+
         /* Print & Cheat Sheet Stilleri */
         @media print {
-            html, body {
+
+            html,
+            body {
                 height: auto !important;
                 overflow: visible !important;
                 background: #ffffff !important;
                 color: #0f172a !important;
             }
-            body > *:not(#cheatSheetModal) {
+
+            body>*:not(#cheatSheetModal) {
                 display: none !important;
             }
+
             #cheatSheetModal {
                 display: block !important;
                 position: static !important;
@@ -537,7 +646,8 @@
                 margin: 0 !important;
                 inset: auto !important;
             }
-            #cheatSheetModal > div {
+
+            #cheatSheetModal>div {
                 box-shadow: none !important;
                 border: none !important;
                 width: 100% !important;
@@ -548,21 +658,26 @@
                 background: #ffffff !important;
                 color: #0f172a !important;
             }
+
             #cheatSheetModal button {
                 display: none !important;
             }
+
             #cheatSheetBody {
                 overflow: visible !important;
                 max-height: none !important;
                 height: auto !important;
                 color: #0f172a !important;
             }
-            #cheatSheetContent, #cheatSheetContent * {
+
+            #cheatSheetContent,
+            #cheatSheetContent * {
                 color: #0f172a !important;
             }
         }
-        html.light #mistakeNotebookModal > div,
-        html.light #cheatSheetModal > div {
+
+        html.light #mistakeNotebookModal>div,
+        html.light #cheatSheetModal>div {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
@@ -575,12 +690,14 @@
             touch-action: none;
             color: #f8fafc !important;
         }
+
         /* Markmap HTML foreignObject & Text Stilleri - Yüksek Kontrast ve Net Okunabilirlik */
         #mindmapSvg foreignObject,
         #mindmapSvg foreignObject * {
             color: #f8fafc !important;
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
+
         #mindmapSvg foreignObject div {
             color: #f8fafc !important;
             font-size: 13.5px !important;
@@ -588,6 +705,7 @@
             line-height: 1.45 !important;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75) !important;
         }
+
         /* Kök Düğüm */
         #mindmapSvg .markmap-node:first-of-type foreignObject div,
         #mindmapSvg g[data-depth="0"] foreignObject div {
@@ -595,6 +713,7 @@
             font-weight: 800 !important;
             color: #ffffff !important;
         }
+
         #mindmapSvg text {
             fill: #f8fafc !important;
             font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
@@ -606,20 +725,24 @@
         html.light #mindmapSvg {
             color: #0f172a !important;
         }
+
         html.light #mindmapSvg foreignObject,
         html.light #mindmapSvg foreignObject * {
             color: #0f172a !important;
         }
+
         html.light #mindmapSvg foreignObject div {
             color: #0f172a !important;
             font-weight: 600 !important;
             text-shadow: none !important;
         }
+
         html.light #mindmapSvg .markmap-node:first-of-type foreignObject div,
         html.light #mindmapSvg g[data-depth="0"] foreignObject div {
             color: #020617 !important;
             font-weight: 800 !important;
         }
+
         html.light #mindmapSvg text {
             fill: #0f172a !important;
         }
@@ -640,61 +763,72 @@
             vertical-align: middle !important;
             transition: all 0.15s ease !important;
         }
+
         #mindmapSvg .mindmap-page-badge:hover {
             background-color: var(--accent) !important;
             color: var(--accent-contrast) !important;
             border-color: var(--accent-hover) !important;
             transform: scale(1.08) !important;
         }
+
         html.light #mindmapSvg .mindmap-page-badge {
             background-color: var(--accent-soft) !important;
             color: var(--accent) !important;
             border-color: var(--accent) !important;
         }
+
         html.light #mindmapSvg .mindmap-page-badge:hover {
             background-color: var(--accent) !important;
             color: var(--accent-contrast) !important;
         }
+
         html.light #tab-mindmap .bg-zinc-900\/90,
         html.light #tab-mindmap .bg-zinc-900\/60,
         html.light #mindmapCanvasContainer {
             background-color: #ffffff !important;
             border-color: #e2e8f0 !important;
         }
+
         html.light #mindmapFocusInput {
             background-color: #f8fafc !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
         }
+
         html.light #tab-mindmap button[class*="bg-zinc-800"] {
             background-color: #f1f5f9 !important;
             border-color: #cbd5e1 !important;
             color: #1e293b !important;
         }
+
         html.light #tab-mindmap button[class*="bg-zinc-800"]:hover {
             background-color: #e2e8f0 !important;
         }
+
         html.light #tab-mindmap h2,
         html.light #tab-mindmap h3,
         html.light #tab-mindmap h4 {
             color: #0f172a !important;
         }
+
         /* Modallar */
-        html.light #profileModal > div,
-        html.light #onboardingModal > div,
-        html.light #sourceSnippetModal > div,
-        html.light #newCourseModal > div,
-        html.light #deleteCourseModal > div {
+        html.light #profileModal>div,
+        html.light #onboardingModal>div,
+        html.light #sourceSnippetModal>div,
+        html.light #newCourseModal>div,
+        html.light #deleteCourseModal>div {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
         }
+
         html.light #newCourseInput {
             background-color: #f8fafc !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
         }
+
         html.light #modalFullUserId {
             background-color: #f1f5f9 !important;
             border-color: #cbd5e1 !important;
@@ -708,31 +842,56 @@
             font-size: 0.875rem;
             color: #e4e4e7;
         }
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4 {
             font-weight: 700;
             color: #fafafa;
             margin-top: 1rem;
             margin-bottom: 0.5rem;
             line-height: 1.35;
         }
-        .markdown-body h1 { font-size: 1.25rem; }
-        .markdown-body h2 { font-size: 1.1rem; }
-        .markdown-body h3 { font-size: 0.95rem; }
+
+        .markdown-body h1 {
+            font-size: 1.25rem;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.1rem;
+        }
+
+        .markdown-body h3 {
+            font-size: 0.95rem;
+        }
+
         .markdown-body p {
             margin-bottom: 0.65rem;
         }
+
         .markdown-body p:last-child {
             margin-bottom: 0;
         }
-        .markdown-body ul, .markdown-body ol {
+
+        .markdown-body ul,
+        .markdown-body ol {
             margin-left: 1.25rem;
             margin-bottom: 0.65rem;
         }
-        .markdown-body ul { list-style-type: disc; }
-        .markdown-body ol { list-style-type: decimal; }
+
+        .markdown-body ul {
+            list-style-type: disc;
+        }
+
+        .markdown-body ol {
+            list-style-type: decimal;
+        }
+
         .markdown-body li {
             margin-bottom: 0.25rem;
         }
+
         .markdown-body blockquote {
             border-left: 3px solid var(--accent);
             padding-left: 0.75rem;
@@ -740,27 +899,33 @@
             margin: 0.75rem 0;
             font-style: italic;
         }
+
         .markdown-body hr {
             border: 0;
             border-top: 1px solid var(--border);
             margin: 1rem 0;
         }
+
         .markdown-body table {
             width: 100%;
             border-collapse: collapse;
             margin: 0.75rem 0;
             font-size: 0.8rem;
         }
-        .markdown-body th, .markdown-body td {
+
+        .markdown-body th,
+        .markdown-body td {
             border: 1px solid var(--border);
             padding: 0.45rem 0.65rem;
             text-align: left;
         }
+
         .markdown-body th {
             background-color: var(--surface-2);
             font-weight: 600;
             color: var(--text);
         }
+
         .markdown-body code:not(pre code) {
             background-color: var(--surface-2);
             border: 1px solid var(--border);
@@ -770,6 +935,7 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.825em;
         }
+
         .markdown-body pre {
             background-color: var(--surface-2);
             border: 1px solid var(--border);
@@ -782,49 +948,60 @@
             color: var(--text);
             line-height: 1.5;
         }
+
         html.light .markdown-body {
             color: var(--text) !important;
         }
+
         html.light .markdown-body h1,
         html.light .markdown-body h2,
         html.light .markdown-body h3,
         html.light .markdown-body h4 {
             color: var(--text) !important;
         }
+
         html.light .markdown-body blockquote {
             color: var(--text-muted) !important;
             border-left-color: var(--accent) !important;
         }
+
         html.light .markdown-body hr {
             border-top-color: var(--border) !important;
         }
+
         html.light .markdown-body th,
         html.light .markdown-body td {
             border-color: var(--border) !important;
         }
+
         html.light .markdown-body th {
             background-color: var(--surface-2) !important;
             color: var(--text) !important;
         }
+
         html.light .markdown-body code:not(pre code) {
             background-color: var(--accent-soft) !important;
             border-color: var(--border) !important;
             color: var(--accent) !important;
         }
+
         html.light .markdown-body pre {
             background-color: var(--surface-2) !important;
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #chatSuggestionChips {
             background-color: var(--surface) !important;
             border-color: var(--border) !important;
         }
+
         html.light #chatSuggestionChips button {
             background-color: var(--surface-2) !important;
             border-color: var(--border) !important;
             color: var(--text) !important;
         }
+
         html.light #chatSuggestionChips button:hover {
             background-color: var(--accent-soft) !important;
             border-color: var(--accent) !important;
@@ -837,94 +1014,134 @@
             -moz-appearance: none;
             appearance: none;
         }
+
         select option {
             background-color: #18181b;
             color: #f4f4f5;
             padding: 8px 12px;
         }
+
         html.light select option {
             background-color: #ffffff;
             color: #0f172a;
         }
-
     </style>
 </head>
+
 <body class="bg-zinc-950 text-zinc-100 h-full h-[100dvh] min-h-0 flex overflow-hidden antialiased select-none relative">
 
     <!-- Mobile Pull-To-Refresh Indicator -->
-    <div id="pullToRefreshPill" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-accent text-accent-contrast text-xs font-semibold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 transform -translate-y-24 transition-all duration-200 pointer-events-none backdrop-blur-md border border-accent-hover/40">
+    <div id="pullToRefreshPill"
+        class="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-accent text-accent-contrast text-xs font-semibold px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 transform -translate-y-24 transition-all duration-200 pointer-events-none backdrop-blur-md border border-accent-hover/40">
         <i id="pullRefreshIcon" data-lucide="arrow-down" class="w-4 h-4 transition-transform duration-200"></i>
         <span id="pullRefreshText">Yenilemek için çekin</span>
     </div>
 
     <!-- Mobile Backdrop Overlay -->
-    <div id="mobileBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-300"></div>
+    <div id="mobileBackdrop" onclick="toggleSidebar(false)"
+        class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-40 hidden md:hidden transition-opacity duration-300">
+    </div>
 
     <!-- ================= SOL ÇALIŞMA PANELİ & KAYNAKLAR (SIDEBAR) ================= -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 bg-zinc-900 border-r border-zinc-800/80 flex flex-col justify-between shrink-0 shadow-2xl transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 md:z-auto">
-        
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 z-50 bg-zinc-900 border-r border-zinc-800/80 flex flex-col justify-between shrink-0 shadow-2xl transition-all duration-300 transform -translate-x-full md:relative md:translate-x-0 md:z-auto">
+
         <!-- Sürükleyip Genişletme / Daraltma Tutacağı -->
-        <div id="sidebarResizer" class="sidebar-resizer hidden md:block" title="Genişliği ayarlamak için sürükleyin (Çift tıklama: Sıfırla)"></div>
+        <div id="sidebarResizer" class="sidebar-resizer hidden md:block"
+            title="Genişliği ayarlamak için sürükleyin (Çift tıklama: Sıfırla)"></div>
 
         <!-- Üst Bölüm: Marka, Ders Seçimi, Kaynak Dokümanlar, Sohbet Geçmişi -->
         <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-            
+
             <!-- Logo & Marka Başlığı -->
             <div class="p-4 border-b border-zinc-800/70 flex items-center justify-between shrink-0">
-                <button onclick="switchTab('home')" class="flex items-center gap-2.5 text-left group cursor-pointer" title="Ana Ekrana Dön">
+                <button onclick="switchTab('home')" class="flex items-center gap-2.5 text-left group cursor-pointer"
+                    title="Ana Ekrana Dön">
                     <svg class="w-8 h-8 rounded-xl shrink-0 shadow-sm" viewBox="0 0 32 32">
-                        <rect width="32" height="32" rx="8" fill="var(--accent)"/>
-                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)"/>
-                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z" fill="var(--accent-contrast)"/>
-                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)"/>
+                        <rect width="32" height="32" rx="8" fill="var(--accent)" />
+                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)" />
+                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z"
+                            fill="var(--accent-contrast)" />
+                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)" />
                     </svg>
                     <div>
-                        <h1 class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition">StudyRAG</h1>
+                        <h1 class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition">
+                            StudyRAG</h1>
                     </div>
                 </button>
 
                 <!-- Sol Menüyü Kapat Butonu -->
-                <button onclick="toggleSidebar(false)" title="Menüyü Kapat" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition md:hidden cursor-pointer">
+                <button onclick="toggleSidebar(false)" title="Menüyü Kapat"
+                    class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition md:hidden cursor-pointer">
                     <i data-lucide="panel-left-close" class="w-4 h-4"></i>
                 </button>
             </div>
 
             <!-- Kaydırılabilir İçerik Alanı -->
             <div class="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
-                
+
                 <!-- 1. DERS / ÇALIŞMA ALANI SEÇİCİ -->
                 <div class="bg-zinc-950/70 border border-zinc-800/80 rounded-2xl p-3 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span
+                            class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                             <i data-lucide="book-marked" class="w-3.5 h-3.5 text-indigo-400"></i> Aktif Ders
                         </span>
-                        
+
                         <!-- ⋯ Ders İşlem Menüsü -->
                         <div class="relative">
-                            <button onclick="toggleCourseMenu(event)" id="courseMenuBtn" title="Ders İşlemleri" class="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer">
+                            <button onclick="toggleCourseMenu(event)" id="courseMenuBtn" title="Ders İşlemleri"
+                                class="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer">
                                 <i data-lucide="more-horizontal" class="w-4 h-4"></i>
                             </button>
-                            <div id="courseDropdownMenu" class="hidden absolute right-0 top-full mt-1 w-36 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-50 py-1 text-xs">
-                                <button type="button" onclick="closeCourseMenu(); promptNewCourse();" class="w-full text-left px-3 py-1.5 text-zinc-300 hover:text-white hover:bg-zinc-800 flex items-center gap-2 transition cursor-pointer">
+                            <div id="courseDropdownMenu"
+                                class="hidden absolute right-0 top-full mt-1 w-36 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-50 py-1 text-xs">
+                                <button type="button" onclick="closeCourseMenu(); promptNewCourse();"
+                                    class="w-full text-left px-3 py-1.5 text-zinc-300 hover:text-white hover:bg-zinc-800 flex items-center gap-2 transition cursor-pointer">
                                     <i data-lucide="plus" class="w-3.5 h-3.5 text-indigo-400"></i>
                                     <span>Yeni Ders Ekle</span>
                                 </button>
-                                <button type="button" id="deleteCourseBtn" onclick="closeCourseMenu(); promptDeleteCurrentCourse();" class="w-full text-left px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 flex items-center gap-2 transition cursor-pointer">
+                                <button type="button" id="deleteCourseBtn"
+                                    onclick="closeCourseMenu(); promptDeleteCurrentCourse();"
+                                    class="w-full text-left px-3 py-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 flex items-center gap-2 transition cursor-pointer">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
                                     <span>Dersi Sil</span>
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center gap-1.5">
-                        <div class="relative w-full">
-                            <select id="courseSelect" onchange="onCourseChange()" class="w-full appearance-none bg-zinc-900 border border-zinc-700/80 rounded-xl pl-3 pr-8 py-2 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer transition shadow-sm">
+                        <div class="relative w-full" id="sidebarCourseDropdownWrapper">
+                            <!-- Gizli select (uyumluluk için) -->
+                            <select id="courseSelect" onchange="onCourseChange()" class="hidden">
                                 <option value="">-- Henüz Ders Eklenmedi --</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-zinc-400">
-                                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+
+                            <!-- UI Custom Buton -->
+                            <button type="button" id="sidebarCourseCustomBtn" onclick="toggleSidebarCourseMenu(event)"
+                                class="w-full flex items-center justify-between bg-zinc-900/90 hover:bg-zinc-800/80 border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-zinc-100 font-medium transition shadow-sm cursor-pointer group">
+                                <div class="flex items-center gap-2 truncate">
+                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent shrink-0"></i>
+                                    <span id="sidebarCourseSelectedName" class="truncate font-semibold">-- Henüz Ders Eklenmedi --</span>
+                                </div>
+                                <i data-lucide="chevron-down" id="sidebarCourseChevron" class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-transform duration-200 shrink-0"></i>
+                            </button>
+
+                            <!-- Custom Dropdown Menü -->
+                            <div id="sidebarCourseCustomMenu"
+                                class="hidden absolute top-full left-0 right-0 mt-1.5 z-50 bg-zinc-900 border border-zinc-700/90 rounded-2xl p-1.5 shadow-2xl max-h-60 overflow-y-auto no-scrollbar space-y-1 backdrop-blur-md animate-in fade-in zoom-in-95">
+                                <div id="sidebarCourseItemsList" class="space-y-0.5">
+                                    <!-- JS ile doldurulacak -->
+                                </div>
+                                <div class="border-t border-zinc-800 pt-1 mt-1">
+                                    <button type="button" onclick="closeAllCourseMenus(); openNewCourseModal();"
+                                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-[11px] text-accent hover:bg-accent-soft font-semibold flex items-center gap-2 transition cursor-pointer">
+                                        <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-accent"></i>
+                                        <span>+ Yeni Ders Ekle</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <span id="deleteCourseTextBtn" class="hidden"></span>
@@ -934,44 +1151,57 @@
                 <!-- 2. KAYNAKLAR (NotebookLM Stili Doküman & PDF Yönetimi) -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between px-1">
-                        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <span
+                            class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i data-lucide="folder-git-2" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak Dokümanlar
                         </span>
-                        <span id="coursePdfBadge" class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-medium">0 PDF</span>
+                        <span id="coursePdfBadge"
+                            class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-medium">0
+                            PDF</span>
                     </div>
 
                     <!-- Küçük + PDF Ekle Butonu (Derste en az 1 dosya varsa gösterilir) -->
-                    <button type="button" id="pdfAddBtnCompact" onclick="document.getElementById('pdfFileInput').click()" class="hidden w-full bg-zinc-800/70 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white py-1.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition font-medium cursor-pointer shadow-sm">
+                    <button type="button" id="pdfAddBtnCompact"
+                        onclick="document.getElementById('pdfFileInput').click()"
+                        class="hidden w-full bg-zinc-800/70 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white py-1.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition font-medium cursor-pointer shadow-sm">
                         <i data-lucide="file-plus-2" class="w-3.5 h-3.5 text-indigo-400"></i>
                         <span>+ PDF Ekle</span>
                     </button>
 
                     <!-- PDF Yükleme Dropzone (Derste hiç dosya yokken görünür) -->
-                    <label id="pdfDropzoneBig" class="border border-dashed border-zinc-700/80 hover:border-indigo-500/80 bg-zinc-950/50 hover:bg-indigo-950/10 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition group shadow-sm">
-                        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" onchange="handleRealPdfUpload(this)">
-                        <div class="w-8 h-8 rounded-xl bg-zinc-800/80 group-hover:bg-indigo-600/20 group-hover:text-indigo-400 text-zinc-400 flex items-center justify-center transition">
+                    <label id="pdfDropzoneBig"
+                        class="border border-dashed border-zinc-700/80 hover:border-indigo-500/80 bg-zinc-950/50 hover:bg-indigo-950/10 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition group shadow-sm">
+                        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden"
+                            onchange="handleRealPdfUpload(this)">
+                        <div
+                            class="w-8 h-8 rounded-xl bg-zinc-800/80 group-hover:bg-indigo-600/20 group-hover:text-indigo-400 text-zinc-400 flex items-center justify-center transition">
                             <i data-lucide="file-up" class="w-4 h-4"></i>
                         </div>
-                        <span class="text-xs font-semibold text-zinc-200 group-hover:text-white transition">Ders Notu / PDF Yükle</span>
+                        <span class="text-xs font-semibold text-zinc-200 group-hover:text-white transition">Ders Notu /
+                            PDF Yükle</span>
                         <span class="text-[10px] text-zinc-400">Tıkla veya buraya sürükle bırak</span>
                     </label>
 
                     <!-- PDF Yükleme İlerleme Durumu -->
-                    <div id="uploadProgressBox" class="hidden bg-zinc-950/80 border border-indigo-500/30 rounded-xl p-2.5 space-y-1.5 shadow-md">
+                    <div id="uploadProgressBox"
+                        class="hidden bg-zinc-950/80 border border-indigo-500/30 rounded-xl p-2.5 space-y-1.5 shadow-md">
                         <div class="flex items-center justify-between text-xs">
-                            <span id="uploadStatusText" class="text-indigo-300 font-medium truncate flex items-center gap-1.5">
+                            <span id="uploadStatusText"
+                                class="text-indigo-300 font-medium truncate flex items-center gap-1.5">
                                 <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> İşleniyor...
                             </span>
                             <span id="uploadPhaseText" class="text-[10px] text-zinc-400 font-mono">0%</span>
                         </div>
                         <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-2/3 animate-pulse"></div>
+                            <div class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-2/3 animate-pulse">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Yüklenen PDF Listesi -->
                     <div id="coursePdfList" class="space-y-1.5 max-h-48 overflow-y-auto no-scrollbar">
-                        <div class="text-[11px] text-zinc-500 italic text-center py-3">Bu derse henüz PDF yüklenmedi.</div>
+                        <div class="text-[11px] text-zinc-500 italic text-center py-3">Bu derse henüz PDF yüklenmedi.
+                        </div>
                     </div>
 
                     <!-- Uyumluluk için gizli elemanlar (JS fonksiyonları hata vermesin) -->
@@ -986,14 +1216,17 @@
                 <!-- 3. ÇALIŞMA OTURUMLARI / SOHBET GEÇMİŞİ -->
                 <div class="space-y-2 pt-2 border-t border-zinc-800/70">
                     <div class="flex items-center justify-between px-1">
-                        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <span
+                            class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i data-lucide="message-square" class="w-3.5 h-3.5 text-zinc-400"></i> Çalışma Oturumları
                         </span>
-                        <span id="chatCountBadge" class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-full font-medium">1</span>
+                        <span id="chatCountBadge"
+                            class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-full font-medium">1</span>
                     </div>
 
                     <!-- Yeni Sohbet Butonu -->
-                    <button onclick="createNewChat()" class="w-full bg-zinc-800/70 hover:bg-zinc-800 text-zinc-200 hover:text-white font-medium text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-2 border border-zinc-700/60 transition shadow-sm">
+                    <button onclick="createNewChat()"
+                        class="w-full bg-zinc-800/70 hover:bg-zinc-800 text-zinc-200 hover:text-white font-medium text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-2 border border-zinc-700/60 transition shadow-sm">
                         <i data-lucide="plus" class="w-3.5 h-3.5 text-indigo-400"></i>
                         <span>Yeni Çalışma Sohbeti</span>
                     </button>
@@ -1008,18 +1241,23 @@
 
             <!-- Alt Kısım: Öğrenci Profili & Cihaz Kimliği -->
             <div class="p-3 border-t border-zinc-800/80 bg-zinc-950/60 shrink-0">
-                <button onclick="openProfileModal()" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/70 transition text-left group">
+                <button onclick="openProfileModal()"
+                    class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/70 transition text-left group">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div id="profileAvatar" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
+                        <div id="profileAvatar"
+                            class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
                             B
                         </div>
                         <div class="min-w-0">
-                            <p id="profileStudentName" class="text-xs font-semibold text-zinc-200 group-hover:text-white truncate">Öğrenci</p>
-                            <p id="profileIdLabel" class="text-[10px] text-zinc-400 font-mono truncate">Cihaz ID: ...</p>
+                            <p id="profileStudentName"
+                                class="text-xs font-semibold text-zinc-200 group-hover:text-white truncate">Öğrenci</p>
+                            <p id="profileIdLabel" class="text-[10px] text-zinc-400 font-mono truncate">Cihaz ID: ...
+                            </p>
                             <span id="profileUserIdShort" class="hidden"></span>
                         </div>
                     </div>
-                    <i data-lucide="settings-2" class="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 transition shrink-0"></i>
+                    <i data-lucide="settings-2"
+                        class="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 transition shrink-0"></i>
                 </button>
             </div>
 
@@ -1028,51 +1266,65 @@
 
     <!-- ================= ANA ÇALIŞMA ALANI (MAIN CANVAS) ================= -->
     <main class="flex-1 flex flex-col h-full min-h-0 min-w-0 overflow-hidden relative">
-        
+
         <!-- ÜST ÇALIŞMA ARAÇ ÇUBUĞU (STUDIO HEADER) -->
-        <header class="h-14 border-b border-border bg-surface/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 gap-2">
-            
+        <header
+            class="h-14 border-b border-border bg-surface/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 gap-2">
+
             <!-- Sol Kısım: Sidebar Toggle & StudyRAG Logo Button (Tıklayınca Ana Ekrana) -->
             <div class="flex items-center gap-2 min-w-0">
-                <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Sol Menüyü Aç/Kapat" class="p-2 rounded-xl text-text-muted hover:text-text bg-surface-2 hover:bg-border transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
+                <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Sol Menüyü Aç/Kapat"
+                    class="p-2 rounded-xl text-text-muted hover:text-text bg-surface-2 hover:bg-border transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
                     <i data-lucide="panel-left" class="w-4 h-4 text-accent"></i>
                 </button>
-                <button onclick="switchTab('home')" class="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-surface-2 transition group cursor-pointer" title="Ana Ekrana Dön">
+                <button onclick="switchTab('home')"
+                    class="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-surface-2 transition group cursor-pointer"
+                    title="Ana Ekrana Dön">
                     <svg class="w-6 h-6 rounded-lg shrink-0 shadow-sm" viewBox="0 0 32 32">
-                        <rect width="32" height="32" rx="8" fill="var(--accent)"/>
-                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)"/>
-                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z" fill="var(--accent-contrast)"/>
-                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)"/>
+                        <rect width="32" height="32" rx="8" fill="var(--accent)" />
+                        <path d="M16 6 L6 11 L16 16 L26 11 Z" fill="var(--accent-contrast)" />
+                        <path d="M9 14.5 V21 C9 24 16 26 16 26 C16 26 23 24 23 21 V14.5 L16 18 Z"
+                            fill="var(--accent-contrast)" />
+                        <path d="M25 13 V20" stroke="var(--accent-contrast)" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="25" cy="21" r="1.5" fill="var(--accent-contrast)" />
                     </svg>
-                    <span class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition hidden sm:inline">StudyRAG</span>
+                    <span
+                        class="font-bold text-sm tracking-tight text-text group-hover:text-accent transition hidden sm:inline">StudyRAG</span>
                 </button>
                 <span id="headerCourseName" class="hidden"></span>
             </div>
 
             <!-- Orta Kısım: Modern Segmentli Çalışma Hub'ları (Tabs) -->
-            <div id="headerTabsContainer" class="flex items-center p-1 bg-surface-2 border border-border rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-1">
-                <button onclick="switchTab('home')" id="tab-btn-home" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer">
+            <div id="headerTabsContainer"
+                class="flex items-center p-1 bg-surface-2 border border-border rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-1">
+                <button onclick="switchTab('home')" id="tab-btn-home"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer">
                     <i data-lucide="home" class="w-3.5 h-3.5"></i>
                     <span>Ana Ekran</span>
                 </button>
-                <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('chat')" id="tab-btn-chat"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="message-square-text" class="w-3.5 h-3.5"></i>
                     <span>Sohbet</span>
                 </button>
-                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
                     <span>Quiz</span>
                 </button>
-                <button onclick="switchTab('flashcards')" id="tab-btn-flashcards" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('flashcards')" id="tab-btn-flashcards"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                     <span>Flashcard</span>
                 </button>
-                <button onclick="switchTab('mindmap')" id="tab-btn-mindmap" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer" title="Dersin Zihin Haritası">
+                <button onclick="switchTab('mindmap')" id="tab-btn-mindmap"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer"
+                    title="Dersin Zihin Haritası">
                     <i data-lucide="network" class="w-3.5 h-3.5"></i>
                     <span>Zihin Haritası</span>
                 </button>
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
+                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
                     <span>Gelişim</span>
                 </button>
@@ -1080,95 +1332,129 @@
 
             <!-- Sağ Kısım: Tema Değiştirici & Profil / Sync ID Butonu -->
             <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir" class="p-2 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
+                <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir"
+                    class="p-2 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
                     <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-reward"></i>
                 </button>
-                <button onclick="openProfileModal()" id="headerProfileBtn" title="Öğrenci Profili & Cihaz / Sync ID" class="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition border border-border cursor-pointer">
-                    <div id="headerAvatar" class="w-5 h-5 rounded-lg bg-accent text-accent-contrast font-bold text-[11px] flex items-center justify-center shrink-0">
+                <button onclick="openProfileModal()" id="headerProfileBtn" title="Öğrenci Profili & Cihaz / Sync ID"
+                    class="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition border border-border cursor-pointer">
+                    <div id="headerAvatar"
+                        class="w-5 h-5 rounded-lg bg-accent text-accent-contrast font-bold text-[11px] flex items-center justify-center shrink-0">
                         Ö
                     </div>
-                    <span id="headerStudentName" class="text-xs font-medium hidden sm:inline max-w-[90px] truncate">Öğrenci</span>
+                    <span id="headerStudentName"
+                        class="text-xs font-medium hidden sm:inline max-w-[90px] truncate">Öğrenci</span>
                 </button>
             </div>
         </header>
 
         <!-- ================= SEKME 0: YENİ ANA EKRAN (STUDDY İLHAMLI HOME) ================= -->
-        <section id="tab-home" class="flex-1 flex flex-col h-full min-h-0 overflow-y-auto relative touch-scroll p-4 sm:p-6 md:p-8 bg-bg">
-            <div id="homeContainer" class="max-w-3xl w-full mx-auto my-auto py-6 sm:py-8 space-y-6 sm:space-y-7 flex flex-col items-center">
+        <section id="tab-home"
+            class="flex-1 flex flex-col h-full min-h-0 overflow-y-auto relative touch-scroll p-4 sm:p-6 md:p-8 bg-bg">
+            <div id="homeContainer"
+                class="max-w-3xl w-full mx-auto my-auto py-6 sm:py-8 space-y-6 sm:space-y-7 flex flex-col items-center">
                 <!-- JS renderHomeScreen() ile doldurulacak -->
             </div>
         </section>
 
         <!-- ================= SEKME 1: NOTEBOOKLM STİLİ SOHBET & DERS ASİSTANI ================= -->
         <section id="tab-chat" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
-            
+
             <!-- Mesaj Akışı Alanı (Chat Messages) -->
-            <div id="chatMessages" class="flex-1 min-h-0 overflow-y-auto p-3.5 md:p-6 space-y-4 md:space-y-6 touch-scroll">
+            <div id="chatMessages"
+                class="flex-1 min-h-0 overflow-y-auto p-3.5 md:p-6 space-y-4 md:space-y-6 touch-scroll">
                 <!-- JS tarafından doldurulacak: Boş halde Hoşgeldin Başlığı + 1 Satırlık Şerit + 5 Mod Kartı -->
             </div>
 
             <!-- Hızlı Öneri Çipleri (SADECE BOŞ HALDE GÖRÜNÜR, GİRİŞ KUTUSUNUN HEMEN ÜSTÜNDE) -->
             <div id="chatSuggestionChips" class="px-3 md:px-4 py-2 border-t border-zinc-800/40 bg-zinc-900/40 shrink-0">
-                <div class="max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    <span class="text-[11px] text-zinc-500 font-semibold shrink-0 hidden sm:inline flex items-center gap-1">
+                <div
+                    class="max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                    <span
+                        class="text-[11px] text-zinc-500 font-semibold shrink-0 hidden sm:inline flex items-center gap-1">
                         <i data-lucide="sparkles" class="w-3 h-3 text-indigo-400"></i> Önerilen:
                     </span>
-                    <button onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')" class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
+                    <button
+                        onclick="sendQuickPrompt('Ders notlarındaki en kritik konuları ve sınavda çıkabilecek kavramları madde madde özetle.')"
+                        class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
                         <i data-lucide="list-collapse" class="w-3.5 h-3.5 text-zinc-400"></i> Genel Özet
                     </button>
-                    <button onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')" class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
+                    <button
+                        onclick="sendQuickPrompt('Bu dersin notlarındaki en önemli 5 sınav tanımını ve sayfa referanslarını listele.')"
+                        class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
                         <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-zinc-400"></i> 5 Kritik Tanım
                     </button>
-                    <button onclick="sendQuickPrompt('Ders notlarındaki tüm formül, denklem ve hesaplama yöntemlerini açıklamalarıyla listele.')" class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
+                    <button
+                        onclick="sendQuickPrompt('Ders notlarındaki tüm formül, denklem ve hesaplama yöntemlerini açıklamalarıyla listele.')"
+                        class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 px-3 py-1.5 rounded-xl text-zinc-300 hover:text-white flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer">
                         <i data-lucide="binary" class="w-3.5 h-3.5 text-zinc-400"></i> Formüller
                     </button>
-                    <button id="cheatSheetBtn" onclick="openCheatSheetModal()" class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer" title="Ders notlarındaki tüm formül ve kavramları A4 formatında özetle">
+                    <button id="cheatSheetBtn" onclick="openCheatSheetModal()"
+                        class="text-xs bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition shrink-0 shadow-sm cursor-pointer"
+                        title="Ders notlarındaki tüm formül ve kavramları A4 formatında özetle">
                         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-zinc-400"></i> Formül Kağıdı
                     </button>
                 </div>
             </div>
 
             <!-- Alt Soru Yazma Kutusu (Composer) -->
-            <div class="p-3 md:p-4 border-t border-zinc-800/60 bg-zinc-900/90 backdrop-blur-md shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
+            <div
+                class="p-3 md:p-4 border-t border-zinc-800/60 bg-zinc-900/90 backdrop-blur-md shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
                 <!-- Seçilen Görsel Önizleme Alanı -->
-                <div id="imagePreviewContainer" class="hidden max-w-4xl xl:max-w-5xl mx-auto mb-2.5 p-2.5 bg-zinc-950/90 border border-indigo-500/30 rounded-2xl flex items-center justify-between shadow-xl animate-in fade-in">
+                <div id="imagePreviewContainer"
+                    class="hidden max-w-4xl xl:max-w-5xl mx-auto mb-2.5 p-2.5 bg-zinc-950/90 border border-indigo-500/30 rounded-2xl flex items-center justify-between shadow-xl animate-in fade-in">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <img id="imagePreviewImg" src="" alt="Yüklenen Görsel" class="w-10 h-10 object-cover rounded-xl border border-indigo-400/30 shrink-0">
+                        <img id="imagePreviewImg" src="" alt="Yüklenen Görsel"
+                            class="w-10 h-10 object-cover rounded-xl border border-indigo-400/30 shrink-0">
                         <div class="truncate text-xs">
-                            <span id="imagePreviewName" class="font-semibold text-zinc-200 block truncate">görsel.jpg</span>
+                            <span id="imagePreviewName"
+                                class="font-semibold text-zinc-200 block truncate">görsel.jpg</span>
                             <span class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
                                 <i data-lucide="sparkles" class="w-3 h-3"></i> Görsel analizi ile çözülecek
                             </span>
                         </div>
                     </div>
-                    <button type="button" onclick="clearSelectedImage()" title="Görseli Kaldır" class="p-1.5 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 transition">
+                    <button type="button" onclick="clearSelectedImage()" title="Görseli Kaldır"
+                        class="p-1.5 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 transition">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <form onsubmit="handleChatSubmit(event)" class="max-w-4xl xl:max-w-5xl mx-auto flex items-center gap-2 md:gap-3">
+                <form onsubmit="handleChatSubmit(event)"
+                    class="max-w-4xl xl:max-w-5xl mx-auto flex items-center gap-2 md:gap-3">
                     <!-- Resim / Soru Fotoğrafı Ekleme Butonu -->
-                    <button type="button" onclick="document.getElementById('chatImageInput').click()" title="Fotoğraf veya Soru Görseli Ekle" class="p-2.5 md:p-3 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/70 text-zinc-300 hover:text-white transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer">
+                    <button type="button" onclick="document.getElementById('chatImageInput').click()"
+                        title="Fotoğraf veya Soru Görseli Ekle"
+                        class="p-2.5 md:p-3 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/70 text-zinc-300 hover:text-white transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer">
                         <i data-lucide="image-plus" class="w-4 h-4"></i>
                     </button>
-                    <input type="file" id="chatImageInput" accept="image/*" class="hidden" onchange="handleChatImageSelect(event)">
+                    <input type="file" id="chatImageInput" accept="image/*" class="hidden"
+                        onchange="handleChatImageSelect(event)">
 
                     <!-- Metin Giriş Alanı -->
                     <div class="flex-1 relative flex items-center">
-                        <textarea id="chatInput" rows="1" placeholder="Ders notlarından bir soru sor veya konu anlatımı iste... (Shift + Enter: yeni satır)" class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none transition shadow-inner max-h-32 leading-relaxed" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleChatSubmit(event); }"></textarea>
+                        <textarea id="chatInput" rows="1"
+                            placeholder="Ders notlarından bir soru sor veya konu anlatımı iste... (Shift + Enter: yeni satır)"
+                            class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none transition shadow-inner max-h-32 leading-relaxed"
+                            onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleChatSubmit(event); }"></textarea>
                     </div>
 
                     <!-- Sadeleştirilmiş Anlatım (ELI5) Toggle Switch -->
-                    <label class="flex items-center gap-2 cursor-pointer select-none bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/70 px-3 py-2 md:py-2.5 rounded-2xl text-zinc-300 hover:text-white transition shrink-0 shadow-sm" title="Basitçe Anlat (ELI5): Cevapları karmaşık terimlerden arındırarak sade bir dille açıklar">
+                    <label
+                        class="flex items-center gap-2 cursor-pointer select-none bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/70 px-3 py-2 md:py-2.5 rounded-2xl text-zinc-300 hover:text-white transition shrink-0 shadow-sm"
+                        title="Basitçe Anlat (ELI5): Cevapları karmaşık terimlerden arındırarak sade bir dille açıklar">
                         <span class="text-xs font-semibold hidden sm:inline">ELI5</span>
                         <div class="relative inline-flex items-center">
                             <input type="checkbox" id="eli5Toggle" class="sr-only peer">
-                            <div class="w-8 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <div
+                                class="w-8 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-indigo-600">
+                            </div>
                         </div>
                     </label>
 
                     <!-- Gönder Butonu (Mor Dolgu) -->
-                    <button type="submit" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold p-2.5 md:px-5 md:py-3 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 shrink-0 cursor-pointer">
+                    <button type="submit" id="sendBtn"
+                        class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold p-2.5 md:px-5 md:py-3 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 shrink-0 cursor-pointer">
                         <span class="hidden md:inline text-xs font-semibold">Gönder</span>
                         <i data-lucide="arrow-up" class="w-4 h-4"></i>
                     </button>
@@ -1179,30 +1465,37 @@
         <!-- ================= SEKME 2: QUIZ & TEST ARENASI ================= -->
         <section id="tab-quiz" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
             <div class="max-w-4xl mx-auto w-full space-y-4">
-                
+
                 <!-- Quiz Ayarları & Filtre Kartı -->
                 <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 md:p-5 shadow-xl space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                            <div
+                                class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
                                 <i data-lucide="sparkles" class="w-4 h-4"></i>
                             </div>
                             <div>
-                                <h2 class="text-sm md:text-base font-bold text-zinc-100">Ders Notlarından Sınav Simülatörü</h2>
-                                <p class="text-[11px] text-zinc-400">Yapay zeka notlarını analiz edip sınava yönelik sorular çıkarır</p>
+                                <h2 class="text-sm md:text-base font-bold text-zinc-100">Ders Notlarından Sınav
+                                    Simülatörü</h2>
+                                <p class="text-[11px] text-zinc-400">Yapay zeka notlarını analiz edip sınava yönelik
+                                    sorular çıkarır</p>
                             </div>
-                        <button id="mistakeNotebookBtn" onclick="openMistakeNotebookModal()" class="bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/80 text-zinc-200 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer" title="Quizlerde yanlış yaptığınız soruları inceleyin ve tekrar çözün">
-                            <i data-lucide="book-x" class="w-3.5 h-3.5 text-rose-400"></i>
-                            <span>Yanlış Defteri (<span id="mistakeCountBadge">0</span>)</span>
-                        </button>
+                            <button id="mistakeNotebookBtn" onclick="openMistakeNotebookModal()"
+                                class="bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/80 text-zinc-200 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                                title="Quizlerde yanlış yaptığınız soruları inceleyin ve tekrar çözün">
+                                <i data-lucide="book-x" class="w-3.5 h-3.5 text-rose-400"></i>
+                                <span>Yanlış Defteri (<span id="mistakeCountBadge">0</span>)</span>
+                            </button>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                         <!-- Soru Tipi -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru Tipi</label>
-                            <select id="quizType" class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru
+                                Tipi</label>
+                            <select id="quizType"
+                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
                                 <option value="mixed">Karışık (Önerilen)</option>
                                 <option value="mcq">Çoktan Seçmeli (Test)</option>
                                 <option value="tf">Doğru / Yanlış</option>
@@ -1212,8 +1505,10 @@
 
                         <!-- Zorluk Seviyesi -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Zorluk Seviyesi</label>
-                            <select id="quizDifficulty" class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Zorluk
+                                Seviyesi</label>
+                            <select id="quizDifficulty"
+                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
                                 <option value="medium">Orta Seviye</option>
                                 <option value="easy">Kolay (Kavram Temeli)</option>
                                 <option value="hard">Zor (Vize / Final Düzeyi)</option>
@@ -1222,8 +1517,10 @@
 
                         <!-- Soru Sayısı -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru Sayısı</label>
-                            <select id="quizCount" class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru
+                                Sayısı</label>
+                            <select id="quizCount"
+                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
                                 <option value="5">5 Soru (Hızlı Test)</option>
                                 <option value="3">3 Soru (Mikro Test)</option>
                                 <option value="10">10 Soru (Kapsamlı Sınav)</option>
@@ -1232,16 +1529,20 @@
 
                         <!-- Zayıf Sayfalara Odaklan -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Odak Alanı</label>
-                            <label class="flex items-center gap-2 h-[38px] px-3 bg-zinc-950 border border-zinc-700/80 rounded-xl cursor-pointer hover:border-zinc-600 transition">
-                                <input type="checkbox" id="quizFocusWeakToggle" class="accent-indigo-500 cursor-pointer">
+                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Odak
+                                Alanı</label>
+                            <label
+                                class="flex items-center gap-2 h-[38px] px-3 bg-zinc-950 border border-zinc-700/80 rounded-xl cursor-pointer hover:border-zinc-600 transition">
+                                <input type="checkbox" id="quizFocusWeakToggle"
+                                    class="accent-indigo-500 cursor-pointer">
                                 <span class="text-xs text-zinc-200 truncate">Zayıf Sayfalara Odaklan</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Quiz Üret Butonu -->
-                    <button id="generateQuizBtn" onclick="generateQuizFromBackend()" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
+                    <button id="generateQuizBtn" onclick="generateQuizFromBackend()"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
                         <i data-lucide="wand-2" class="w-4 h-4"></i>
                         <span>PDF'ten Yeni Quiz Üret</span>
                     </button>
@@ -1273,11 +1574,13 @@
         </section>
 
         <!-- ================= SEKME 3: FLASHCARDS (QUIZLET / AKTİF HATIRLAMA) ================= -->
-        <section id="tab-flashcards" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
+        <section id="tab-flashcards"
+            class="hidden flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
             <div class="max-w-2xl mx-auto w-full space-y-4">
-                
+
                 <!-- Üst Kontrol & Üretim Çubuğu -->
-                <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center justify-between flex-wrap gap-3">
+                <div
+                    class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center justify-between flex-wrap gap-3">
                     <div>
                         <h2 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
                             <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i> Aktif Hatırlama (Flashcards)
@@ -1285,7 +1588,8 @@
                         <p class="text-[11px] text-zinc-400">Kavramları kartlarla pekiştirin</p>
                     </div>
 
-                    <button id="generateFcBtn" onclick="generateFlashcardsFromBackend()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-indigo-600/25">
+                    <button id="generateFcBtn" onclick="generateFlashcardsFromBackend()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-indigo-600/25">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                         <span>Yeni Kart Seti Üret</span>
                     </button>
@@ -1294,11 +1598,14 @@
                 <!-- 3D Flashcard Sahnesi -->
                 <div class="perspective w-full h-80 sm:h-96 cursor-pointer" onclick="flipCard()">
                     <div id="flashcardInner" class="transform-style-3d relative w-full h-full">
-                        
+
                         <!-- ÖN YÜZ -->
-                        <div class="backface-hidden absolute inset-0 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                        <div
+                            class="backface-hidden absolute inset-0 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
                             <div class="flex items-center justify-between">
-                                <span id="fcBadge" class="text-[10px] uppercase font-bold tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full">Kavram / Soru</span>
+                                <span id="fcBadge"
+                                    class="text-[10px] uppercase font-bold tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full">Kavram
+                                    / Soru</span>
                                 <span class="text-xs text-zinc-500 flex items-center gap-1">
                                     <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Çevirmek için tıkla
                                 </span>
@@ -1317,9 +1624,12 @@
                         </div>
 
                         <!-- ARKA YÜZ -->
-                        <div class="rotate-y-180 backface-hidden absolute inset-0 bg-zinc-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                        <div
+                            class="rotate-y-180 backface-hidden absolute inset-0 bg-zinc-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
                             <div class="flex items-center justify-between">
-                                <span id="fcAnswerBadge" class="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Cevap & Açıklama</span>
+                                <span id="fcAnswerBadge"
+                                    class="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Cevap
+                                    & Açıklama</span>
                                 <span id="fcSource" class="text-xs text-indigo-400 font-medium">Sayfa: -</span>
                             </div>
 
@@ -1340,16 +1650,20 @@
 
                 <!-- Kart Altı Gezinme ve Puanlama Butonları -->
                 <div class="grid grid-cols-4 gap-2 pt-2">
-                    <button onclick="handleSelfEval(1)" class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-rose-500/30 hover:bg-rose-950/30 text-rose-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
+                    <button onclick="handleSelfEval(1)"
+                        class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-rose-500/30 hover:bg-rose-950/30 text-rose-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
                         <span>Tekrar (1)</span>
                     </button>
-                    <button onclick="handleSelfEval(2)" class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-amber-500/30 hover:bg-amber-950/30 text-amber-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
+                    <button onclick="handleSelfEval(2)"
+                        class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-amber-500/30 hover:bg-amber-950/30 text-amber-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
                         <span>Zor (2)</span>
                     </button>
-                    <button onclick="handleSelfEval(3)" class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-blue-500/30 hover:bg-blue-950/30 text-blue-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
+                    <button onclick="handleSelfEval(3)"
+                        class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-blue-500/30 hover:bg-blue-950/30 text-blue-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
                         <span>İyi (3)</span>
                     </button>
-                    <button onclick="handleSelfEval(4)" class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-emerald-500/30 hover:bg-emerald-950/30 text-emerald-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
+                    <button onclick="handleSelfEval(4)"
+                        class="py-2.5 px-3 rounded-xl bg-zinc-900 border border-emerald-500/30 hover:bg-emerald-950/30 text-emerald-300 font-semibold text-xs flex flex-col items-center gap-0.5 transition shadow-sm">
                         <span>Kolay (4)</span>
                     </button>
                 </div>
@@ -1358,99 +1672,131 @@
         </section>
 
         <!-- ================= SEKME: ZİHİN HARİTASI (MIND MAP) ================= -->
-        <section id="tab-mindmap" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden p-3 md:p-5 space-y-3">
+        <section id="tab-mindmap"
+            class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden p-3 md:p-5 space-y-3">
             <!-- Üst Kontrol & Arama Çubuğu -->
-            <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 md:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shrink-0">
+            <div
+                class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 md:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
                         <i data-lucide="network" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <h2 class="text-sm font-bold text-zinc-100">Ders Zihin Haritası</h2>
-                            <span id="mindmapCourseBadge" class="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/25 px-2 py-0.5 rounded-full font-medium">Ders Seçilmedi</span>
+                            <span id="mindmapCourseBadge"
+                                class="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/25 px-2 py-0.5 rounded-full font-medium">Ders
+                                Seçilmedi</span>
                         </div>
-                        <p class="text-[11px] text-zinc-400">Konu hiyerarşisi ve sayfa referansları (Sayfa rozetine tıklayarak inceleyin)</p>
+                        <p class="text-[11px] text-zinc-400">Konu hiyerarşisi ve sayfa referansları (Sayfa rozetine
+                            tıklayarak inceleyin)</p>
                     </div>
                 </div>
 
                 <!-- Arama & İşlem Butonları -->
                 <div class="flex items-center flex-wrap gap-2">
                     <div class="relative flex-1 sm:w-64">
-                        <input id="mindmapFocusInput" type="text" placeholder="Konu (opsiyonel, örn: Termodinamik)" class="w-full bg-zinc-950/80 border border-zinc-700/70 rounded-xl px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500/80 transition" onkeydown="if(event.key==='Enter') generateMindmap(false)">
+                        <input id="mindmapFocusInput" type="text" placeholder="Konu (opsiyonel, örn: Termodinamik)"
+                            class="w-full bg-zinc-950/80 border border-zinc-700/70 rounded-xl px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500/80 transition"
+                            onkeydown="if(event.key==='Enter') generateMindmap(false)">
                     </div>
-                    <button id="mindmapGenerateBtn" onclick="generateMindmap(false)" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-purple-600/25 cursor-pointer shrink-0">
+                    <button id="mindmapGenerateBtn" onclick="generateMindmap(false)"
+                        class="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-purple-600/25 cursor-pointer shrink-0">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                         <span>Oluştur</span>
                     </button>
-                    <button id="mindmapRefreshBtn" onclick="generateMindmap(true)" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 border border-zinc-700/80 cursor-pointer shrink-0" title="Önbelleği atlayıp yeniden üret">
+                    <button id="mindmapRefreshBtn" onclick="generateMindmap(true)"
+                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 border border-zinc-700/80 cursor-pointer shrink-0"
+                        title="Önbelleği atlayıp yeniden üret">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                         <span>Yeniden Oluştur</span>
                     </button>
-                    <button id="mindmapExportBtn" onclick="exportMindmapPNG()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0" title="Zihin Haritasını PNG Olarak İndir">
+                    <button id="mindmapExportBtn" onclick="exportMindmapPNG()"
+                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0"
+                        title="Zihin Haritasını PNG Olarak İndir">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         <span class="hidden sm:inline">PNG İndir</span>
                     </button>
-                    <button onclick="fitMindmapView()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0" title="Görünümü Sığdır">
+                    <button onclick="fitMindmapView()"
+                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0"
+                        title="Görünümü Sığdır">
                         <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Zihin Haritası Çizim Sahnesi (SVG Canvas) -->
-            <div id="mindmapCanvasContainer" class="flex-1 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl relative overflow-hidden flex flex-col shadow-inner min-h-[350px]">
+            <div id="mindmapCanvasContainer"
+                class="flex-1 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl relative overflow-hidden flex flex-col shadow-inner min-h-[350px]">
                 <!-- Yükleniyor Durumu (Skeleton / Spinner) -->
-                <div id="mindmapLoading" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-xs gap-3 text-center p-4">
-                    <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <div id="mindmapLoading"
+                    class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-xs gap-3 text-center p-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
                         <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
                     </div>
                     <div>
                         <h4 class="text-sm font-bold text-zinc-100">Zihin Haritası Çıkarılıyor...</h4>
-                        <p class="text-xs text-zinc-400 max-w-sm mt-1">Ders notlarındaki ana temalar ve sayfa bağlantıları hiyerarşik olarak analiz ediliyor.</p>
+                        <p class="text-xs text-zinc-400 max-w-sm mt-1">Ders notlarındaki ana temalar ve sayfa
+                            bağlantıları hiyerarşik olarak analiz ediliyor.</p>
                     </div>
                 </div>
 
                 <!-- Boş Başlangıç Durumu -->
-                <div id="mindmapEmptyState" class="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3">
-                    <div class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/70 flex items-center justify-center text-purple-400">
+                <div id="mindmapEmptyState"
+                    class="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/70 flex items-center justify-center text-purple-400">
                         <i data-lucide="network" class="w-7 h-7"></i>
                     </div>
                     <div class="max-w-md">
                         <h3 class="text-sm font-bold text-zinc-200">Görsel Zihin Haritası</h3>
-                        <p class="text-xs text-zinc-400 mt-1">Ders notlarınızın büyük resmini görmek için yukarıdaki <strong class="text-purple-400 font-semibold">"Oluştur"</strong> butonuna basın. Belirli bir üniteye odaklanmak isterseniz konu kutusunu kullanabilirsiniz.</p>
+                        <p class="text-xs text-zinc-400 mt-1">Ders notlarınızın büyük resmini görmek için yukarıdaki
+                            <strong class="text-purple-400 font-semibold">"Oluştur"</strong> butonuna basın. Belirli bir
+                            üniteye odaklanmak isterseniz konu kutusunu kullanabilirsiniz.</p>
                     </div>
-                    <button onclick="generateMindmap(false)" class="mt-2 text-xs bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-purple-600/25">
+                    <button onclick="generateMindmap(false)"
+                        class="mt-2 text-xs bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-purple-600/25">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
                         <span>Zihin Haritası Oluştur</span>
                     </button>
                 </div>
 
                 <!-- Hata Durumu -->
-                <div id="mindmapErrorState" class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3 bg-zinc-950/80">
-                    <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <div id="mindmapErrorState"
+                    class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3 bg-zinc-950/80">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
                         <i data-lucide="alert-circle" class="w-6 h-6"></i>
                     </div>
-                    <p id="mindmapErrorMessage" class="text-xs sm:text-sm text-rose-300 font-medium max-w-md leading-relaxed"></p>
-                    <button onclick="generateMindmap(true)" class="mt-2 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-1.5 px-3 rounded-lg transition border border-zinc-700">
+                    <p id="mindmapErrorMessage"
+                        class="text-xs sm:text-sm text-rose-300 font-medium max-w-md leading-relaxed"></p>
+                    <button onclick="generateMindmap(true)"
+                        class="mt-2 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-1.5 px-3 rounded-lg transition border border-zinc-700">
                         Tekrar Dene
                     </button>
                 </div>
 
                 <!-- Gerçek SVG ve Alternatif Mermaid Çizim Alanı -->
                 <svg id="mindmapSvg" class="w-full h-full block flex-1 cursor-grab active:cursor-grabbing"></svg>
-                <div id="mermaidFallbackContainer" class="hidden w-full h-full overflow-auto p-4 flex items-center justify-center"></div>
+                <div id="mermaidFallbackContainer"
+                    class="hidden w-full h-full overflow-auto p-4 flex items-center justify-center"></div>
             </div>
         </section>
 
         <!-- ================= SEKME 4: GELİŞİM VE ÖĞRENME ANALİZİ ================= -->
-        <section id="tab-dashboard" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
+        <section id="tab-dashboard"
+            class="hidden flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
             <div class="max-w-4xl mx-auto w-full space-y-4">
-                
+
                 <!-- Günlük Çalışma Planı & Sınav Geri Sayımı (Detaylı Bant) -->
-                <div id="dailyFocusBanner" class="bg-gradient-to-r from-indigo-950/40 via-zinc-900/60 to-violet-950/40 border border-indigo-500/20 rounded-2xl p-4 shadow-sm space-y-3">
+                <div id="dailyFocusBanner"
+                    class="bg-gradient-to-r from-indigo-950/40 via-zinc-900/60 to-violet-950/40 border border-indigo-500/20 rounded-2xl p-4 shadow-sm space-y-3">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+                            <span
+                                class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
                                 <i data-lucide="target" class="w-4 h-4"></i>
                             </span>
                             <div>
@@ -1460,12 +1806,16 @@
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <button id="examCountdownBadge" onclick="openExamDateModal()" class="text-[11px] font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/80 px-2.5 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer" title="Sınav tarihini değiştir / belirle">
+                            <button id="examCountdownBadge" onclick="openExamDateModal()"
+                                class="text-[11px] font-medium bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/80 px-2.5 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer"
+                                title="Sınav tarihini değiştir / belirle">
                                 <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-indigo-400"></i>
                                 <span>Sınav Tarihi Ekle</span>
                             </button>
-                            <button onclick="toggleDailyFocusBanner()" title="Paneli Küçült / Büyüt" class="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer">
-                                <i id="dailyFocusToggleIcon" data-lucide="chevron-up" class="w-4 h-4 transition-transform duration-200"></i>
+                            <button onclick="toggleDailyFocusBanner()" title="Paneli Küçült / Büyüt"
+                                class="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer">
+                                <i id="dailyFocusToggleIcon" data-lucide="chevron-up"
+                                    class="w-4 h-4 transition-transform duration-200"></i>
                             </button>
                         </div>
                     </div>
@@ -1473,34 +1823,46 @@
                     <!-- Katlanabilir Çalışma Hedefleri Satırı -->
                     <div id="dailyFocusContent" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5 text-xs">
                         <!-- 1. Hedef: Zayıf Sayfa Tekrarı -->
-                        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                        <div
+                            class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
                             <div class="min-w-0">
-                                <span class="text-[10px] font-semibold text-rose-400 uppercase tracking-wider block flex items-center gap-1">
+                                <span
+                                    class="text-[10px] font-semibold text-rose-400 uppercase tracking-wider block flex items-center gap-1">
                                     <i data-lucide="alert-triangle" class="w-3 h-3"></i> Öncelikli Tekrar
                                 </span>
-                                <span id="examFocusWeakText" class="text-xs font-semibold text-zinc-200 block truncate mt-0.5">Henüz zayıf sayfa yok</span>
+                                <span id="examFocusWeakText"
+                                    class="text-xs font-semibold text-zinc-200 block truncate mt-0.5">Henüz zayıf sayfa
+                                    yok</span>
                             </div>
-                            <button id="examFocusWeakActionBtn" onclick="switchTab('quiz')" class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-semibold transition shrink-0 cursor-pointer">
+                            <button id="examFocusWeakActionBtn" onclick="switchTab('quiz')"
+                                class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-semibold transition shrink-0 cursor-pointer">
                                 Soru Çöz
                             </button>
                         </div>
 
                         <!-- 2. Hedef: Aktif Hatırlama (Flashcards) -->
-                        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                        <div
+                            class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm">
                             <div class="min-w-0">
-                                <span class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block flex items-center gap-1">
+                                <span
+                                    class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block flex items-center gap-1">
                                     <i data-lucide="layers" class="w-3 h-3"></i> Aktif Hatırlama
                                 </span>
-                                <span id="examFocusFcText" class="text-xs font-semibold text-zinc-200 block truncate mt-0.5">Kavram Kartı Üret</span>
+                                <span id="examFocusFcText"
+                                    class="text-xs font-semibold text-zinc-200 block truncate mt-0.5">Kavram Kartı
+                                    Üret</span>
                             </div>
-                            <button onclick="switchTab('flashcards')" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg text-[11px] font-semibold transition shrink-0 cursor-pointer">
+                            <button onclick="switchTab('flashcards')"
+                                class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg text-[11px] font-semibold transition shrink-0 cursor-pointer">
                                 Başla
                             </button>
                         </div>
 
                         <!-- 3. Strateji / Günlük Tavsiye -->
-                        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center gap-2.5 shadow-sm">
-                            <div class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+                        <div
+                            class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex items-center gap-2.5 shadow-sm">
+                            <div
+                                class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
                                 <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>
                             </div>
                             <p id="examStrategyTip" class="text-[11px] text-zinc-300 leading-tight line-clamp-2">
@@ -1509,7 +1871,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Bento Grid KPI Metrik Kartları -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-lg space-y-1">
@@ -1543,7 +1905,8 @@
                                 <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
                                 Zayıf Sayfa Tespiti
                             </h3>
-                            <button onclick="refreshDashboardStats()" class="text-zinc-400 hover:text-indigo-400 p-1 rounded" title="Yenile">
+                            <button onclick="refreshDashboardStats()"
+                                class="text-zinc-400 hover:text-indigo-400 p-1 rounded" title="Yenile">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -1563,15 +1926,18 @@
                         <div class="space-y-2.5 text-xs text-zinc-300">
                             <div class="p-3 bg-zinc-950/70 border border-zinc-800 rounded-xl space-y-1">
                                 <span class="font-semibold text-indigo-300">1. Konu Anlatımı için "Basitçe Anlat"</span>
-                                <p class="text-zinc-400">Karmaşık terimleri anlamakta zorlandığınızda ELI5 modunu açarak soru sorun.</p>
+                                <p class="text-zinc-400">Karmaşık terimleri anlamakta zorlandığınızda ELI5 modunu açarak
+                                    soru sorun.</p>
                             </div>
                             <div class="p-3 bg-zinc-950/70 border border-zinc-800 rounded-xl space-y-1">
                                 <span class="font-semibold text-emerald-300">2. Aktif Hatırlama (Flashcards)</span>
-                                <p class="text-zinc-400">Flashcards sekmesini kullanarak her gün 5 dakika kavram tekrarı yapın.</p>
+                                <p class="text-zinc-400">Flashcards sekmesini kullanarak her gün 5 dakika kavram tekrarı
+                                    yapın.</p>
                             </div>
                             <div class="p-3 bg-zinc-950/70 border border-zinc-800 rounded-xl space-y-1">
                                 <span class="font-semibold text-amber-300">3. Vize Seviyesi Quiz Çözümü</span>
-                                <p class="text-zinc-400">Sınav öncesi Quiz sekmesinden "Karışık" soru tipiyle kendinizi test edin.</p>
+                                <p class="text-zinc-400">Sınav öncesi Quiz sekmesinden "Karışık" soru tipiyle kendinizi
+                                    test edin.</p>
                             </div>
                         </div>
                     </div>
@@ -1583,11 +1949,14 @@
     </main>
 
     <!-- ================= ÖĞRENCİ PROFİLİ & CİHAZ SENKRONİZASYON MODALI ================= -->
-    <div id="profileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4 animate-in fade-in">
-        <div class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-md p-5 shadow-2xl relative space-y-4">
+    <div id="profileModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4 animate-in fade-in">
+        <div
+            class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-md p-5 shadow-2xl relative space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                         <i data-lucide="user-check" class="w-5 h-5"></i>
                     </div>
                     <div>
@@ -1595,7 +1964,8 @@
                         <p class="text-[11px] text-zinc-400">Çalışma alanı kimliği ve senkronizasyon</p>
                     </div>
                 </div>
-                <button onclick="closeProfileModal()" class="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition">
+                <button onclick="closeProfileModal()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -1603,8 +1973,10 @@
             <div class="space-y-1.5">
                 <label class="text-[11px] font-medium text-zinc-300">Öğrenci Adı / Profil İsmi</label>
                 <div class="flex items-center gap-2">
-                    <input id="inputStudentName" type="text" placeholder="Örn: Berk Cezik" class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
-                    <button onclick="saveStudentName()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl transition font-medium">Kaydet</button>
+                    <input id="inputStudentName" type="text" placeholder="Örn: Berk Cezik"
+                        class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
+                    <button onclick="saveStudentName()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl transition font-medium">Kaydet</button>
                 </div>
             </div>
 
@@ -1614,15 +1986,18 @@
                         <i data-lucide="fingerprint" class="w-3.5 h-3.5 text-emerald-400"></i>
                         Bu Cihazın Öğrenci ID'si
                     </span>
-                    <button onclick="copyUserIdToClipboard()" class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium bg-indigo-950/60 border border-indigo-800/60 px-2 py-0.5 rounded transition">
+                    <button onclick="copyUserIdToClipboard()"
+                        class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium bg-indigo-950/60 border border-indigo-800/60 px-2 py-0.5 rounded transition">
                         <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
                     </button>
                 </div>
-                <p id="modalFullUserId" class="font-mono text-[11px] text-emerald-400/90 break-all bg-zinc-900 p-2 rounded-lg border border-zinc-800 select-all">
+                <p id="modalFullUserId"
+                    class="font-mono text-[11px] text-emerald-400/90 break-all bg-zinc-900 p-2 rounded-lg border border-zinc-800 select-all">
                     ...
                 </p>
                 <p class="text-[10px] text-zinc-400 leading-relaxed">
-                    Yüklediğiniz PDF'ler ve soru geçmişiniz bu ID'ye kaydedilir. Telefon ve bilgisayarınızda farklı ID varsa dökümanlar ayrı tutulur.
+                    Yüklediğiniz PDF'ler ve soru geçmişiniz bu ID'ye kaydedilir. Telefon ve bilgisayarınızda farklı ID
+                    varsa dökümanlar ayrı tutulur.
                 </p>
             </div>
 
@@ -1632,17 +2007,22 @@
                     Cihaz Eşle (PC & Telefonu Bağla)
                 </label>
                 <div class="flex items-center gap-2">
-                    <input id="inputSyncId" type="text" placeholder="Örn: user_..." class="flex-1 bg-zinc-950 border border-indigo-800/60 rounded-xl px-3 py-1.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-indigo-400">
-                    <button onclick="syncWithOtherDeviceId()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl transition font-medium">Eşle</button>
+                    <input id="inputSyncId" type="text" placeholder="Örn: user_..."
+                        class="flex-1 bg-zinc-950 border border-indigo-800/60 rounded-xl px-3 py-1.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-indigo-400">
+                    <button onclick="syncWithOtherDeviceId()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl transition font-medium">Eşle</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ================= HOŞ GELDİN ONBOARDING MODALI ================= -->
-    <div id="onboardingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in">
-        <div class="bg-zinc-900 border border-indigo-500/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative space-y-5 text-center">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-600/30">
+    <div id="onboardingModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in">
+        <div
+            class="bg-zinc-900 border border-indigo-500/30 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative space-y-5 text-center">
+            <div
+                class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-600/30">
                 <i data-lucide="graduation-cap" class="w-6 h-6"></i>
             </div>
             <div>
@@ -1652,10 +2032,12 @@
 
             <div class="bg-zinc-950/70 border border-zinc-800 rounded-2xl p-3.5 text-left space-y-1.5">
                 <label class="text-xs font-semibold text-zinc-200">Sana nasıl hitap edelim?</label>
-                <input id="onboardingNameInput" type="text" placeholder="Adınızı giriniz (Örn: Berk, Zeynep...)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
+                <input id="onboardingNameInput" type="text" placeholder="Adınızı giriniz (Örn: Berk, Zeynep...)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
             </div>
 
-            <button onclick="completeOnboarding()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
+            <button onclick="completeOnboarding()"
+                class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2">
                 <span>Çalışmaya Başla</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
@@ -1663,50 +2045,63 @@
     </div>
 
     <!-- ================= DERS NOTU & PDF SAYFASI ÖNİZLEME MODALI ================= -->
-    <div id="sourceSnippetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
-        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-4xl max-h-[95vh] shadow-2xl relative flex flex-col overflow-hidden">
-            
+    <div id="sourceSnippetModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
+        <div
+            class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-4xl max-h-[95vh] shadow-2xl relative flex flex-col overflow-hidden">
+
             <!-- Modal Üst Başlık & Araç Çubuğu -->
-            <div class="flex items-center justify-between p-3.5 sm:p-4 border-b border-zinc-800 bg-zinc-900/90 shrink-0 gap-2">
+            <div
+                class="flex items-center justify-between p-3.5 sm:p-4 border-b border-zinc-800 bg-zinc-900/90 shrink-0 gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                     </div>
                     <div class="truncate">
-                        <h3 id="modalSourceDocTitle" class="text-xs sm:text-sm font-semibold text-zinc-100 truncate">Ders Notu Önizleme</h3>
+                        <h3 id="modalSourceDocTitle" class="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                            Ders Notu Önizleme</h3>
                         <p id="modalSourcePageBadge" class="text-[10px] text-indigo-300 font-mono">Sayfa ...</p>
                     </div>
                 </div>
 
                 <!-- Sayfa Kontrolleri -->
                 <div class="flex items-center gap-1.5 sm:gap-2">
-                    <button id="pdfPrevPageBtn" onclick="changePdfPreviewPage(-1)" title="Önceki Sayfa" class="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
+                    <button id="pdfPrevPageBtn" onclick="changePdfPreviewPage(-1)" title="Önceki Sayfa"
+                        class="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-                    <div class="flex items-center gap-1 text-xs text-zinc-300 font-medium bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800">
+                    <div
+                        class="flex items-center gap-1 text-xs text-zinc-300 font-medium bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800">
                         <span>Sayfa</span>
-                        <input id="pdfPageInput" type="number" min="1" value="1" onchange="jumpToPdfPage(this.value)" class="w-10 text-center bg-transparent border-b border-indigo-500 text-indigo-300 font-bold text-xs focus:outline-none">
+                        <input id="pdfPageInput" type="number" min="1" value="1" onchange="jumpToPdfPage(this.value)"
+                            class="w-10 text-center bg-transparent border-b border-indigo-500 text-indigo-300 font-bold text-xs focus:outline-none">
                         <span id="pdfTotalPagesLabel" class="text-zinc-400">/ 1</span>
                     </div>
-                    <button id="pdfNextPageBtn" onclick="changePdfPreviewPage(1)" title="Sonraki Sayfa" class="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
+                    <button id="pdfNextPageBtn" onclick="changePdfPreviewPage(1)" title="Sonraki Sayfa"
+                        class="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition text-xs flex items-center disabled:opacity-30 disabled:pointer-events-none">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
-                    
+
                     <!-- Zoom & Yeni Sekme & Kapat Butonları -->
                     <div class="hidden sm:flex items-center gap-1 pl-2 border-l border-zinc-800">
-                        <button onclick="zoomPdfPreview(-0.15)" title="Uzaklaştır" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition">
+                        <button onclick="zoomPdfPreview(-0.15)" title="Uzaklaştır"
+                            class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition">
                             <i data-lucide="zoom-out" class="w-4 h-4"></i>
                         </button>
                         <span id="pdfZoomLabel" class="text-[10px] text-zinc-400 font-mono w-10 text-center">100%</span>
-                        <button onclick="zoomPdfPreview(0.15)" title="Yakınlaştır" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition">
+                        <button onclick="zoomPdfPreview(0.15)" title="Yakınlaştır"
+                            class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition">
                             <i data-lucide="zoom-in" class="w-4 h-4"></i>
                         </button>
                     </div>
 
-                    <a id="modalOpenFullPdfLink" href="#" target="_blank" title="Tam PDF'i Aç" class="p-1.5 rounded-lg text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800 transition">
+                    <a id="modalOpenFullPdfLink" href="#" target="_blank" title="Tam PDF'i Aç"
+                        class="p-1.5 rounded-lg text-zinc-400 hover:text-indigo-300 hover:bg-zinc-800 transition">
                         <i data-lucide="external-link" class="w-4 h-4"></i>
                     </a>
-                    <button onclick="closeSourceSnippetModal()" class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
+                    <button onclick="closeSourceSnippetModal()"
+                        class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1714,21 +2109,27 @@
 
             <!-- Modal Gövdesi: PDF Sayfası Görseli -->
             <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 flex flex-col items-center">
-                <div class="relative w-full flex items-center justify-center bg-zinc-950/90 rounded-xl border border-zinc-800/80 overflow-hidden min-h-[300px] sm:min-h-[420px] p-2">
-                    <div id="pdfPageLoadingSpinner" class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-950/70 backdrop-blur-xs gap-2">
+                <div
+                    class="relative w-full flex items-center justify-center bg-zinc-950/90 rounded-xl border border-zinc-800/80 overflow-hidden min-h-[300px] sm:min-h-[420px] p-2">
+                    <div id="pdfPageLoadingSpinner"
+                        class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-950/70 backdrop-blur-xs gap-2">
                         <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400"></i>
                         <span class="text-xs text-zinc-300 font-medium">Sayfa Oluşturuluyor...</span>
                     </div>
-                    <img id="modalPdfPageImg" src="" alt="PDF Sayfası" class="max-w-full max-h-[65vh] object-contain rounded shadow-2xl select-none cursor-pointer" onclick="openLightboxFromPreview()" title="Büyütmek için tıkla">
+                    <img id="modalPdfPageImg" src="" alt="PDF Sayfası"
+                        class="max-w-full max-h-[65vh] object-contain rounded shadow-2xl select-none cursor-pointer"
+                        onclick="openLightboxFromPreview()" title="Büyütmek için tıkla">
                 </div>
 
                 <!-- Sayfadaki RAG Alıntısı -->
                 <div id="modalSnippetSection" class="w-full space-y-1.5">
-                    <button type="button" onclick="toggleElement('modalSourceSnippetText')" class="text-[11px] font-semibold text-zinc-400 hover:text-indigo-300 flex items-center gap-1.5 transition">
+                    <button type="button" onclick="toggleElement('modalSourceSnippetText')"
+                        class="text-[11px] font-semibold text-zinc-400 hover:text-indigo-300 flex items-center gap-1.5 transition">
                         <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
                         <span>İlgili Metin Alıntısını Göster</span>
                     </button>
-                    <div id="modalSourceSnippetText" class="hidden text-xs text-zinc-300 bg-zinc-950 p-3 rounded-xl border border-zinc-800 max-h-36 overflow-y-auto font-mono whitespace-pre-wrap leading-relaxed">
+                    <div id="modalSourceSnippetText"
+                        class="hidden text-xs text-zinc-300 bg-zinc-950 p-3 rounded-xl border border-zinc-800 max-h-36 overflow-y-auto font-mono whitespace-pre-wrap leading-relaxed">
                         Metin bulunamadı.
                     </div>
                 </div>
@@ -1736,11 +2137,13 @@
 
             <!-- Alt Araç Çubuğu -->
             <div class="p-3 border-t border-zinc-800 bg-zinc-900/90 flex items-center justify-between shrink-0">
-                <button id="modalAskAboutSourceBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2">
+                <button id="modalAskAboutSourceBtn"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2">
                     <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
                     <span>Bu Sayfayı AI'a Sor</span>
                 </button>
-                <a id="modalDownloadPdfBtn" href="#" download class="text-xs text-zinc-400 hover:text-white px-3 py-2 rounded-xl border border-zinc-700/80 hover:bg-zinc-800 transition flex items-center gap-1.5">
+                <a id="modalDownloadPdfBtn" href="#" download
+                    class="text-xs text-zinc-400 hover:text-white px-3 py-2 rounded-xl border border-zinc-700/80 hover:bg-zinc-800 transition flex items-center gap-1.5">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     <span>PDF İndir</span>
                 </a>
@@ -1749,18 +2152,24 @@
     </div>
 
     <!-- ================= GÖRSEL BÜYÜTME (LIGHTBOX) MODALI ================= -->
-    <div id="imageLightboxModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in" onclick="closeImageLightbox()">
+    <div id="imageLightboxModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in"
+        onclick="closeImageLightbox()">
         <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
             <button onclick="closeImageLightbox()" class="absolute -top-10 right-0 text-white/80 hover:text-white p-2">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
-            <img id="lightboxImg" src="" alt="Büyütülmüş Görsel" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10">
+            <img id="lightboxImg" src="" alt="Büyütülmüş Görsel"
+                class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10">
         </div>
     </div>
 
     <!-- ================= YENİ DERS EKLEME MODALI ================= -->
-    <div id="newCourseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in" onclick="if(event.target === this) closeNewCourseModal()">
-        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4" onclick="event.stopPropagation()">
+    <div id="newCourseModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeNewCourseModal()">
+        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4"
+            onclick="event.stopPropagation()">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
@@ -1771,22 +2180,26 @@
                         <p class="text-[11px] text-zinc-400">Çalışma alanı ve döküman grubu oluşturun</p>
                     </div>
                 </div>
-                <button onclick="closeNewCourseModal()" class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
+                <button onclick="closeNewCourseModal()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
             <div class="space-y-1.5">
                 <label class="text-xs font-medium text-zinc-300">Ders / Konu Adı</label>
-                <input id="newCourseInput" type="text" placeholder="Örn: Bilgisayar Mimarisi, Yapay Zeka, Fizik II..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
+                <input id="newCourseInput" type="text" placeholder="Örn: Bilgisayar Mimarisi, Yapay Zeka, Fizik II..."
+                    class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
                 <p id="newCourseError" class="hidden text-[11px] text-rose-400 font-medium"></p>
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
-                <button type="button" onclick="closeNewCourseModal()" class="px-3.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+                <button type="button" onclick="closeNewCourseModal()"
+                    class="px-3.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
                     İptal
                 </button>
-                <button type="button" onclick="submitNewCourse()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition flex items-center gap-1.5">
+                <button type="button" onclick="submitNewCourse()"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition flex items-center gap-1.5">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     <span>Dersi Ekle</span>
                 </button>
@@ -1795,27 +2208,34 @@
     </div>
 
     <!-- ================= DERS SİLME ONAY MODALI ================= -->
-    <div id="deleteCourseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in" onclick="if(event.target === this) closeDeleteCourseModal()">
-        <div class="bg-zinc-900 border border-rose-500/30 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4" onclick="event.stopPropagation()">
+    <div id="deleteCourseModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeDeleteCourseModal()">
+        <div class="bg-zinc-900 border border-rose-500/30 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4"
+            onclick="event.stopPropagation()">
             <div class="flex items-center gap-2.5">
                 <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm sm:text-base font-semibold text-zinc-100">Dersi Silmek İstediğinize Emin Misiniz?</h3>
+                    <h3 class="text-sm sm:text-base font-semibold text-zinc-100">Dersi Silmek İstediğinize Emin Misiniz?
+                    </h3>
                     <p id="deleteCourseTargetName" class="text-xs text-rose-400 font-medium mt-0.5"></p>
                 </div>
             </div>
 
             <p class="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/80">
-                Bu ders silindiğinde bu derse yüklediğiniz tüm PDF dökümanları ve notlar sistemden kalıcı olarak kaldırılacaktır.
+                Bu ders silindiğinde bu derse yüklediğiniz tüm PDF dökümanları ve notlar sistemden kalıcı olarak
+                kaldırılacaktır.
             </p>
 
             <div class="flex items-center justify-end gap-2 pt-1 border-t border-zinc-800/80">
-                <button type="button" onclick="closeDeleteCourseModal()" class="px-3.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+                <button type="button" onclick="closeDeleteCourseModal()"
+                    class="px-3.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
                     Vazgeç
                 </button>
-                <button id="confirmDeleteCourseBtn" type="button" onclick="confirmDeleteCurrentCourseAction()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/25 transition flex items-center gap-1.5">
+                <button id="confirmDeleteCourseBtn" type="button" onclick="confirmDeleteCurrentCourseAction()"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/25 transition flex items-center gap-1.5">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     <span>Evet, Dersi Sil</span>
                 </button>
@@ -1823,7 +2243,7 @@
         </div>
     </div>
 
-<script>
+    <script>
         // Lucide İkonlarını Başlat
         lucide.createIcons();
 
@@ -2064,8 +2484,8 @@
                 closeProfileModal();
                 fetchDocumentsForCurrentCourse();
                 refreshDashboardStats();
-            renderDailyFocusCard();
-            renderMistakesCount();
+                renderDailyFocusCard();
+                renderMistakesCount();
                 alert("Cihaz başarıyla eşlendi!");
             }
         }
@@ -2084,9 +2504,9 @@
         }
 
         // -------------------------------------------------------------
-        
+
         // -------------------------------------------------------------
-        
+
         // -------------------------------------------------------------
         // 0.5 SOHBETTEN KARTA / QUIZ'E KÖPRÜ (CONTEXTUAL BRIDGES)
         // -------------------------------------------------------------
@@ -2377,7 +2797,7 @@
 
                 if (!res.ok) {
                     let errMsg = 'Formül kağıdı üretilemedi';
-                    try { const err = await res.json(); errMsg = err.detail || errMsg; } catch (_) {}
+                    try { const err = await res.json(); errMsg = err.detail || errMsg; } catch (_) { }
                     throw new Error(errMsg);
                 }
 
@@ -2676,7 +3096,7 @@
                         try {
                             const raw = await res.text();
                             errMsg = raw.slice(0, 120) || errMsg;
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                     throw new Error(errMsg);
                 }
@@ -2717,7 +3137,7 @@
 
                     if (svg) svg.innerHTML = '';
                     if (currentMindmapInstance) {
-                        try { currentMindmapInstance.destroy(); } catch (_) {}
+                        try { currentMindmapInstance.destroy(); } catch (_) { }
                     }
 
                     currentMindmapInstance = Markmap.create(svg, {
@@ -2832,7 +3252,7 @@
                 try {
                     const b = svgEl.getBBox();
                     if (b.width > 0 && b.height > 0) bbox = b;
-                } catch (_) {}
+                } catch (_) { }
 
                 const padding = 60;
                 const width = Math.max(Math.ceil(bbox.width + padding * 2), 900);
@@ -2979,7 +3399,7 @@
                     badge.className = "text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm cursor-pointer";
                     badge.innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5"></i> Sınava ${daysLeft} Gün Kaldı`;
                     if (strategyTip) {
-                        strategyTip.textContent = daysLeft <= 4 
+                        strategyTip.textContent = daysLeft <= 4
                             ? "Sınava çok az kaldı! Zayıf sayfalara odaklanıp test çöz ve formülleri tekrarla."
                             : "Kavram kartlarıyla aktif hatırlama yap ve notları sindirerek özet çıkar.";
                     }
@@ -3070,7 +3490,7 @@
             const name = (input && input.value.trim()) ? input.value.trim() : 'Öğrenci';
             localStorage.setItem('study_student_name', name);
             localStorage.setItem('study_onboarding_done', 'true');
-            
+
             const modal = document.getElementById('onboardingModal');
             if (modal) modal.classList.add('hidden');
 
@@ -3088,17 +3508,17 @@
             }
 
             const toast = document.createElement('div');
-            const borderClass = type === 'success' 
-                ? 'border-emerald-500/50 bg-zinc-900/95 text-emerald-300' 
+            const borderClass = type === 'success'
+                ? 'border-emerald-500/50 bg-zinc-900/95 text-emerald-300'
                 : type === 'error'
-                ? 'border-rose-500/50 bg-zinc-900/95 text-rose-300'
-                : 'border-accent/50 bg-zinc-900/95 text-text';
+                    ? 'border-rose-500/50 bg-zinc-900/95 text-rose-300'
+                    : 'border-accent/50 bg-zinc-900/95 text-text';
 
-            const iconHtml = type === 'success' 
-                ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>' 
+            const iconHtml = type === 'success'
+                ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>'
                 : type === 'error'
-                ? '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>'
-                : '<i data-lucide="info" class="w-4 h-4 text-accent shrink-0"></i>';
+                    ? '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>'
+                    : '<i data-lucide="info" class="w-4 h-4 text-accent shrink-0"></i>';
 
             toast.className = `pointer-events-auto flex items-center gap-2.5 p-3 rounded-2xl border shadow-2xl backdrop-blur-md text-xs font-medium animate-in fade-in slide-in-from-top-2 transition-all ${borderClass}`;
             toast.innerHTML = `
@@ -3214,7 +3634,7 @@
 
                 // --- DURUM A: İLK KULLANICI DENEYİMİ (HİÇ DERS YOKSA) ---
                 if (courses.length === 0) {
-                    const welcomeHeading = studentName 
+                    const welcomeHeading = studentName
                         ? `StudyRAG'e hoş geldin, <span class="text-accent">${studentName}</span>!`
                         : `StudyRAG'e hoş geldin!`;
 
@@ -3276,7 +3696,7 @@
                 const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
 
                 // 1. Büyük Karşılama Başlığı
-                const greetingText = studentName 
+                const greetingText = studentName
                     ? `Bugün ne çalışmak istiyorsun, <span class="font-bold text-accent">${studentName}</span>?`
                     : `Bugün ne çalışmak istiyorsun?`;
 
@@ -3292,15 +3712,15 @@
                 const modeCardsHtml = `
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 w-full">
                         ${HOME_MODES.map(m => {
-                            const isSelected = m.id === currentHomeMode;
-                            const containerClasses = isSelected
-                                ? 'border-accent bg-accent-soft text-text ring-2 ring-accent/30 shadow-md'
-                                : 'border-border bg-surface text-text hover:bg-surface-2 hover:border-accent/40 shadow-sm';
-                            const iconBgClasses = isSelected
-                                ? 'bg-accent text-accent-contrast'
-                                : 'bg-surface-2 text-text-muted group-hover:text-accent';
+                    const isSelected = m.id === currentHomeMode;
+                    const containerClasses = isSelected
+                        ? 'border-accent bg-accent-soft text-text ring-2 ring-accent/30 shadow-md'
+                        : 'border-border bg-surface text-text hover:bg-surface-2 hover:border-accent/40 shadow-sm';
+                    const iconBgClasses = isSelected
+                        ? 'bg-accent text-accent-contrast'
+                        : 'bg-surface-2 text-text-muted group-hover:text-accent';
 
-                            return `
+                    return `
                                 <button onclick="selectHomeMode('${m.id}')" class="p-3.5 sm:p-4 rounded-2xl border text-left transition-all flex flex-col items-start gap-2.5 group cursor-pointer relative ${containerClasses}">
                                     <div class="flex items-center justify-between w-full">
                                         <div class="w-8 h-8 rounded-xl flex items-center justify-center transition shadow-sm ${iconBgClasses}">
@@ -3314,7 +3734,7 @@
                                     </div>
                                 </button>
                             `;
-                        }).join('')}
+                }).join('')}
                     </div>
                 `;
 
@@ -3377,13 +3797,39 @@
                         <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-border mt-2">
                             <!-- Sol: Ders Seçimi & PDF Ekle & Ek Araçlar -->
                             <div class="flex flex-wrap items-center gap-2">
-                                <!-- Hızlı Ders Seçici -->
-                                <div class="relative flex items-center">
-                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent absolute left-2.5 pointer-events-none"></i>
-                                    <select onchange="handleHomeCourseChange(this.value)" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border pl-7 pr-6 py-1.5 rounded-xl font-medium cursor-pointer transition focus:outline-none focus:border-accent">
-                                        ${courseOptions}
-                                    </select>
-                                    <i data-lucide="chevron-down" class="w-3 h-3 text-text-muted absolute right-2 pointer-events-none"></i>
+                                <!-- Hızlı Ders Seçici (Custom UI Dropdown) -->
+                                <div class="relative" id="homeCourseDropdownWrapper">
+                                    <button type="button" id="homeCourseCustomBtn" onclick="toggleHomeCourseMenu(event)"
+                                        class="text-[11px] bg-surface-2 hover:bg-border/80 text-text border border-border px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs group">
+                                        <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent shrink-0"></i>
+                                        <span id="homeCourseSelectedName" class="truncate max-w-[100px] sm:max-w-[140px] font-semibold">${escapeHtml(currentCourse || 'Ders Seçin')}</span>
+                                        <i data-lucide="chevron-down" id="homeCourseChevron" class="w-3 h-3 text-text-muted group-hover:text-text transition-transform duration-200 shrink-0"></i>
+                                    </button>
+
+                                    <!-- Custom Dropdown Menüsü -->
+                                    <div id="homeCourseCustomMenu"
+                                        class="hidden absolute bottom-full sm:bottom-auto sm:top-full left-0 mb-1.5 sm:mb-0 sm:mt-1.5 z-50 bg-surface border border-border rounded-2xl p-1.5 shadow-2xl min-w-[210px] max-h-64 overflow-y-auto no-scrollbar space-y-1 backdrop-blur-md animate-in fade-in zoom-in-95">
+                                        <div class="text-[10px] font-bold text-text-muted px-2.5 py-1 uppercase tracking-wider">Aktif Ders Seç</div>
+                                        <div class="space-y-0.5">
+                                            ${courses.map(c => {
+                                                const isSelected = c === currentCourse;
+                                                return `
+                                                    <button type="button" onclick="selectCourseFromUi('${escapeHtml(c)}')"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition cursor-pointer ${isSelected ? 'bg-accent/15 text-accent font-semibold border border-accent/30' : 'text-text hover:bg-surface-2'}">
+                                                        <span class="truncate">${escapeHtml(c)}</span>
+                                                        ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 text-accent shrink-0"></i>' : ''}
+                                                    </button>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                        <div class="border-t border-border/80 pt-1 mt-1">
+                                            <button type="button" onclick="closeAllCourseMenus(); openNewCourseModal();"
+                                                class="w-full text-left px-2.5 py-1.5 rounded-xl text-[11px] text-accent hover:bg-accent-soft font-semibold flex items-center gap-2 transition cursor-pointer">
+                                                <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-accent"></i>
+                                                <span>+ Yeni Ders Ekle</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Yüklü PDF Rozeti -->
@@ -3438,7 +3884,7 @@
                             </div>
                         `;
                     }
-                } catch (_) {}
+                } catch (_) { }
 
                 // 5. "Devam Et" Bölümü (Son 2-3 oturum/ders - Sadece varsa göster)
                 let recentSectionHtml = '';
@@ -3472,7 +3918,7 @@
                             </div>
                         `;
                     }
-                } catch (_) {}
+                } catch (_) { }
 
                 container.innerHTML = `
                     <div class="w-full max-w-2xl mx-auto space-y-6 sm:space-y-7 flex flex-col items-center animate-in fade-in">
@@ -3684,7 +4130,7 @@
                         const filtered = Array.isArray(parsed) ? parsed.filter(c => !defaults.includes(c)) : [];
                         localStorage.setItem(key, JSON.stringify(filtered));
                         return filtered;
-                    } catch (_) {}
+                    } catch (_) { }
                 }
                 return [];
             }
@@ -3699,7 +4145,7 @@
                     }
                     return filtered;
                 }
-            } catch (_) {}
+            } catch (_) { }
             return [];
         }
 
@@ -3707,30 +4153,108 @@
             localStorage.setItem(getUserCoursesStorageKey(), JSON.stringify(courses));
         }
 
+        function closeAllCourseMenus() {
+            const sideMenu = document.getElementById('sidebarCourseCustomMenu');
+            const homeMenu = document.getElementById('homeCourseCustomMenu');
+            const sideChev = document.getElementById('sidebarCourseChevron');
+            const homeChev = document.getElementById('homeCourseChevron');
+            if (sideMenu) sideMenu.classList.add('hidden');
+            if (homeMenu) homeMenu.classList.add('hidden');
+            if (sideChev) sideChev.classList.remove('rotate-180');
+            if (homeChev) homeChev.classList.remove('rotate-180');
+        }
+
+        function toggleSidebarCourseMenu(e) {
+            if (e) e.stopPropagation();
+            const sideMenu = document.getElementById('sidebarCourseCustomMenu');
+            const sideChev = document.getElementById('sidebarCourseChevron');
+            const isHidden = sideMenu?.classList.contains('hidden');
+            closeAllCourseMenus();
+            if (isHidden && sideMenu) {
+                renderSidebarCourseItems();
+                sideMenu.classList.remove('hidden');
+                if (sideChev) sideChev.classList.add('rotate-180');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function toggleHomeCourseMenu(e) {
+            if (e) e.stopPropagation();
+            const homeMenu = document.getElementById('homeCourseCustomMenu');
+            const homeChev = document.getElementById('homeCourseChevron');
+            const isHidden = homeMenu?.classList.contains('hidden');
+            closeAllCourseMenus();
+            if (isHidden && homeMenu) {
+                homeMenu.classList.remove('hidden');
+                if (homeChev) homeChev.classList.add('rotate-180');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function renderSidebarCourseItems() {
+            const listEl = document.getElementById('sidebarCourseItemsList');
+            if (!listEl) return;
+            const courses = getSavedUserCourses();
+            if (courses.length === 0) {
+                listEl.innerHTML = `<div class="text-[11px] text-zinc-500 italic px-2 py-2 text-center">Henüz ders eklenmedi</div>`;
+                return;
+            }
+            listEl.innerHTML = courses.map(c => {
+                const isSelected = c === currentCourse;
+                return `
+                    <button type="button" onclick="selectCourseFromUi('${escapeHtml(c)}')"
+                        class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition cursor-pointer ${isSelected ? 'bg-accent/15 text-accent font-semibold border border-accent/30' : 'text-zinc-200 hover:bg-zinc-800/80'}">
+                        <span class="truncate">${escapeHtml(c)}</span>
+                        ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 text-accent shrink-0"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function selectCourseFromUi(courseName) {
+            currentCourse = courseName;
+            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            const selectEl = document.getElementById('courseSelect');
+            if (selectEl) {
+                selectEl.value = currentCourse;
+            }
+            closeAllCourseMenus();
+            updateCourseDropdownUI();
+            onCourseChange();
+            if (document.getElementById('tab-home') && !document.getElementById('tab-home').classList.contains('hidden')) {
+                renderHomeScreen();
+            }
+        }
+
+        function updateCourseDropdownUI() {
+            const sideName = document.getElementById('sidebarCourseSelectedName');
+            if (sideName) {
+                sideName.textContent = currentCourse || '-- Henüz Ders Eklenmedi --';
+            }
+            const homeName = document.getElementById('homeCourseSelectedName');
+            if (homeName) {
+                homeName.textContent = currentCourse || 'Ders Seçin';
+            }
+            updateHeaderCourseBadge();
+            updateCourseButtonsState();
+        }
+
         function initCourseDropdown() {
             const select = document.getElementById('courseSelect');
-            if (!select) return;
-
             const courses = getSavedUserCourses();
-            select.innerHTML = '';
 
             if (courses.length === 0) {
                 currentCourse = '';
                 localStorage.removeItem(getUserCurrentCourseKey());
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = '-- Henüz Ders Eklenmedi --';
-                placeholder.disabled = true;
-                placeholder.selected = true;
-                select.appendChild(placeholder);
+                if (select) {
+                    select.innerHTML = '<option value="">-- Henüz Ders Eklenmedi --</option>';
+                    select.value = '';
+                }
             } else {
-                courses.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = c;
-                    select.appendChild(opt);
-                });
-
+                if (select) {
+                    select.innerHTML = courses.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+                }
                 let saved = localStorage.getItem(getUserCurrentCourseKey());
                 if (saved && courses.includes(saved)) {
                     currentCourse = saved;
@@ -3738,11 +4262,11 @@
                     currentCourse = courses[0];
                     localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
                 }
-                select.value = currentCourse;
+                if (select) select.value = currentCourse;
             }
 
-            updateHeaderCourseBadge();
-            updateCourseButtonsState();
+            updateCourseDropdownUI();
+            renderSidebarCourseItems();
         }
 
         function updateHeaderCourseBadge() {
@@ -3771,6 +4295,9 @@
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#courseMenuBtn') && !e.target.closest('#courseDropdownMenu')) {
                 closeCourseMenu();
+            }
+            if (!e.target.closest('#sidebarCourseDropdownWrapper') && !e.target.closest('#homeCourseDropdownWrapper')) {
+                closeAllCourseMenus();
             }
         });
 
@@ -3817,17 +4344,17 @@
                     const weakPages = getStoredWeakPages();
                     const weakCount = Object.keys(weakPages || {}).length;
                     if (weakCount > 0) weakText = `${weakCount} zayıf sayfa`;
-                } catch (_) {}
+                } catch (_) { }
 
                 // 3. Kartlar
                 let cardText = "Kart çalış";
                 try {
                     const fcList = getStoredFlashcards();
-                    const cardsCount = (Array.isArray(generatedCards) && generatedCards.length > 0) 
-                        ? generatedCards.length 
+                    const cardsCount = (Array.isArray(generatedCards) && generatedCards.length > 0)
+                        ? generatedCards.length
                         : (Array.isArray(fcList) ? fcList.length : 0);
                     if (cardsCount > 0) cardText = `${cardsCount} kart çalış`;
-                } catch (_) {}
+                } catch (_) { }
 
                 return `${examText} · ${weakText} · ${cardText}`;
             } catch (_) {
@@ -4141,7 +4668,7 @@
 
             try {
                 const res = await fetch(`/documents?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
-                    headers: { 
+                    headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
                     }
@@ -4278,15 +4805,15 @@
             }
 
             const timers = [
-                setTimeout(() => { 
+                setTimeout(() => {
                     if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Sayfalar Ayrıştırılıyor...';
                     if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Sayfalar taranıyor...';
                 }, 2000),
-                setTimeout(() => { 
+                setTimeout(() => {
                     if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Anlamsal Analiz Yapılıyor...';
                     if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Vektörler ve analiz yapılıyor...';
                 }, 6000),
-                setTimeout(() => { 
+                setTimeout(() => {
                     if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Ders Hafızası Güncelleniyor...';
                     if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Ders hafızası güncelleniyor...';
                 }, 14000)
@@ -4313,7 +4840,7 @@
                     } catch (_) {
                         try {
                             errMsg = (await res.text()) || errMsg;
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                     throw new Error(errMsg);
                 }
@@ -4324,7 +4851,7 @@
 
                 if (phaseText) phaseText.textContent = 'İndeksleme Tamamlandı!';
                 if (statusText) statusText.textContent = 'Başarılı ✓';
-                
+
                 showToast(`✓ "${file.name}"${pageText} başarıyla yüklendi ve ders hafızasına eklendi!`, 'success');
 
                 await fetchDocumentsForCurrentCourse();
@@ -4349,7 +4876,7 @@
             try {
                 const res = await fetch(`/documents/${encodeURIComponent(filename)}?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
                     method: 'DELETE',
-                    headers: { 
+                    headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
                     }
@@ -4471,8 +4998,8 @@
 
             listEl.innerHTML = visibleChats.map(c => {
                 const isActive = c.id === activeChatId;
-                const activeClasses = isActive 
-                    ? 'bg-accent/15 border-accent/40 text-text font-medium shadow-xs' 
+                const activeClasses = isActive
+                    ? 'bg-accent/15 border-accent/40 text-text font-medium shadow-xs'
                     : 'bg-surface-2/60 border-border text-text-muted hover:bg-surface hover:text-text';
 
                 return `
@@ -4684,7 +5211,7 @@
                 if (spinner) spinner.classList.remove('hidden');
                 img.style.transform = `scale(${currentPdfPreview.zoom})`;
                 const imgUrl = `/pdf-page-image?filename=${encodeURIComponent(currentPdfPreview.docName)}&page=${currentPdfPreview.page}&user_id=${encodeURIComponent(currentUserId)}&dpi=140`;
-                
+
                 img.onload = () => {
                     if (spinner) spinner.classList.add('hidden');
                 };
@@ -4847,7 +5374,7 @@
 
                 const studentName = escapeHtml(localStorage.getItem('study_user_name') || 'Öğrenci');
                 const stripText = getExamStripSummary();
-                const courseSubtitle = currentCourse 
+                const courseSubtitle = currentCourse
                     ? `<span class="inline-flex items-center gap-1 text-xs text-zinc-400 bg-zinc-900/60 border border-zinc-800/80 px-2.5 py-0.5 rounded-full"><i data-lucide="book-marked" class="w-3 h-3 text-indigo-400"></i> ${escapeHtml(currentCourse)}</span>`
                     : `<span class="inline-flex items-center gap-1 text-xs text-zinc-500 italic">Ders seçilmedi</span>`;
 
@@ -5026,7 +5553,7 @@
                         ],
                         throwOnError: false
                     });
-                } catch (_) {}
+                } catch (_) { }
             }
             container.scrollTop = container.scrollHeight;
         }
@@ -5117,7 +5644,7 @@
                     const response = await fetch('/chat-stream', {
                         method: 'POST',
                         signal: controller.signal,
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-User-Id': currentUserId
@@ -5213,7 +5740,7 @@
                         try {
                             const errJson = await response.json();
                             lastDetail = errJson.detail || '';
-                        } catch (_) {}
+                        } catch (_) { }
                         throw new Error(lastDetail || `HTTP ${response.status}`);
                     }
                 } catch (streamError) {
@@ -5230,7 +5757,7 @@
                         const fallbackRes = await fetch('/chat', {
                             method: 'POST',
                             signal: controller.signal,
-                            headers: { 
+                            headers: {
                                 'Content-Type': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'X-User-Id': currentUserId
@@ -5254,7 +5781,7 @@
                                 const errData = await fallbackRes.json();
                                 errMsg = errData.detail || errMsg;
                                 lastDetail = errMsg;
-                            } catch (_) {}
+                            } catch (_) { }
                             throw new Error(errMsg);
                         }
 
@@ -5339,8 +5866,8 @@
             btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>${focusWeak ? 'Zayıf Konulardan Hazırlanıyor...' : 'Üretiliyor...'}</span>`;
             if (window.lucide) lucide.createIcons();
 
-            const statusText = focusWeak 
-                ? `🎯 Hata Yaptığınız Konular İnceleniyor...` 
+            const statusText = focusWeak
+                ? `🎯 Hata Yaptığınız Konular İnceleniyor...`
                 : `Ders Notlarınız İnceleniyor...`;
             const statusSub = focusWeak
                 ? `Önceki yanlışlarınız ağırlıklı olmak üzere ${count} adet telafi sorusu hazırlanıyor.`
@@ -5356,13 +5883,13 @@
             if (window.lucide) lucide.createIcons();
 
             try {
-                const targetPages = (focusWeak && currentQuizSession.lastMistakePages.length > 0) 
-                    ? currentQuizSession.lastMistakePages 
+                const targetPages = (focusWeak && currentQuizSession.lastMistakePages.length > 0)
+                    ? currentQuizSession.lastMistakePages
                     : null;
 
                 const res = await fetch('/generate-quiz', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
@@ -5387,7 +5914,7 @@
                         try {
                             const raw = await res.text();
                             errMsg = raw.slice(0, 140) || errMsg;
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                     throw new Error(errMsg);
                 }
@@ -5451,7 +5978,7 @@
 
         function renderQuizCard(q, idx) {
             let optionsHtml = '';
-            
+
             if (q.question_type === 'mcq' && q.options && q.options.length > 0) {
                 optionsHtml = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-2">
@@ -5549,7 +6076,7 @@
             try {
                 await fetch('/submit-answer', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
@@ -5562,8 +6089,8 @@
                     })
                 });
                 refreshDashboardStats();
-            renderDailyFocusCard();
-            renderMistakesCount();
+                renderDailyFocusCard();
+                renderMistakesCount();
             } catch (e) {
                 console.error("Quiz sonucu gönderilemedi:", e);
             }
@@ -5576,7 +6103,7 @@
         async function checkMcqAnswer(btn, selected, correct, docName, pageNo, explanationId, qIdx) {
             const isCorrect = selected.trim().toLowerCase() === correct.trim().toLowerCase();
             const parent = btn.parentElement;
-            
+
             [...parent.querySelectorAll('button')].forEach(b => b.disabled = true);
 
             if (isCorrect) {
@@ -5615,7 +6142,7 @@
             try {
                 await fetch('/submit-answer', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
@@ -5628,8 +6155,8 @@
                     })
                 });
                 refreshDashboardStats();
-            renderDailyFocusCard();
-            renderMistakesCount();
+                renderDailyFocusCard();
+                renderMistakesCount();
             } catch (e) {
                 console.error("Quiz sonucu gönderilemedi:", e);
             }
@@ -5661,7 +6188,7 @@
             let headerTitle = "Tebrikler! Konuyu Çok İyi Kavradın 🎉";
             let headerDesc = "Tüm soruları başarıyla tamamladın. Notlarındaki bilgilere hakimsin.";
             let headerColor = "from-emerald-950/60 to-slate-900/90 border-emerald-600/40 text-emerald-400";
-            
+
             if (pct < 50) {
                 headerTitle = "Geliştirilmesi Gereken Zayıf Konular Tespit Edildi! 🎯";
                 headerDesc = `Bu testte ${wrong} soruda takıldın. Aşağıdaki yanlış yaptığın konulara özel telafi soruları üreterek eksiklerini kapatabilirsin.`;
@@ -5814,7 +6341,7 @@
                         try {
                             const raw = await res.text();
                             errMsg = raw.slice(0, 120) || errMsg;
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                     throw new Error(errMsg);
                 }
@@ -5853,14 +6380,14 @@
             if (currentCardIndex < 0 || currentCardIndex >= generatedCards.length) currentCardIndex = 0;
             const card = generatedCards[currentCardIndex];
             if (!card) return;
-            
+
             const inner = document.getElementById('flashcardInner');
             if (inner) inner.classList.remove('rotate-y-180');
 
             setTimeout(() => {
                 const fcBadge = document.getElementById('fcBadge');
                 if (fcBadge) fcBadge.textContent = `Kart ${currentCardIndex + 1} / ${generatedCards.length} • ${currentCourse || 'Genel'}`;
-                
+
                 const fcFront = document.getElementById('fcFront');
                 if (fcFront) {
                     fcFront.innerHTML = formatMarkdownText(card.front || '');
@@ -5893,7 +6420,7 @@
         async function refreshDashboardStats() {
             try {
                 const res = await fetch(`/dashboard-stats?user_id=${encodeURIComponent(currentUserId)}`, {
-                    headers: { 
+                    headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-User-Id': currentUserId
                     }
@@ -6408,8 +6935,11 @@
     </script>
 
     <!-- ================= SINAV TARİHİ BELİRLEME MODALI ================= -->
-    <div id="examDateModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in" onclick="if(event.target === this) closeExamDateModal()">
-        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative space-y-4" onclick="event.stopPropagation()">
+    <div id="examDateModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeExamDateModal()">
+        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative space-y-4"
+            onclick="event.stopPropagation()">
             <div class="flex items-center justify-between pb-2 border-b border-zinc-800">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
@@ -6420,22 +6950,27 @@
                         <p id="examModalCourseTitle" class="text-[11px] text-zinc-400">Aktif Ders</p>
                     </div>
                 </div>
-                <button onclick="closeExamDateModal()" class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
+                <button onclick="closeExamDateModal()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
             <div class="space-y-1.5">
                 <label class="text-xs font-semibold text-zinc-300">Vize / Final Tarihi</label>
-                <input type="date" id="inputExamDate" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
-                <p class="text-[10px] text-zinc-400 leading-relaxed">Girdiğiniz tarihe göre ana ekranda akıllı geri sayım ve hedefe yönelik çalışma önerileri gösterilir.</p>
+                <input type="date" id="inputExamDate"
+                    class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
+                <p class="text-[10px] text-zinc-400 leading-relaxed">Girdiğiniz tarihe göre ana ekranda akıllı geri
+                    sayım ve hedefe yönelik çalışma önerileri gösterilir.</p>
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/80">
-                <button type="button" onclick="closeExamDateModal()" class="px-3 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+                <button type="button" onclick="closeExamDateModal()"
+                    class="px-3 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
                     İptal
                 </button>
-                <button type="button" onclick="saveExamDate()" class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition flex items-center gap-1.5">
+                <button type="button" onclick="saveExamDate()"
+                    class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition flex items-center gap-1.5">
                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                     <span>Tarihi Kaydet</span>
                 </button>
@@ -6445,8 +6980,11 @@
 
 
     <!-- ================= YANLIŞ DEFTERİ (MISTAKE NOTEBOOK) MODALI ================= -->
-    <div id="mistakeNotebookModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-3 sm:p-4 animate-in fade-in" onclick="if(event.target === this) closeMistakeNotebookModal()">
-        <div class="bg-zinc-900 border border-rose-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl relative flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+    <div id="mistakeNotebookModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-3 sm:p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeMistakeNotebookModal()">
+        <div class="bg-zinc-900 border border-rose-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl relative flex flex-col overflow-hidden"
+            onclick="event.stopPropagation()">
             <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/90 shrink-0">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
@@ -6455,12 +6993,15 @@
                     <div>
                         <h3 class="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2">
                             <span>Yanlış Defteri</span>
-                            <span id="notebookCourseBadge" class="text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">Ders</span>
+                            <span id="notebookCourseBadge"
+                                class="text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">Ders</span>
                         </h3>
-                        <p class="text-[11px] text-zinc-400">Quizlerde hata yaptığınız sorular burada birikir; tek tıkla kart yapın veya tekrar çözün.</p>
+                        <p class="text-[11px] text-zinc-400">Quizlerde hata yaptığınız sorular burada birikir; tek tıkla
+                            kart yapın veya tekrar çözün.</p>
                     </div>
                 </div>
-                <button onclick="closeMistakeNotebookModal()" class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
+                <button onclick="closeMistakeNotebookModal()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -6471,7 +7012,8 @@
 
             <div class="p-3 border-t border-zinc-800 bg-zinc-900/90 flex items-center justify-between shrink-0">
                 <span class="text-xs text-zinc-400" id="mistakeTotalInfo">0 Soru Kayıtlı</span>
-                <button onclick="clearMistakeNotebookPrompt()" class="text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
+                <button onclick="clearMistakeNotebookPrompt()"
+                    class="text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Tümünü Temizle
                 </button>
             </div>
@@ -6479,38 +7021,51 @@
     </div>
 
     <!-- ================= SINAV FORMÜL KAĞIDI (CHEAT SHEET) MODALI ================= -->
-    <div id="cheatSheetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in" onclick="if(event.target === this) closeCheatSheetModal()">
-        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-4xl max-h-[95vh] shadow-2xl relative flex flex-col overflow-hidden" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between p-3.5 sm:p-4 border-b border-zinc-800 bg-zinc-900/90 shrink-0 gap-2">
+    <div id="cheatSheetModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeCheatSheetModal()">
+        <div class="bg-zinc-900 border border-indigo-500/40 rounded-2xl w-full max-w-4xl max-h-[95vh] shadow-2xl relative flex flex-col overflow-hidden"
+            onclick="event.stopPropagation()">
+            <div
+                class="flex items-center justify-between p-3.5 sm:p-4 border-b border-zinc-800 bg-zinc-900/90 shrink-0 gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     </div>
                     <div class="truncate">
-                        <h3 id="cheatSheetTitle" class="text-xs sm:text-sm font-bold text-zinc-100 truncate">Sınav Formül Kağıdı</h3>
-                        <p class="text-[10px] text-zinc-400">Sınav öncesi tek sayfalık formül, teorem ve kritik kavram özeti</p>
+                        <h3 id="cheatSheetTitle" class="text-xs sm:text-sm font-bold text-zinc-100 truncate">Sınav
+                            Formül Kağıdı</h3>
+                        <p class="text-[10px] text-zinc-400">Sınav öncesi tek sayfalık formül, teorem ve kritik kavram
+                            özeti</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button onclick="printCheatSheet()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <button onclick="printCheatSheet()"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                         <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                         <span>Yazdır / PDF İndir</span>
                     </button>
-                    <button onclick="copyCheatSheetText()" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Metni Kopyala">
+                    <button onclick="copyCheatSheetText()"
+                        class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                        title="Metni Kopyala">
                         <i data-lucide="copy" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="closeCheatSheetModal()" class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-zinc-800 transition">
+                    <button onclick="closeCheatSheetModal()"
+                        class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-zinc-800 transition">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="cheatSheetBody" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 touch-scroll font-normal text-xs sm:text-sm leading-relaxed text-zinc-200">
+            <div id="cheatSheetBody"
+                class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 touch-scroll font-normal text-xs sm:text-sm leading-relaxed text-zinc-200">
                 <div id="cheatSheetLoading" class="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-400"></i>
                     <p class="text-sm font-semibold text-zinc-200">Formül Kağıdı Hazırlanıyor...</p>
-                    <p class="text-xs text-zinc-400 max-w-sm">Tüm ders notları taranıyor, formüller, denklemler ve sınav ipuçları derleniyor.</p>
+                    <p class="text-xs text-zinc-400 max-w-sm">Tüm ders notları taranıyor, formüller, denklemler ve sınav
+                        ipuçları derleniyor.</p>
                 </div>
                 <div id="cheatSheetContent" class="hidden prose prose-invert max-w-none space-y-4"></div>
             </div>
@@ -6518,4 +7073,5 @@
     </div>
 
 </body>
+
 </html>
