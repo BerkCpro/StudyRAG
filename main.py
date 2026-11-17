@@ -186,6 +186,26 @@ def clear_mindmap_cache(uid: str, course_name: Optional[str] = None):
         print(f"[WARN] Mindmap DB temizleme hatası: {e}", flush=True)
 
 
+def build_course_filter(uid: str, course_name: Optional[str] = None, selected_docs: Optional[list[str]] = None) -> Filter:
+    """Kullanıcı, ders ve isteğe bağlı seçili PDF dökümanları için ortak Qdrant filtresi oluşturur."""
+    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
+    if course_name and course_name.strip():
+        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=course_name.strip())))
+
+    valid_selected = [d.strip() for d in (selected_docs or []) if d and d.strip()]
+    if valid_selected:
+        if len(valid_selected) == 1:
+            must_conditions.append(FieldCondition(key="document_name", match=MatchValue(value=valid_selected[0])))
+        else:
+            should_conditions = [
+                FieldCondition(key="document_name", match=MatchValue(value=doc_name))
+                for doc_name in valid_selected
+            ]
+            must_conditions.append(Filter(should=should_conditions))
+
+    return Filter(must=must_conditions)
+
+
 def sync_documents_from_qdrant():
     """Qdrant vektör tabanında mevcut noktaları tarayarak uploaded_documents listesini otomatik senkronize eder."""
     global uploaded_documents
@@ -486,6 +506,7 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = "default_user"
     image_base64: Optional[str] = None  # Base64 formatında soru/not görseli
     image_mime_type: Optional[str] = "image/jpeg"
+    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'ler üzerinde çalışma filtresi
 
 
 class SourceInfo(BaseModel):
@@ -527,6 +548,7 @@ class QuizGenerateRequest(BaseModel):
     user_id: Optional[str] = "default_user"
     focus_weak_topics: bool = False  # Hata yapılan zayıf konulara odaklan
     focus_pages: Optional[list[int]] = None  # Odaklanılacak belirli sayfa listesi
+    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden quiz üretme filtresi
 
 
 # --- Flashcard Şemaları ---
@@ -545,6 +567,7 @@ class FlashcardListResponse(BaseModel):
 class CheatSheetRequest(BaseModel):
     course_name: Optional[str] = None
     user_id: Optional[str] = "default_user"
+    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden formül kağıdı üretme filtresi
 
 
 class CheatSheetResponse(BaseModel):
@@ -556,6 +579,7 @@ class FlashcardGenerateRequest(BaseModel):
     count: Optional[int] = 5
     course_name: Optional[str] = None
     user_id: Optional[str] = "default_user"
+    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden flashcard üretme filtresi
 
 
 # --- Zihin Haritası Modelleri ---
@@ -565,6 +589,7 @@ class MindMapRequest(BaseModel):
     user_id: Optional[str] = None
     focus: Optional[str] = None
     refresh: Optional[bool] = False
+    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden zihin haritası çıkarma filtresi
 
 class MindMapLeaf(BaseModel):
     title: str = Field(description="Alt kavram veya detay (en fazla 6 kelime)")
@@ -1066,12 +1091,7 @@ def build_chat_context_and_prompt(request: ChatRequest):
 
     # Eğer derste döküman varsa veya kullanıcı derste PDF olmasa bile spesifik bir konu sormuşsa / görsel yüklemişse:
     query_vector = get_embeddings([raw_question])[0]
-
-    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if course_name_clean:
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=course_name_clean)))
-
-    query_filter = Filter(must=must_conditions)
+    query_filter = build_course_filter(uid, course_name_clean, request.selected_docs)
 
     # Genel özet ve geniş kapsam için limit 8
     search_results = []
@@ -1112,6 +1132,10 @@ def build_chat_context_and_prompt(request: ChatRequest):
             current_ref = seen_sources[doc_key]
 
         context_parts.append(f"[KAYNAK {current_ref} | Dosya: {doc_name} | Sayfa: {page_num}]\n{text_content}")
+
+    if request.selected_docs:
+        docs_str = ", ".join(f"'{d}'" for d in request.selected_docs)
+        context_parts.insert(0, f"[FİLTRE KISITLAMASI]: Kullanıcı yalnızca şu seçili PDF döküman(lar)ına odaklanmak istiyor: {docs_str}. Lütfen yanıtlarını sadece bu seçili dökümanlardaki bilgilerle oluştur.")
 
     style_instruction = (
         "Konuyu hiç bilmeyen birine anlatır gibi günlük hayattan benzetmelerle çok sade ve basitçe anlat."
@@ -1291,13 +1315,9 @@ async def generate_quiz(
     x_user_id: Optional[str] = Header(None, alias="X-User-Id")
 ):
     uid = (x_user_id or request.user_id or "default_user").strip()
-    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if request.course_name:
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=request.course_name)))
+    scroll_filter = build_course_filter(uid, request.course_name, request.selected_docs)
 
-    scroll_filter = Filter(must=must_conditions)
-
-    # Qdrant'tan kayıtlı parçaları çek (seçili ders filtreli)
+    # Qdrant'tan kayıtlı parçaları çek (seçili ders ve döküman filtreli)
     scroll_result, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=scroll_filter,
@@ -1305,6 +1325,9 @@ async def generate_quiz(
     )
 
     if not scroll_result:
+        if request.selected_docs:
+            docs_msg = ", ".join(f"'{d}'" for d in request.selected_docs)
+            raise HTTPException(status_code=404, detail=f"Seçilen döküman(lar) ({docs_msg}) için içerik bulunamadı.")
         course_msg = f"'{request.course_name}' dersi için" if request.course_name else "Bu çalışma alanı için"
         raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF yüklenmedi. Lütfen sol menüden bu derse en az bir PDF ekleyin.")
 
@@ -1413,13 +1436,10 @@ async def generate_flashcards(
     target_course = (payload.course_name if payload and payload.course_name else course_name) or None
     actual_count = min(max(target_count, 3), 5)
 
-    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if target_course:
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
+    selected_docs = payload.selected_docs if payload else None
+    scroll_filter = build_course_filter(uid, target_course, selected_docs)
 
-    scroll_filter = Filter(must=must_conditions)
-
-    # Qdrant'tan parçaları çek (seçili ders filtreli)
+    # Qdrant'tan parçaları çek (seçili ders ve döküman filtreli)
     scroll_result, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=scroll_filter,
@@ -1427,6 +1447,9 @@ async def generate_flashcards(
     )
 
     if not scroll_result:
+        if selected_docs:
+            docs_msg = ", ".join(f"'{d}'" for d in selected_docs)
+            raise HTTPException(status_code=404, detail=f"Seçilen döküman(lar) ({docs_msg}) için içerik bulunamadı.")
         course_msg = f"'{target_course}' dersi için" if target_course else "Bu çalışma alanı için"
         raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF yüklenmedi. Lütfen sol menüden bu derse en az bir PDF ekleyin.")
 
@@ -1477,9 +1500,8 @@ async def generate_cheatsheet(
     uid = (x_user_id or (payload.user_id if payload else None) or user_id or "default_user").strip()
     target_course = (payload.course_name if payload and payload.course_name else course_name) or None
 
-    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if target_course:
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
+    selected_docs = payload.selected_docs if payload else None
+    course_filter = build_course_filter(uid, target_course, selected_docs)
 
     # Formül, denklem ve kilit kavramları öne çıkaran semantik arama
     search_query = "temel formüller denklemler tanımlar teoremler bağıntılar hesaplama kurallar özet"
@@ -1490,7 +1512,7 @@ async def generate_cheatsheet(
         search_results = qdrant_client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
-            query_filter=Filter(must=must_conditions),
+            query_filter=course_filter,
             limit=16
         ).points
     except Exception as e:
@@ -1499,12 +1521,15 @@ async def generate_cheatsheet(
     if not search_results:
         scroll_result, _ = qdrant_client.scroll(
             collection_name=COLLECTION_NAME,
-            scroll_filter=Filter(must=must_conditions),
+            scroll_filter=course_filter,
             limit=16
         )
         search_results = scroll_result
 
     if not search_results:
+        if selected_docs:
+            docs_msg = ", ".join(f"'{d}'" for d in selected_docs)
+            raise HTTPException(status_code=404, detail=f"Seçilen döküman(lar) ({docs_msg}) için içerik bulunamadı.")
         course_msg = f"'{target_course}' dersi için" if target_course else "Bu çalışma alanı için"
         raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF notu yüklenmemiş. Lütfen önce ders notu yükleyin.")
 
@@ -1575,12 +1600,11 @@ async def generate_mindmap(
             detail="Lütfen bir ders seçiniz. Zihin haritası oluşturmak için aktif bir ders gereklidir."
         )
 
-    # 1. Qdrant üzerinde ders ve kullanıcı filtreleri
-    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
-    course_filter = Filter(must=must_conditions)
+    # 1. Qdrant üzerinde ders, kullanıcı ve seçili döküman filtreleri
+    selected_docs = payload.selected_docs or []
+    course_filter = build_course_filter(uid, target_course, selected_docs)
 
-    # 1.1 Ders boş mu kontrolü (Ders boşsa önbelleği de temizle ve 400 dön)
+    # 1.1 Ders / Döküman boş mu kontrolü
     check_records, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=course_filter,
@@ -1589,14 +1613,17 @@ async def generate_mindmap(
         with_vectors=False
     )
     if not check_records:
-        clear_mindmap_cache(uid, target_course)
+        if not selected_docs:
+            clear_mindmap_cache(uid, target_course)
+        msg = "Seçilen PDF döküman(lar)ı için içerik bulunamadı." if selected_docs else f"'{target_course}' dersi için henüz hiç PDF ders notu yüklenmemiş. Lütfen önce sol menüden ders notu yükleyiniz."
         raise HTTPException(
             status_code=400,
-            detail=f"'{target_course}' dersi için henüz hiç PDF ders notu yüklenmemiş. Lütfen önce sol menüden ders notu yükleyiniz."
+            detail=msg
         )
 
     # 2. SQLite Önbellek Kontrolü (Refresh istenmediyse)
-    cache_key = f"{uid}_{target_course.lower()}_{(focus or '').lower()}"
+    sorted_docs_key = ",".join(sorted(selected_docs)) if selected_docs else "all"
+    cache_key = f"{uid}_{target_course.lower()}_{(focus or '').lower()}_{sorted_docs_key}"
     if not refresh:
         cached_result = get_mindmap_cache(cache_key)
         if cached_result:
