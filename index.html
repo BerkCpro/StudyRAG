@@ -3676,86 +3676,264 @@
         }
 
         function exportMindmapPNG() {
-            const svgEl = document.getElementById('mindmapSvg');
-            if (!svgEl || svgEl.classList.contains('hidden') || !currentMindmapData) {
-                alert("Henüz oluşturulmuş bir zihin haritası bulunmuyor.");
+            let targetSvg = document.getElementById('mindmapSvg');
+            const fallbackContainer = document.getElementById('mermaidFallbackContainer');
+            const isMarkmapVisible = targetSvg && !targetSvg.classList.contains('hidden') && targetSvg.innerHTML.trim() !== '';
+            const isMermaidVisible = fallbackContainer && !fallbackContainer.classList.contains('hidden') && fallbackContainer.querySelector('svg');
+
+            if (!isMarkmapVisible && isMermaidVisible) {
+                targetSvg = fallbackContainer.querySelector('svg');
+            }
+
+            if (!targetSvg || (!isMarkmapVisible && !isMermaidVisible) || !currentMindmapData) {
+                showToast("Henüz oluşturulmuş veya ekranda görüntülenen bir zihin haritası bulunmuyor.", "warning");
                 return;
             }
 
+            const exportBtn = document.getElementById('mindmapExportBtn');
+            let origBtnHtml = '';
+            if (exportBtn) {
+                origBtnHtml = exportBtn.innerHTML;
+                exportBtn.disabled = true;
+                exportBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span class="hidden sm:inline">İndiriliyor...</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
+
+            const restoreExportBtn = () => {
+                if (exportBtn) {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = origBtnHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
+            };
+
             try {
-                let bbox = { x: 0, y: 0, width: 800, height: 600 };
-                try {
-                    const b = svgEl.getBBox();
-                    if (b.width > 0 && b.height > 0) bbox = b;
-                } catch (_) { }
+                // 1. Hedef SVG ve BBox Hesaplama
+                let bbox = { x: 0, y: 0, width: 900, height: 600 };
+                const liveGroup = targetSvg.querySelector('g');
+                if (liveGroup && typeof liveGroup.getBBox === 'function') {
+                    try {
+                        const b = liveGroup.getBBox();
+                        if (b.width > 0 && b.height > 0) {
+                            bbox = { x: b.x, y: b.y, width: b.width, height: b.height };
+                        }
+                    } catch (_) { }
+                }
 
-                const padding = 60;
-                const width = Math.max(Math.ceil(bbox.width + padding * 2), 900);
-                const height = Math.max(Math.ceil(bbox.height + padding * 2), 600);
+                if (bbox.width <= 0 || bbox.height <= 0) {
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    targetSvg.querySelectorAll('.markmap-node, text, path, line, circle').forEach(el => {
+                        try {
+                            if (typeof el.getBBox === 'function') {
+                                const b = el.getBBox();
+                                if (b.width > 0 || b.height > 0) {
+                                    minX = Math.min(minX, b.x);
+                                    minY = Math.min(minY, b.y);
+                                    maxX = Math.max(maxX, b.x + b.width);
+                                    maxY = Math.max(maxY, b.y + b.height);
+                                }
+                            }
+                        } catch (_) { }
+                    });
+                    if (minX !== Infinity && maxX > minX) {
+                        bbox = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+                    } else {
+                        bbox = { x: 0, y: 0, width: targetSvg.clientWidth || 1000, height: targetSvg.clientHeight || 700 };
+                    }
+                }
 
-                const clonedSvg = svgEl.cloneNode(true);
-                clonedSvg.setAttribute('width', width);
-                clonedSvg.setAttribute('height', height);
-                clonedSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${width} ${height}`);
+                // 2. Klonlama ve Namespace Ayarları
+                const clonedSvg = targetSvg.cloneNode(true);
+                clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                clonedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+                // Klonlanan ana g grubunun zoom/pan dönüşümünü sıfırla ki doğrudan bbox koordinatlarına otursun
+                const clonedMainGroup = clonedSvg.querySelector('g');
+                if (clonedMainGroup) {
+                    clonedMainGroup.removeAttribute('transform');
+                }
 
                 const isDark = document.documentElement.classList.contains('dark') || !document.documentElement.classList.contains('light');
-                const bgColor = isDark ? '#090d16' : '#ffffff';
+                const bgColor = isDark ? '#0b0f19' : '#ffffff';
 
-                const styleEl = document.createElement('style');
+                // 3. Markmap foreignObject düğümlerini saf SVG <text> ve <tspan> elemanlarına dönüştür
+                // Böylece tarayıcı Image/Canvas güvenlik engeline takılmaz ve canvas tainted olmaz
+                const liveNodes = targetSvg.querySelectorAll('.markmap-node');
+                const clonedNodes = clonedSvg.querySelectorAll('.markmap-node');
+
+                for (let i = 0; i < liveNodes.length && i < clonedNodes.length; i++) {
+                    const liveNode = liveNodes[i];
+                    const clonedNode = clonedNodes[i];
+                    if (!liveNode || !clonedNode) continue;
+
+                    const liveFo = liveNode.querySelector('foreignObject');
+                    const clonedFo = clonedNode.querySelector('foreignObject');
+                    if (!liveFo || !clonedFo) continue;
+
+                    const depthAttr = liveNode.getAttribute('data-depth');
+                    const isRoot = depthAttr === '0' || i === 0;
+
+                    const badge = liveFo.querySelector('.mindmap-page-badge');
+                    const badgeText = badge ? badge.textContent.trim() : '';
+
+                    let titleText = '';
+                    const div = liveFo.querySelector('div') || liveFo;
+                    if (div) {
+                        let full = div.innerText || div.textContent || '';
+                        if (badgeText) {
+                            full = full.replace(badgeText, '').trim();
+                        }
+                        titleText = full.trim();
+                    }
+
+                    const foX = parseFloat(liveFo.getAttribute('x') || 0);
+                    const foY = parseFloat(liveFo.getAttribute('y') || -20);
+                    const foH = parseFloat(liveFo.getAttribute('height') || 22);
+
+                    const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textEl.setAttribute('x', (foX + 4).toString());
+                    textEl.setAttribute('y', '-5');
+                    textEl.setAttribute('font-family', 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+                    textEl.setAttribute('font-size', isRoot ? '16px' : '13px');
+                    textEl.setAttribute('font-weight', isRoot ? '800' : '600');
+                    textEl.setAttribute('fill', isRoot ? (isDark ? '#ffffff' : '#020617') : (isDark ? '#f8fafc' : '#0f172a'));
+
+                    const textNode = document.createTextNode(titleText);
+                    textEl.appendChild(textNode);
+
+                    if (badgeText) {
+                        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                        tspan.setAttribute('dx', '8');
+                        tspan.setAttribute('font-size', '10.5px');
+                        tspan.setAttribute('font-weight', '700');
+                        tspan.setAttribute('fill', isDark ? '#2dd4bf' : '#0f9488');
+                        tspan.textContent = badgeText;
+                        textEl.appendChild(tspan);
+                    }
+
+                    if (clonedFo.parentNode) {
+                        clonedFo.parentNode.replaceChild(textEl, clonedFo);
+                    }
+                }
+
+                // Varsa arta kalan diğer foreignObject'leri de temizle/dönüştür
+                clonedSvg.querySelectorAll('foreignObject').forEach(fo => {
+                    const txt = (fo.textContent || '').trim();
+                    if (txt) {
+                        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        textEl.setAttribute('x', fo.getAttribute('x') || '0');
+                        textEl.setAttribute('y', fo.getAttribute('y') || '0');
+                        textEl.setAttribute('font-family', 'system-ui, sans-serif');
+                        textEl.setAttribute('font-size', '13px');
+                        textEl.setAttribute('fill', isDark ? '#f8fafc' : '#0f172a');
+                        textEl.textContent = txt;
+                        if (fo.parentNode) fo.parentNode.replaceChild(textEl, fo);
+                    } else {
+                        fo.remove();
+                    }
+                });
+
+                // 4. Canlı öğelerin hesaplanmış çizgi renklerini (stroke / fill) klona aktar
+                const livePaths = targetSvg.querySelectorAll('path, line, circle');
+                const clonedPaths = clonedSvg.querySelectorAll('path, line, circle');
+                for (let i = 0; i < livePaths.length && i < clonedPaths.length; i++) {
+                    const lEl = livePaths[i];
+                    const cEl = clonedPaths[i];
+                    if (!lEl || !cEl) continue;
+                    const cs = window.getComputedStyle(lEl);
+                    if (cs.stroke && cs.stroke !== 'none' && !cEl.getAttribute('stroke')) {
+                        cEl.setAttribute('stroke', cs.stroke);
+                    }
+                    if (cs.strokeWidth && !cEl.getAttribute('stroke-width')) {
+                        cEl.setAttribute('stroke-width', cs.strokeWidth);
+                    }
+                    if (cs.fill && cs.fill !== 'none' && !cEl.getAttribute('fill')) {
+                        cEl.setAttribute('fill', cs.fill);
+                    }
+                }
+
+                // 5. Dahili CSS Stili Ekle
+                const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
                 styleEl.textContent = `
-                    foreignObject, foreignObject div, foreignObject span {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-                        font-size: 13.5px !important;
-                        font-weight: 600 !important;
-                        color: ${isDark ? '#f8fafc' : '#0f172a'} !important;
-                    }
-                    text {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                        font-size: 13.5px;
-                        fill: ${isDark ? '#f8fafc' : '#0f172a'};
-                        font-weight: 600;
-                    }
-                    .mindmap-page-badge {
-                        color: ${isDark ? '#2dd4bf' : '#0f9488'} !important;
-                        font-size: 11px !important;
-                        font-weight: bold !important;
-                    }
+                    .markmap-link { fill: none !important; }
+                    path.markmap-link { fill: none !important; }
+                    text { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+                    line { stroke-linecap: round; }
                 `;
                 clonedSvg.insertBefore(styleEl, clonedSvg.firstChild);
 
+                // 6. ViewBox ve Boyutlandırma
+                const padding = 60;
+                const finalX = Math.floor(bbox.x - padding);
+                const finalY = Math.floor(bbox.y - padding);
+                const finalW = Math.max(Math.ceil(bbox.width + padding * 2), 700);
+                const finalH = Math.max(Math.ceil(bbox.height + padding * 2), 450);
+
+                clonedSvg.setAttribute('viewBox', `${finalX} ${finalY} ${finalW} ${finalH}`);
+                clonedSvg.setAttribute('width', finalW.toString());
+                clonedSvg.setAttribute('height', finalH.toString());
+
+                // 7. PNG Dönüştürme & İndirme
+                const rawName = (currentCourse || 'Zihin_Haritasi').replace(/[^a-zA-Z0-9_\u00C0-\u017F-]/g, '_');
+                const fileName = `${rawName}_Zihin_Haritasi`;
                 const svgString = new XMLSerializer().serializeToString(clonedSvg);
                 const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
                 const blobURL = URL.createObjectURL(svgBlob);
 
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width * 2;
-                    canvas.height = height * 2;
-                    const ctx = canvas.getContext('2d');
-                    ctx.scale(2, 2);
-
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-
+                const triggerSvgFallback = () => {
                     const a = document.createElement('a');
-                    const fileName = `${(currentCourse || 'Zihin_Haritasi').replace(/\s+/g, '_')}_Zihin_Haritasi.png`;
-                    a.download = fileName;
-                    a.href = canvas.toDataURL('image/png');
+                    a.download = `${fileName}.svg`;
+                    a.href = blobURL;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(blobURL);
+                    setTimeout(() => URL.revokeObjectURL(blobURL), 2500);
+                    restoreExportBtn();
+                    showToast("Zihin haritası SVG formatında indirildi.", "info");
                 };
-                img.onerror = () => {
-                    alert("PNG dışa aktarılırken bir hata oluştu.");
-                    URL.revokeObjectURL(blobURL);
+
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const scale = 2; // Yüksek çözünürlüklü Retina (2x) PNG
+                        const canvas = document.createElement('canvas');
+                        canvas.width = finalW * scale;
+                        canvas.height = finalH * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.scale(scale, scale);
+
+                        // Arka plan dolgusu
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(0, 0, finalW, finalH);
+
+                        // SVG çizimi
+                        ctx.drawImage(img, 0, 0, finalW, finalH);
+
+                        const a = document.createElement('a');
+                        a.download = `${fileName}.png`;
+                        a.href = canvas.toDataURL('image/png');
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(blobURL);
+                        restoreExportBtn();
+                        showToast("Zihin haritası PNG olarak başarıyla indirildi!", "success");
+                    } catch (canvasErr) {
+                        console.error("Canvas PNG dönüştürme hatası:", canvasErr);
+                        triggerSvgFallback();
+                    }
                 };
+
+                img.onerror = (err) => {
+                    console.error("SVG görüntü yükleme hatası:", err);
+                    triggerSvgFallback();
+                };
+
                 img.src = blobURL;
             } catch (err) {
-                console.error("Export hatası:", err);
-                alert("PNG oluşturulamadı: " + err.message);
+                console.error("Zihin haritası dışa aktarma hatası:", err);
+                restoreExportBtn();
+                showToast("Dışa aktarma hatası: " + err.message, "error");
             }
         }
 
