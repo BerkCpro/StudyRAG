@@ -5031,6 +5031,7 @@
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         let buffer = '';
+                        let streamErrorObj = null;
 
                         while (true) {
                             const { value, done } = await reader.read();
@@ -5056,12 +5057,11 @@
                                     }
                                     if (parsed.text) {
                                         fullText += parsed.text;
-                                        textEl.innerHTML = formatMarkdownText(fullText, sources) + '<span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle"></span>';
+                                        textEl.innerHTML = formatMarkdownText(fullText, sources) + '<span class="inline-block w-1.5 h-3.5 bg-accent animate-pulse ml-0.5 align-middle"></span>';
                                         container.scrollTop = container.scrollHeight;
                                     }
                                     if (parsed.error) {
-                                        fullText += `\n\n⚠️ **Hata:** ${parsed.error}`;
-                                        textEl.innerHTML = formatMarkdownText(fullText, sources);
+                                        streamErrorObj = parsed;
                                     }
                                 } catch (e) {
                                     console.error('SSE parse error:', e);
@@ -5069,7 +5069,13 @@
                             }
                         }
 
-                        if (fullText.trim().length > 0) {
+                        if (streamErrorObj) {
+                            isSuccess = false;
+                            lastStatus = 503;
+                            lastDetail = streamErrorObj.error;
+                            lastError = new Error(streamErrorObj.error);
+                            throw lastError;
+                        } else if (fullText.trim().length > 0) {
                             textEl.innerHTML = formatMarkdownText(fullText, sources);
                             isSuccess = true;
                         }
@@ -5083,8 +5089,8 @@
                     }
                 } catch (streamError) {
                     lastError = streamError;
-                    console.warn("Canlı akış hatası, standart JSON moduna geçiliyor...", streamError);
-                    if (isTimeout || controller.signal.aborted) {
+                    console.warn("Canlı akış hatası veya kesintisi:", streamError);
+                    if (isTimeout || controller.signal.aborted || lastStatus === 503) {
                         throw streamError;
                     }
                 }
@@ -5970,8 +5976,30 @@
         }
 
         function classifyChatError(err, status = 0, detail = '') {
-            // 1. Ders boş / PDF yok
-            if (!currentCourse || !currentCoursePdfList || currentCoursePdfList.length === 0) {
+            const errStr = (detail || err?.message || '').toLowerCase();
+
+            // 1. Yapay Zeka Aşırı Yoğunluk (Google 503 UNAVAILABLE / High Demand)
+            if (status === 503 || errStr.includes('503') || errStr.includes('unavailable') || errStr.includes('high demand') || errStr.includes('yoğunluk') || errStr.includes('yoğun')) {
+                return {
+                    type: 'ai_overload',
+                    title: 'Google Sunucularında Anlık Yoğunluk (503)',
+                    message: detail || 'Google Gemini yapay zeka servisinde anlık bir yoğunluk yaşanıyor. Bu durum genellikle birkaç saniye içinde düzelir. Lütfen aşağıdaki butondan tekrar deneyin.',
+                    canRetry: true
+                };
+            }
+
+            // 2. API İstek Sınırı (429 Rate Limit / Quota)
+            if (status === 429 || errStr.includes('429') || errStr.includes('resource_exhausted') || errStr.includes('quota')) {
+                return {
+                    type: 'rate_limit',
+                    title: 'İstek Sınırına Ulaşıldı (429)',
+                    message: 'Çok fazla istek gönderildi veya API kotasına ulaşıldı. Lütfen 10-15 saniye bekleyip tekrar deneyin.',
+                    canRetry: true
+                };
+            }
+
+            // 3. Ders boş / PDF yok (Eğer backend açıkça doküman eksikliği döndüyse)
+            if (errStr.includes('pdf yükle') || errStr.includes('ders notu bulunamadı') || errStr.includes('döküman')) {
                 return {
                     type: 'no_pdf',
                     title: 'Ders Notu (PDF) Bulunamadı',
@@ -5980,8 +6008,8 @@
                 };
             }
 
-            // 2. Zaman Aşımı (Timeout - 90 sn)
-            if (err && (err.name === 'AbortError' || err.message?.toLowerCase().includes('abort') || err.message?.toLowerCase().includes('timeout'))) {
+            // 4. Zaman Aşımı (Timeout - 90 sn)
+            if (err && (err.name === 'AbortError' || errStr.includes('abort') || errStr.includes('timeout'))) {
                 return {
                     type: 'timeout',
                     title: 'İstek Zaman Aşımına Uğradı (90 sn)',
@@ -5990,18 +6018,7 @@
                 };
             }
 
-            // 3. HTTP 4xx / 5xx
-            if (status > 0 || detail) {
-                const errorDetail = detail || err?.message || 'Bilinmeyen bir sunucu hatası oluştu.';
-                return {
-                    type: 'http',
-                    title: `Sunucu Hatası (${status || 'HTTP'})`,
-                    message: `Hata detayı: ${escapeHtml(errorDetail)}`,
-                    canRetry: status >= 500 || status === 429
-                };
-            }
-
-            // 4. Ağ / Sunucuya Ulaşılamadı
+            // 5. Ağ / Sunucuya Ulaşılamadı
             const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
             const isNetworkErr = err && (err.message?.includes('Failed to fetch') || err.name === 'TypeError' || err.message?.includes('NetworkError'));
             if (isOffline || isNetworkErr) {
@@ -6010,6 +6027,17 @@
                     title: 'Sunucuya Ulaşılamadı',
                     message: 'Sunucuya ulaşılamadı. Bağlantını kontrol et ya da birazdan tekrar dene.',
                     canRetry: true
+                };
+            }
+
+            // 6. HTTP 4xx / 5xx
+            if (status > 0 || detail) {
+                const errorDetail = detail || err?.message || 'Bilinmeyen bir sunucu hatası oluştu.';
+                return {
+                    type: 'http',
+                    title: `Sunucu Hatası (${status || 'HTTP'})`,
+                    message: `Hata detayı: ${escapeHtml(errorDetail)}`,
+                    canRetry: status >= 500
                 };
             }
 

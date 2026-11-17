@@ -1177,6 +1177,20 @@ async def chat_with_pdf(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def format_user_friendly_ai_error(e: Exception) -> str:
+    """Gemini API veya ağ hatalarını kullanıcı dostu Türkçe açıklamaya çevirir."""
+    err_str = str(e)
+    err_lower = err_str.lower()
+    if "503" in err_str or "unavailable" in err_lower or "high demand" in err_lower:
+        return "Google yapay zeka sunucularında anlık bir yoğunluk yaşanıyor (503). Model yanıtı tamamlayamadı. Lütfen birkaç saniye sonra tekrar deneyin."
+    elif "429" in err_str or "resource_exhausted" in err_lower or "quota" in err_lower:
+        return "Google API istek limitine ulaşıldı (429). Lütfen kısa bir süre bekleyip tekrar deneyin."
+    elif "500" in err_str or "internal" in err_lower:
+        return "Yapay zeka servisinde geçici bir sunucu hatası oluştu (500). Lütfen tekrar deneyin."
+    else:
+        return f"Yapay zeka yanıtı üretilirken geçici bir bağlantı sorunu oluştu: {err_str[:120]}"
+
+
 # 3.1 Canlı Akış (Streaming SSE - Kayan Metin & Multimodal Görsel)
 @app.post("/chat-stream")
 async def chat_stream_with_pdf(request: ChatRequest):
@@ -1201,29 +1215,41 @@ async def chat_stream_with_pdf(request: ChatRequest):
         # 2. İlk olarak kaynakları gönder
         yield f"data: {json.dumps({'sources': [s.model_dump() for s in sources]})}\n\n"
 
-        # 3. Gemini akışını canlı token olarak ilet
-        try:
-            stream = client.models.generate_content_stream(
-                model=GEMINI_MODEL,
-                contents=contents
-            )
-            for chunk in stream:
-                if chunk.text:
-                    yield f"data: {json.dumps({'text': chunk.text})}\n\n"
-        except Exception as e:
-            logger.exception("Gemini akışında (/chat-stream) birincil model hatası, yedek modele geçiliyor:")
-            # Yedek modele düş
+        # 3. Gemini akışını canlı token olarak ilet (Fallback Zinciri & Akıllı Geçiş)
+        models_to_try = [GEMINI_MODEL, GEMINI_FALLBACK_MODEL, "gemini-2.5-flash"]
+        stream_started = False
+        last_exception = None
+
+        for idx, model_name in enumerate(models_to_try):
             try:
+                # İkinci veya üçüncü modele geçerken kısa bir nefes al (400ms)
+                if idx > 0 and not stream_started:
+                    await asyncio.sleep(0.4)
+
                 stream = client.models.generate_content_stream(
-                    model=GEMINI_FALLBACK_MODEL,
+                    model=model_name,
                     contents=contents
                 )
                 for chunk in stream:
                     if chunk.text:
+                        stream_started = True
                         yield f"data: {json.dumps({'text': chunk.text})}\n\n"
-            except Exception as e2:
-                logger.exception("Gemini akışında (/chat-stream) yedek model de hata verdi:")
-                yield f"data: {json.dumps({'error': str(e2)})}\n\n"
+
+                # Akış sorunsuz bitti
+                last_exception = None
+                break
+
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"[CHAT-STREAM] Model '{model_name}' hatası: {e} (stream_started={stream_started})")
+                # Eğer akış zaten bir miktar metin ürettiyse, model değiştirmek metni bozacağı için durdur
+                if stream_started:
+                    break
+
+        if last_exception:
+            friendly_err = format_user_friendly_ai_error(last_exception)
+            logger.error(f"[CHAT-STREAM] Nihai akış hatası: {last_exception}")
+            yield f"data: {json.dumps({'error': friendly_err, 'is_stream_interrupted': stream_started})}\n\n"
 
         # 4. Tamamlandı sinyali
         yield f"data: {json.dumps({'done': True})}\n\n"
