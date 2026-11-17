@@ -4259,6 +4259,11 @@
         }
 
         function createNewChat(switchToIt = true) {
+            // Soru giriş kutusunu ve görsel önizlemesini temizle
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) chatInput.value = '';
+            if (typeof removeSelectedImage === 'function') removeSelectedImage();
+
             // Aktif sohbet zaten boşsa gereksiz yeni sohbet açmak yerine mevcut boş sohbete geç
             const currentActive = chats.find(c => c.id === activeChatId);
             if (currentActive && (!currentActive.messages || currentActive.messages.length === 0)) {
@@ -4266,6 +4271,7 @@
                     renderActiveChatMessages();
                     switchTab('chat');
                     if (window.innerWidth < 768) toggleSidebar(false);
+                    setTimeout(() => chatInput?.focus(), 80);
                 }
                 return;
             }
@@ -4290,6 +4296,7 @@
                 if (window.innerWidth < 768) {
                     toggleSidebar(false);
                 }
+                setTimeout(() => chatInput?.focus(), 80);
             }
         }
 
@@ -4298,6 +4305,7 @@
             localStorage.setItem('study_active_chat_id', activeChatId);
             renderChatList();
             renderActiveChatMessages();
+            switchTab('chat');
             if (window.innerWidth < 768) {
                 toggleSidebar(false);
             }
@@ -4336,26 +4344,26 @@
             if (badgeEl) badgeEl.textContent = visibleChats.length;
 
             if (visibleChats.length === 0) {
-                listEl.innerHTML = `<div class="text-[11px] text-zinc-500 italic text-center py-3">Geçmiş sohbet bulunmuyor</div>`;
+                listEl.innerHTML = `<div class="text-[11px] text-text-muted italic text-center py-3">Geçmiş sohbet bulunmuyor</div>`;
                 return;
             }
 
             listEl.innerHTML = visibleChats.map(c => {
                 const isActive = c.id === activeChatId;
                 const activeClasses = isActive 
-                    ? 'bg-indigo-600/20 border-indigo-500/50 text-white' 
-                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:bg-zinc-800/70 hover:text-white';
+                    ? 'bg-accent/15 border-accent/40 text-text font-medium shadow-xs' 
+                    : 'bg-surface-2/60 border-border text-text-muted hover:bg-surface hover:text-text';
 
                 return `
                     <div onclick="selectChat('${c.id}')" class="flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer group transition ${activeClasses}">
                         <div class="flex items-center gap-2 overflow-hidden">
-                            <i data-lucide="message-square" class="w-3.5 h-3.5 ${isActive ? 'text-indigo-400' : 'text-zinc-500'} shrink-0"></i>
+                            <i data-lucide="message-square" class="w-3.5 h-3.5 ${isActive ? 'text-accent' : 'text-text-muted'} shrink-0"></i>
                             <div class="truncate">
                                 <p class="font-medium truncate text-[11px]">${escapeHtml(c.title)}</p>
-                                <p class="text-[9px] text-zinc-500">${c.createdAt} • ${escapeHtml(c.course || '')}</p>
+                                <p class="text-[9px] text-text-muted">${c.createdAt} • ${escapeHtml(c.course || '')}</p>
                             </div>
                         </div>
-                        <button onclick="deleteChat(event, '${c.id}')" title="Sohbeti Sil" class="text-zinc-500 hover:text-rose-400 p-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                        <button onclick="deleteChat(event, '${c.id}')" title="Sohbeti Sil" class="text-text-muted hover:text-danger p-1 opacity-0 group-hover:opacity-100 transition shrink-0">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
