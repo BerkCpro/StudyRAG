@@ -1173,7 +1173,7 @@
                     <!-- PDF Yükleme Dropzone (Derste hiç dosya yokken görünür) -->
                     <label id="pdfDropzoneBig"
                         class="border border-dashed border-zinc-700/80 hover:border-indigo-500/80 bg-zinc-950/50 hover:bg-indigo-950/10 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition group shadow-sm">
-                        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden"
+                        <input type="file" id="pdfFileInput" accept="application/pdf" multiple class="hidden"
                             onchange="handleRealPdfUpload(this)">
                         <div
                             class="w-8 h-8 rounded-xl bg-zinc-800/80 group-hover:bg-indigo-600/20 group-hover:text-indigo-400 text-zinc-400 flex items-center justify-center transition">
@@ -4032,7 +4032,7 @@
         let currentHomeMode = localStorage.getItem('study_home_mode') || 'chat';
         let homeSelectedImageBase64 = null;
         let homeSelectedImageMime = 'image/jpeg';
-        let pendingFirstCourseFile = null;
+        let pendingFirstCourseFiles = [];
 
         function selectHomeMode(modeId) {
             currentHomeMode = modeId;
@@ -4088,12 +4088,12 @@
                                         <i data-lucide="file-up" class="w-3.5 h-3.5 text-accent"></i> Ders Notu (PDF)
                                     </label>
                                     <label for="firstCoursePdfInput" class="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-accent/60 bg-surface-2 rounded-xl p-6 cursor-pointer group transition">
-                                        <input type="file" id="firstCoursePdfInput" accept="application/pdf" class="hidden" onchange="handleFirstCoursePdfSelected(this)">
+                                        <input type="file" id="firstCoursePdfInput" accept="application/pdf" multiple class="hidden" onchange="handleFirstCoursePdfSelected(this)">
                                         <div class="w-10 h-10 rounded-xl bg-surface group-hover:bg-accent-soft text-text-muted group-hover:text-accent flex items-center justify-center transition mb-2">
                                             <i data-lucide="file-text" class="w-5 h-5"></i>
                                         </div>
                                         <span id="firstCoursePdfLabel" class="text-xs font-semibold text-text text-center">PDF Seç veya Buraya Sürükle</span>
-                                        <span class="text-[11px] text-text-muted mt-0.5">Yalnızca PDF dosyaları desteklenir</span>
+                                        <span class="text-[11px] text-text-muted mt-0.5">Tek veya birden çok PDF seçebilirsiniz</span>
                                     </label>
                                 </div>
 
@@ -4484,11 +4484,15 @@
         }
 
         function handleFirstCoursePdfSelected(input) {
-            if (!input.files || !input.files[0]) return;
-            pendingFirstCourseFile = input.files[0];
+            if (!input.files || input.files.length === 0) return;
+            pendingFirstCourseFiles = Array.from(input.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
             const label = document.getElementById('firstCoursePdfLabel');
             if (label) {
-                label.textContent = `Seçilen: ${pendingFirstCourseFile.name}`;
+                if (pendingFirstCourseFiles.length === 1) {
+                    label.textContent = `Seçilen: ${pendingFirstCourseFiles[0].name}`;
+                } else {
+                    label.textContent = `Seçilen: ${pendingFirstCourseFiles.length} PDF dosyası`;
+                }
             }
         }
 
@@ -4512,16 +4516,16 @@
             initCourseDropdown();
             onCourseChange();
 
-            // Eğer PDF seçildiyse yüklemeyi tetikle
-            if (pendingFirstCourseFile) {
+            // Eğer PDF(ler) seçildiyse yüklemeyi tetikle
+            if (pendingFirstCourseFiles && pendingFirstCourseFiles.length > 0) {
                 const pdfInput = document.getElementById('pdfFileInput');
                 if (pdfInput) {
                     const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(pendingFirstCourseFile);
+                    pendingFirstCourseFiles.forEach(f => dataTransfer.items.add(f));
                     pdfInput.files = dataTransfer.files;
                     handleRealPdfUpload(pdfInput);
                 }
-                pendingFirstCourseFile = null;
+                pendingFirstCourseFiles = [];
             }
 
             renderHomeScreen();
@@ -5195,7 +5199,13 @@
         }
 
         async function handleRealPdfUpload(input) {
-            if (!input.files || !input.files[0]) return;
+            if (!input.files || input.files.length === 0) return;
+            const files = Array.from(input.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+            if (files.length === 0) {
+                showToast("Lütfen sadece PDF dosyaları seçiniz.", "error");
+                input.value = '';
+                return;
+            }
 
             // Aktif dersi sağlama al:
             if (!currentCourse || !currentCourse.trim() || currentCourse.includes('Henüz Ders')) {
@@ -5224,7 +5234,6 @@
             }
             updateHeaderCourseBadge();
 
-            const file = input.files[0];
             const progressBox = document.getElementById('uploadProgressBox');
             const statusText = document.getElementById('uploadStatusText');
             const phaseText = document.getElementById('uploadPhaseText');
@@ -5235,86 +5244,115 @@
             const homePhase = document.getElementById('homePdfUploadPhase');
             const homePdfBtn = document.getElementById('homePdfAddBtn');
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('course_name', currentCourse);
-            formData.append('user_id', currentUserId);
-
-            // 1. Sol panel ilerleme kutusu
             if (progressBox) progressBox.classList.remove('hidden');
-            if (phaseText) phaseText.textContent = `${file.name.slice(0, 18)}...`;
-            if (statusText) statusText.textContent = 'Yükleniyor...';
-
-            // 2. Ana Ekran ilerleme çubuğu & buton animasyonu
-            if (homeBanner) {
-                homeBanner.classList.remove('hidden');
-                if (homeFileName) homeFileName.textContent = `${file.name.slice(0, 24)}...`;
-                if (homePhase) homePhase.textContent = 'Sunucuya gönderiliyor...';
-                if (window.lucide) lucide.createIcons();
-            }
+            if (homeBanner) homeBanner.classList.remove('hidden');
             if (homePdfBtn) {
                 homePdfBtn.disabled = true;
                 homePdfBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 text-accent animate-spin"></i><span>Yükleniyor...</span>`;
                 if (window.lucide) lucide.createIcons();
             }
 
-            const timers = [
-                setTimeout(() => {
-                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Sayfalar Ayrıştırılıyor...';
-                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Sayfalar taranıyor...';
-                }, 2000),
-                setTimeout(() => {
-                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Anlamsal Analiz Yapılıyor...';
-                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Vektörler ve analiz yapılıyor...';
-                }, 6000),
-                setTimeout(() => {
-                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Ders Hafızası Güncelleniyor...';
-                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Ders hafızası güncelleniyor...';
-                }, 14000)
-            ];
-            const clearAllTimers = () => timers.forEach(t => clearTimeout(t));
+            const total = files.length;
+            let successCount = 0;
+            let totalPagesCount = 0;
+            const errors = [];
 
             try {
-                const res = await fetch('/upload-pdf', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-User-Id': currentUserId
-                    },
-                    body: formData
-                });
+                for (let i = 0; i < total; i++) {
+                    const file = files[i];
+                    const fileIndexText = total > 1 ? `[${i + 1}/${total}] ` : '';
 
-                clearAllTimers();
+                    if (phaseText) phaseText.textContent = `${fileIndexText}${file.name.slice(0, 16)}...`;
+                    if (statusText) statusText.textContent = total > 1 ? `${i + 1}/${total} Yükleniyor...` : 'Yükleniyor...';
 
-                if (!res.ok) {
-                    let errMsg = 'Yükleme başarısız oldu';
+                    if (homeFileName) homeFileName.textContent = `${fileIndexText}${file.name.slice(0, 24)}`;
+                    if (homePhase) homePhase.textContent = total > 1 ? `${i + 1}/${total} Sunucuya gönderiliyor...` : 'Sunucuya gönderiliyor...';
+                    if (window.lucide) lucide.createIcons();
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('course_name', currentCourse);
+                    formData.append('user_id', currentUserId);
+
+                    const stepTimers = [
+                        setTimeout(() => {
+                            if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = `${fileIndexText}Sayfalar Ayrıştırılıyor...`;
+                            if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = `${fileIndexText}Sayfalar taranıyor...`;
+                        }, 2000),
+                        setTimeout(() => {
+                            if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = `${fileIndexText}Anlamsal Analiz Yapılıyor...`;
+                            if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = `${fileIndexText}Vektör analizi yapılıyor...`;
+                        }, 6000),
+                        setTimeout(() => {
+                            if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = `${fileIndexText}Ders Hafızası Güncelleniyor...`;
+                            if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = `${fileIndexText}Hafıza güncelleniyor...`;
+                        }, 14000)
+                    ];
+
                     try {
-                        const errorData = await res.json();
-                        errMsg = errorData.detail || errMsg;
-                    } catch (_) {
-                        try {
-                            errMsg = (await res.text()) || errMsg;
-                        } catch (_) { }
+                        const res = await fetch('/upload-pdf', {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-User-Id': currentUserId
+                            },
+                            body: formData
+                        });
+
+                        stepTimers.forEach(t => clearTimeout(t));
+
+                        if (!res.ok) {
+                            let errMsg = 'Yükleme başarısız oldu';
+                            try {
+                                const errorData = await res.json();
+                                errMsg = errorData.detail || errMsg;
+                            } catch (_) {
+                                try { errMsg = (await res.text()) || errMsg; } catch (_) {}
+                            }
+                            throw new Error(errMsg);
+                        }
+
+                        const resData = await res.json().catch(() => ({}));
+                        const pageCount = resData.total_pages || resData.pages || 0;
+                        totalPagesCount += pageCount;
+                        successCount++;
+
+                        if (total > 1) {
+                            showToast(`✓ (${i + 1}/${total}) "${file.name}" yüklendi.`, 'success', 2500);
+                        }
+                    } catch (fileErr) {
+                        stepTimers.forEach(t => clearTimeout(t));
+                        console.error(`"${file.name}" yüklenirken hata:`, fileErr);
+                        errors.push(`"${file.name}": ${fileErr.message}`);
                     }
-                    throw new Error(errMsg);
                 }
 
-                const resData = await res.json().catch(() => ({}));
-                const pageCount = resData.total_pages || resData.pages || '';
-                const pageText = pageCount ? ` (${pageCount} Sayfa)` : '';
-
-                if (phaseText) phaseText.textContent = 'İndeksleme Tamamlandı!';
-                if (statusText) statusText.textContent = 'Başarılı ✓';
-
-                showToast(`✓ "${file.name}"${pageText} başarıyla yüklendi ve ders hafızasına eklendi!`, 'success');
-
                 await fetchDocumentsForCurrentCourse();
-                if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 1500);
+
+                if (successCount === total) {
+                    if (phaseText) phaseText.textContent = 'Tüm PDF\'ler İndekslendi!';
+                    if (statusText) statusText.textContent = 'Başarılı ✓';
+                    if (total === 1) {
+                        showToast(`✓ "${files[0].name}" (${totalPagesCount} sayfa) başarıyla yüklendi!`, 'success');
+                    } else {
+                        showToast(`✓ ${successCount} PDF (${totalPagesCount} sayfa) başarıyla yüklendi ve ders hafızasına eklendi!`, 'success');
+                    }
+                    if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 1500);
+                } else if (successCount > 0) {
+                    if (phaseText) phaseText.textContent = `${successCount}/${total} Yüklendi`;
+                    if (statusText) statusText.textContent = 'Kısmen Tamamlandı';
+                    showToast(`⚠️ ${successCount}/${total} PDF yüklendi. Hatalar: ${errors.join(', ')}`, 'warning', 6000);
+                    if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 3000);
+                } else {
+                    if (phaseText) phaseText.textContent = 'Yükleme Başarısız';
+                    if (statusText) statusText.textContent = 'Başarısız ✗';
+                    showToast(`✗ PDF Yükleme Hatası: ${errors.join('; ')}`, 'error', 6000);
+                    if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 3500);
+                }
             } catch (err) {
-                clearAllTimers();
-                if (phaseText) phaseText.textContent = 'Hata: ' + err.message.slice(0, 24);
+                if (phaseText) phaseText.textContent = 'Hata';
                 if (statusText) statusText.textContent = 'Başarısız ✗';
-                showToast(`✗ PDF Yükleme Hatası: ${err.message}`, 'error', 5000);
+                showToast(`✗ Beklenmeyen hata: ${err.message}`, 'error');
                 if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 3500);
             } finally {
                 input.value = '';
@@ -5585,27 +5623,30 @@
             window.addEventListener('drop', (e) => {
                 e.preventDefault();
                 if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
-                const file = e.dataTransfer.files[0];
+                const pdfFiles = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
 
-                if (file.name.toLowerCase().endsWith('.pdf')) {
+                if (pdfFiles.length > 0) {
                     const dt = new DataTransfer();
-                    dt.items.add(file);
+                    pdfFiles.forEach(f => dt.items.add(f));
                     const input = document.getElementById('pdfFileInput');
                     if (input) {
                         input.files = dt.files;
                         handleRealPdfUpload(input);
                     }
-                } else if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        currentSelectedImageBase64 = event.target.result;
-                        currentSelectedImageMime = file.type || 'image/jpeg';
-                        currentSelectedImageName = file.name;
-                        showImagePreview(currentSelectedImageBase64, currentSelectedImageName);
-                        switchTab('chat');
-                        document.getElementById('chatInput')?.focus();
-                    };
-                    reader.readAsDataURL(file);
+                } else {
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            currentSelectedImageBase64 = event.target.result;
+                            currentSelectedImageMime = file.type || 'image/jpeg';
+                            currentSelectedImageName = file.name;
+                            showImagePreview(currentSelectedImageBase64, currentSelectedImageName);
+                            switchTab('chat');
+                            document.getElementById('chatInput')?.focus();
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 }
             });
         }
