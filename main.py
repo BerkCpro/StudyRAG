@@ -956,6 +956,52 @@ async def get_pdf_info(
         return {"filename": filename, "total_pages": 1, "has_file": True}
 
 
+def course_has_uploaded_documents(uid: str, course_name: Optional[str]) -> bool:
+    """Kullanıcının belirtilen derste herhangi bir PDF dökümanı olup olmadığını kontrol eder."""
+    if not course_name or not course_name.strip():
+        return any(d.get("user_id") == uid for d in uploaded_documents)
+
+    target_c = course_name.strip().lower()
+    for d in uploaded_documents:
+        if d.get("user_id") == uid and d.get("course_name", "").strip().lower() == target_c:
+            return True
+
+    try:
+        if qdrant_client:
+            must_cond = [
+                FieldCondition(key="user_id", match=MatchValue(value=uid)),
+                FieldCondition(key="course_name", match=MatchValue(value=course_name.strip()))
+            ]
+            count_res = qdrant_client.count(
+                collection_name=COLLECTION_NAME,
+                count_filter=Filter(must=must_cond),
+                exact=False
+            )
+            if count_res and count_res.count > 0:
+                return True
+    except Exception:
+        pass
+    return False
+
+
+def is_course_notes_dependent_question(raw_question: str) -> bool:
+    """Kullanıcının sorusunun yüklenmiş ders notlarına veya genel ders özetine atıfta bulunup bulunmadığını kontrol eder."""
+    q = raw_question.lower().strip()
+    
+    # Hazır çipler veya doğrudan notlara atıf yapan kalıplar
+    note_patterns = [
+        "ders not", "dersin not", "bu ders", "notlar", "notlardaki", "notlarımdaki",
+        "özet", "özetle", "özetini", "özet çıkar",
+        "sayfa referans", "sayfa numara", "hangi sayfa",
+        "sınavda ne çıkar", "sınavda çıkabilecek", "sınav konuları", "müfredat",
+        "konuları anlat", "konuları listele", "konuları özetle", "dersi anlat", "ders konuları",
+        "bütün konular", "tüm konular", "neler var", "hangi konular var",
+        "formül kağıdı", "kavram kağıdı", "5 kritik tanım", "en önemli tanımlar",
+        "tanımları listele", "formülleri listele"
+    ]
+    return any(p in q for p in note_patterns)
+
+
 # 3. RAG Sohbet & Özet & "Basitçe Anlat" Modu & Multimodal Görsel Desteği
 def build_chat_context_and_prompt(request: ChatRequest):
     raw_question = (request.question or "").strip()
@@ -966,29 +1012,61 @@ def build_chat_context_and_prompt(request: ChatRequest):
     elif not raw_question and not has_image:
         raise HTTPException(status_code=400, detail="Lütfen bir soru yazın veya bir görsel ekleyin.")
 
-    query_vector = get_embeddings([raw_question])[0]
     uid = (request.user_id or "default_user").strip()
+    course_name_clean = (request.course_name or "").strip()
+    has_docs = course_has_uploaded_documents(uid, course_name_clean)
+    course_title = course_name_clean if course_name_clean else "Bu ders"
+
+    # DERSTE HİÇ PDF YOKKEN VE GÖRSEL DE YOKKEN KONTROL:
+    if not has_docs and not has_image:
+        q_lower = raw_question.lower().strip()
+
+        # 1. Selamlaşma veya ne yapabilirsin tarzı genel sorular
+        if q_lower in ["merhaba", "selam", "selamlar", "günaydın", "iyi günler", "hey", "merhabalar"]:
+            direct_answer = (
+                f"Merhaba! Ben StudyRAG akademik çalışma asistanınım. 👋\n\n"
+                f"Şu an **{course_title}** dersindesin. Bu derse henüz bir ders notu (PDF) yüklenmedi.\n\n"
+                f"**Nasıl başlayabilirsin?**\n"
+                f"- Sol menüden veya Ana Ekran'dan dersine ait **PDF ders notlarını yükleyebilir**, ardından notların üzerinden özet, sınav tanımları, formüller, quiz ve zihin haritası oluşturabilirsin.\n"
+                f"- Ya da merak ettiğin belirli bir akademik konuyu doğrudan bana sorabilirsin! *(Örn: \"Newton yasaları nelerdir?\" veya \"Python'da döngüler nasıl çalışır?\")*"
+            )
+            return None, [], None, direct_answer
+
+        # 2. Soru doğrudan ders notlarına, özetlere, formüllere veya sınav konularına atıfta bulunuyorsa:
+        if is_course_notes_dependent_question(raw_question):
+            direct_answer = (
+                f"### 📄 Bu Derste Henüz Ders Notu (PDF) Bulunmuyor\n\n"
+                f"**{course_title}** dersi için sisteme henüz herhangi bir ders notu veya kaynak PDF yüklenmemiştir.\n\n"
+                f"Ders notlarınızdaki konuları özetleyebilmem, en önemli sınav tanımlarını veya formülleri çıkarabilmem için:\n"
+                f"- Sol menüdeki **Kaynak Dokümanlar** bölümünden veya **Ana Ekran**'dan ders notunuzu (PDF) yükleyebilirsiniz.\n\n"
+                f"---\n"
+                f"💡 **İpucu:** Eğer PDF yüklemeden doğrudan genel bir konuyu öğrenmek istiyorsanız, konunun adını açıkça belirterek soru sorabilirsiniz.\n"
+                f"*(Örneğin: *\"Termodinamiğin 2. yasası nedir?\"*, *\"Kinetik enerji formülünü açıkla\"* veya *\"Fotosentez evreleri nelerdir?\"*)*"
+            )
+            return None, [], None, direct_answer
+
+    # Eğer derste döküman varsa veya kullanıcı derste PDF olmasa bile spesifik bir konu sormuşsa / görsel yüklemişse:
+    query_vector = get_embeddings([raw_question])[0]
 
     must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
-    if request.course_name and request.course_name.strip():
-        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=request.course_name.strip())))
+    if course_name_clean:
+        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=course_name_clean)))
 
     query_filter = Filter(must=must_conditions)
 
     # Genel özet ve geniş kapsam için limit 8
     search_results = []
-    try:
-        search_results = qdrant_client.query_points(
-            collection_name=COLLECTION_NAME,
-            query=query_vector,
-            query_filter=query_filter,
-            limit=8
-        ).points
-    except Exception as e:
-        print(f"[WARN] Qdrant arama: {e}", flush=True)
+    if has_docs:
+        try:
+            search_results = qdrant_client.query_points(
+                collection_name=COLLECTION_NAME,
+                query=query_vector,
+                query_filter=query_filter,
+                limit=8
+            ).points
+        except Exception as e:
+            print(f"[WARN] Qdrant arama: {e}", flush=True)
 
-    # Not: search_results boş olsa bile 404 fırlatmıyoruz!
-    # Öğrenci PDF yüklemeden de "Bana şu konuyu anlat" diyebilmeli.
     context_parts = []
     sources = []
     seen_sources = {}
@@ -1016,11 +1094,6 @@ def build_chat_context_and_prompt(request: ChatRequest):
 
         context_parts.append(f"[KAYNAK {current_ref} | Dosya: {doc_name} | Sayfa: {page_num}]\n{text_content}")
 
-    if context_parts:
-        context_text = "\n\n---\n\n".join(context_parts)
-    else:
-        context_text = "(Bu çalışma alanında henüz bu konuyla ilgili özel bir PDF ders notu yüklenmedi. Üniversite ders müfredatına uygun genel uzman akademik bilginle kapsamlı, eğitici ve net bir yanıt ver.)"
-
     style_instruction = (
         "Konuyu hiç bilmeyen birine anlatır gibi günlük hayattan benzetmelerle çok sade ve basitçe anlat."
         if request.eli5_mode else
@@ -1041,7 +1114,9 @@ def build_chat_context_and_prompt(request: ChatRequest):
         except Exception as e:
             print(f"[WARN] Görsel decode hatası: {e}", flush=True)
 
-    prompt = f"""Sen üniversite öğrencilerine ders çalışma ve sınav hazırlığında rehberlik eden uzman bir yapay zeka asistanısın.
+    if context_parts:
+        context_text = "\n\n---\n\n".join(context_parts)
+        prompt = f"""Sen üniversite öğrencilerine ders çalışma ve sınav hazırlığında rehberlik eden uzman bir yapay zeka asistanısın.
 Tarzın: {style_instruction}
 
 Aşağıda öğrencinin yüklediği ilgili [DERS NOTLARI] parçaları [KAYNAK 1], [KAYNAK 2]... etiketleriyle verilmiştir.
@@ -1058,16 +1133,36 @@ YÖNERGELER:
 [SORU]:
 {raw_question}{image_instruction}
 """
-    return prompt, sources, image_part
+    else:
+        # Bu derste PDF yok ama kullanıcı spesifik bir konuyu sordu veya görsel yükledi:
+        prompt = f"""Sen üniversite öğrencilerine ders çalışma ve sınav hazırlığında rehberlik eden uzman bir yapay zeka asistanısın.
+Tarzın: {style_instruction}
+
+ÖNEMLİ BİLGİLENDİRME VE KESİN KURALLAR:
+1. Öğrencinin seçili '{course_title}' dersinde sisteme yüklenmiş HİÇBİR PDF DERS NOTU BULUNMAMAKTADIR.
+2. KESİNLİKLE rastgele bir ders müfredatı, uydurma bir akademik alan (örneğin iktisat, tıp, hukuk gibi ilgisiz alanlar) ÜRETME.
+3. KESİNLİKLE [KAYNAK 1] veya sayfa numarası gibi sahte kaynak etiketleri KULLANMA.
+4. SADECE VE SADECE öğrencinin doğrudan sorduğu konuyu ({raw_question}) veya gönderdiği görseli genel akademik uzmanlığınla en doğru, eğitici ve net biçimde açıkla.
+5. Matematiksel veya teknik formülleri KaTeX uyumlu standart LaTeX ($ ... $ veya $$ ... $$) formatında yaz.
+6. Yanıtının ilk satırında italik olarak şu bilgilendirme cümlesini ekle:
+*(Not: '{course_title}' dersinde henüz bir PDF ders notu yüklü olmadığı için yanıt genel akademik bilgilerle verilmiştir. Sınav kapsamınıza ve notlarınıza göre çalışmak için sol menüden PDF yükleyebilirsiniz.)*
+
+[SORU]:
+{raw_question}{image_instruction}
+"""
+
+    return prompt, sources, image_part, None
 
 
 # 3. RAG Sohbet & Özet (Standart JSON Yanıt)
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_pdf(request: ChatRequest):
     try:
-        prompt, sources, image_part = build_chat_context_and_prompt(request)
-        client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+        prompt, sources, image_part, direct_answer = build_chat_context_and_prompt(request)
+        if direct_answer:
+            return ChatResponse(answer=direct_answer, sources=[])
 
+        client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
         contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
 
         response = client.models.generate_content(
@@ -1086,9 +1181,9 @@ async def chat_with_pdf(request: ChatRequest):
 @app.post("/chat-stream")
 async def chat_stream_with_pdf(request: ChatRequest):
     try:
-        prompt, sources, image_part = build_chat_context_and_prompt(request)
+        prompt, sources, image_part, direct_answer = build_chat_context_and_prompt(request)
         client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
-        contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
+        contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if (image_part and prompt) else prompt
     except HTTPException:
         raise
     except Exception as e:
@@ -1096,10 +1191,17 @@ async def chat_stream_with_pdf(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
     async def event_generator():
-        # 1. İlk olarak kaynakları gönder
+        # 1. Eğer doğrudan cevap varsa (PDF yok ve yönlendirme mesajı gerekiyorsa)
+        if direct_answer:
+            yield f"data: {json.dumps({'sources': []})}\n\n"
+            yield f"data: {json.dumps({'text': direct_answer})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+            return
+
+        # 2. İlk olarak kaynakları gönder
         yield f"data: {json.dumps({'sources': [s.model_dump() for s in sources]})}\n\n"
 
-        # 2. Gemini akışını canlı token olarak ilet
+        # 3. Gemini akışını canlı token olarak ilet
         try:
             stream = client.models.generate_content_stream(
                 model=GEMINI_MODEL,
@@ -1123,7 +1225,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
                 logger.exception("Gemini akışında (/chat-stream) yedek model de hata verdi:")
                 yield f"data: {json.dumps({'error': str(e2)})}\n\n"
 
-        # 3. Tamamlandı sinyali
+        # 4. Tamamlandı sinyali
         yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(
