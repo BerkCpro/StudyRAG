@@ -3077,6 +3077,47 @@
             renderProfileWidget();
         }
 
+        // Global Şık Bildirim (Toast) Sistemi
+        function showToast(message, type = 'info', duration = 4000) {
+            let container = document.getElementById('globalToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'globalToastContainer';
+                container.className = 'fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full px-4';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const borderClass = type === 'success' 
+                ? 'border-emerald-500/50 bg-zinc-900/95 text-emerald-300' 
+                : type === 'error'
+                ? 'border-rose-500/50 bg-zinc-900/95 text-rose-300'
+                : 'border-accent/50 bg-zinc-900/95 text-text';
+
+            const iconHtml = type === 'success' 
+                ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>' 
+                : type === 'error'
+                ? '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>'
+                : '<i data-lucide="info" class="w-4 h-4 text-accent shrink-0"></i>';
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 p-3 rounded-2xl border shadow-2xl backdrop-blur-md text-xs font-medium animate-in fade-in slide-in-from-top-2 transition-all ${borderClass}`;
+            toast.innerHTML = `
+                ${iconHtml}
+                <span class="flex-1 leading-snug">${escapeHtml(message)}</span>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white p-0.5 rounded cursor-pointer">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            if (window.lucide) lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
         // -------------------------------------------------------------
         // 0. MODÜLER ANA EKRAN (HOME SCREEN) YÖNETİMİ
         // -------------------------------------------------------------
@@ -3297,9 +3338,35 @@
                 const startBtnDisabled = !hasPdfs;
                 const startBtnTitle = !hasPdfs ? 'Önce bir PDF eklemelisin' : '';
 
+                // Yüklü PDF rozeti (Eğer derste PDF varsa göster)
+                let pdfBadgeHtml = '';
+                if (hasPdfs && currentCoursePdfList && currentCoursePdfList.length > 0) {
+                    const firstPdf = currentCoursePdfList[0];
+                    const count = currentCoursePdfList.length;
+                    const countBadge = count > 1 ? `<span class="bg-accent/20 px-1 py-0.2 rounded text-[10px] font-mono">+${count - 1}</span>` : '';
+                    pdfBadgeHtml = `
+                        <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-accent-soft border border-accent/40 rounded-xl text-accent text-[11px] font-medium shadow-xs" title="${escapeHtml(firstPdf.filename)} (${firstPdf.total_pages || 1} sayfa)">
+                            <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-accent shrink-0"></i>
+                            <span class="truncate max-w-[110px] sm:max-w-[160px]">${escapeHtml(firstPdf.filename)}</span>
+                            <span class="text-[9px] opacity-75 font-mono">(${firstPdf.total_pages || 1} sf)</span>
+                            ${countBadge}
+                        </div>
+                    `;
+                }
+
                 const inputBoxHtml = `
                     <div class="w-full bg-surface border border-border rounded-2xl p-3.5 sm:p-4 shadow-xl focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
                         ${imagePreviewHtml}
+                        <!-- Yükleme İlerleme Durumu (PDF yüklenirken görünür) -->
+                        <div id="homePdfUploadBanner" class="hidden mb-2.5 p-2.5 bg-surface-2 border border-accent/40 rounded-xl flex items-center justify-between text-xs animate-in fade-in">
+                            <div class="flex items-center gap-2 text-text min-w-0">
+                                <i data-lucide="loader-2" class="w-4 h-4 text-accent animate-spin shrink-0"></i>
+                                <span id="homePdfUploadFileName" class="font-medium truncate">PDF Yükleniyor...</span>
+                                <span id="homePdfUploadPhase" class="text-[10px] text-text-muted hidden sm:inline truncate">Sayfalar ayrıştırılıyor...</span>
+                            </div>
+                            <span class="text-[10px] text-accent font-mono animate-pulse shrink-0">İndeksleniyor</span>
+                        </div>
+
                         <div class="relative">
                             <textarea id="homeMainInput" rows="2" placeholder="${escapeHtml(activeMode.placeholder)}"
                                 onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleHomeStart(); }"
@@ -3319,10 +3386,13 @@
                                     <i data-lucide="chevron-down" class="w-3 h-3 text-text-muted absolute right-2 pointer-events-none"></i>
                                 </div>
 
+                                <!-- Yüklü PDF Rozeti -->
+                                ${pdfBadgeHtml}
+
                                 <!-- + PDF Ekle Butonu -->
-                                <button onclick="triggerHomePdfUpload()" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border px-2.5 py-1.5 rounded-xl font-medium flex items-center gap-1 transition cursor-pointer" title="Bu derse PDF notu yükle">
+                                <button id="homePdfAddBtn" onclick="triggerHomePdfUpload()" class="text-[11px] ${hasPdfs ? 'bg-surface-2 hover:bg-border text-text-muted hover:text-text' : 'bg-accent-soft hover:bg-accent/20 text-accent font-semibold border-accent/40'} border border-border px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition cursor-pointer shadow-xs" title="Bu derse PDF notu yükle">
                                     <i data-lucide="file-plus" class="w-3.5 h-3.5 text-accent"></i>
-                                    <span>+ PDF Ekle</span>
+                                    <span>${hasPdfs ? '+ Ekle' : '+ PDF Ekle'}</span>
                                 </button>
 
                                 <!-- Sohbet moduna özel: Görsel Ekle ve Mikrofon -->
@@ -4146,39 +4216,80 @@
         async function handleRealPdfUpload(input) {
             if (!input.files || !input.files[0]) return;
 
-            if (!currentCourse || !currentCourse.trim()) {
+            // Aktif dersi sağlama al:
+            if (!currentCourse || !currentCourse.trim() || currentCourse.includes('Henüz Ders')) {
+                const selectEl = document.getElementById('courseSelect');
+                if (selectEl && selectEl.value && selectEl.value.trim() && !selectEl.value.includes('Henüz Ders')) {
+                    currentCourse = selectEl.value.trim();
+                } else {
+                    const courses = getStoredCourses();
+                    if (courses && courses.length > 0) {
+                        currentCourse = courses[0];
+                    }
+                }
+            }
+
+            if (!currentCourse || !currentCourse.trim() || currentCourse.includes('Henüz Ders')) {
                 openNewCourseModal("PDF yükleyebilmek için lütfen önce bir ders adı giriniz.");
                 input.value = '';
                 return;
             }
+
+            // Seçili dersi senkronize et
+            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+            const selectEl = document.getElementById('courseSelect');
+            if (selectEl && selectEl.value !== currentCourse) {
+                selectEl.value = currentCourse;
+            }
+            updateHeaderCourseBadge();
 
             const file = input.files[0];
             const progressBox = document.getElementById('uploadProgressBox');
             const statusText = document.getElementById('uploadStatusText');
             const phaseText = document.getElementById('uploadPhaseText');
 
-            // Aktif dersi dropdown ile eşle
-            const selectEl = document.getElementById('courseSelect');
-            if (selectEl && selectEl.value) {
-                currentCourse = selectEl.value;
-                localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
-                updateHeaderCourseBadge();
-            }
+            // Ana Ekran UI elementleri
+            const homeBanner = document.getElementById('homePdfUploadBanner');
+            const homeFileName = document.getElementById('homePdfUploadFileName');
+            const homePhase = document.getElementById('homePdfUploadPhase');
+            const homePdfBtn = document.getElementById('homePdfAddBtn');
 
             const formData = new FormData();
             formData.append('file', file);
             formData.append('course_name', currentCourse);
             formData.append('user_id', currentUserId);
 
-            progressBox.classList.remove('hidden');
+            // 1. Sol panel ilerleme kutusu
+            if (progressBox) progressBox.classList.remove('hidden');
             if (phaseText) phaseText.textContent = `${file.name.slice(0, 18)}...`;
             if (statusText) statusText.textContent = 'Yükleniyor...';
 
+            // 2. Ana Ekran ilerleme çubuğu & buton animasyonu
+            if (homeBanner) {
+                homeBanner.classList.remove('hidden');
+                if (homeFileName) homeFileName.textContent = `${file.name.slice(0, 24)}...`;
+                if (homePhase) homePhase.textContent = 'Sunucuya gönderiliyor...';
+                if (window.lucide) lucide.createIcons();
+            }
+            if (homePdfBtn) {
+                homePdfBtn.disabled = true;
+                homePdfBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 text-accent animate-spin"></i><span>Yükleniyor...</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
+
             const timers = [
-                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Sayfalar Ayrıştırılıyor...'; }, 2000),
-                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Anlamsal Analiz Yapılıyor...'; }, 6000),
-                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Ders Hafızası Güncelleniyor...'; }, 14000),
-                setTimeout(() => { if (statusText && !progressBox.classList.contains('hidden')) statusText.textContent = 'Son Aşamalar Tamamlanıyor...'; }, 24000)
+                setTimeout(() => { 
+                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Sayfalar Ayrıştırılıyor...';
+                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Sayfalar taranıyor...';
+                }, 2000),
+                setTimeout(() => { 
+                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Anlamsal Analiz Yapılıyor...';
+                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Vektörler ve analiz yapılıyor...';
+                }, 6000),
+                setTimeout(() => { 
+                    if (statusText && !progressBox?.classList.contains('hidden')) statusText.textContent = 'Ders Hafızası Güncelleniyor...';
+                    if (homePhase && !homeBanner?.classList.contains('hidden')) homePhase.textContent = 'Ders hafızası güncelleniyor...';
+                }, 14000)
             ];
             const clearAllTimers = () => timers.forEach(t => clearTimeout(t));
 
@@ -4207,19 +4318,29 @@
                     throw new Error(errMsg);
                 }
 
+                const resData = await res.json().catch(() => ({}));
+                const pageCount = resData.total_pages || resData.pages || '';
+                const pageText = pageCount ? ` (${pageCount} Sayfa)` : '';
+
                 if (phaseText) phaseText.textContent = 'İndeksleme Tamamlandı!';
                 if (statusText) statusText.textContent = 'Başarılı ✓';
                 
+                showToast(`✓ "${file.name}"${pageText} başarıyla yüklendi ve ders hafızasına eklendi!`, 'success');
+
                 await fetchDocumentsForCurrentCourse();
-                setTimeout(() => progressBox.classList.add('hidden'), 1500);
+                if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 1500);
             } catch (err) {
                 clearAllTimers();
                 if (phaseText) phaseText.textContent = 'Hata: ' + err.message.slice(0, 24);
                 if (statusText) statusText.textContent = 'Başarısız ✗';
-                alert("Ders Notu Yükleme Hatası: " + err.message);
-                setTimeout(() => progressBox.classList.add('hidden'), 3500);
+                showToast(`✗ PDF Yükleme Hatası: ${err.message}`, 'error', 5000);
+                if (progressBox) setTimeout(() => progressBox.classList.add('hidden'), 3500);
             } finally {
                 input.value = '';
+                if (homeBanner) homeBanner.classList.add('hidden');
+                if (document.getElementById('tab-home') && !document.getElementById('tab-home').classList.contains('hidden')) {
+                    renderHomeScreen();
+                }
             }
         }
 
