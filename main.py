@@ -40,7 +40,7 @@ import sqlite3
 import pymupdf
 from typing import Literal, Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
@@ -329,9 +329,34 @@ async def lifespan(app: FastAPI):
     print("[STOP] Sistem kapatılıyor...", flush=True)
 
 
+tags_metadata = [
+    {
+        "name": "Döküman Yönetimi",
+        "description": "PDF yükleme, listeleme, silme, sayfa görseli ve döküman detayları.",
+    },
+    {
+        "name": "Sohbet",
+        "description": "RAG tabanlı sohbet ve canlı akış (SSE).",
+    },
+    {
+        "name": "Çalışma Araçları",
+        "description": "Quiz, flashcard, formül kağıdı ve zihin haritası.",
+    },
+    {
+        "name": "İlerleme",
+        "description": "Quiz cevapları ve dashboard istatistikleri.",
+    },
+    {
+        "name": "Sistem",
+        "description": "Sağlık kontrolü ve ana sayfa.",
+    },
+]
+
 app = FastAPI(
-    title="StudyRAG - Akıllı Ders Çalışma Sistemi",
+    title="StudyRAG - Akıllı Ders Çalışma Sistemi API",
+    description="Üniversite ders notları ve slaytları üzerinde çalışan, asenkron RAG (Retrieval-Augmented Generation) tabanlı yapay zeka destekli akıllı ders çalışma ve sınav hazırlık platformu.",
     version="1.0.0",
+    openapi_tags=tags_metadata,
     lifespan=lifespan
 )
 
@@ -500,24 +525,67 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
 # 4. PYDANTIC ŞEMALARI (VERİ DOĞRULAMA)
 # ==========================================
 class ChatRequest(BaseModel):
-    question: str
-    course_name: Optional[str] = None
-    eli5_mode: bool = False  # "Basitçe Anlat" modu
-    user_id: Optional[str] = "default_user"
-    image_base64: Optional[str] = None  # Base64 formatında soru/not görseli
-    image_mime_type: Optional[str] = "image/jpeg"
-    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'ler üzerinde çalışma filtresi
+    question: str = Field(..., description="Kullanıcının ders notlarıyla ilgili sorusu")
+    course_name: Optional[str] = Field(None, description="Materyalin ait olduğu ders adı")
+    eli5_mode: bool = Field(False, description="Basitçe Anlat (Explain Like I'm 5) pedagojik modu")
+    user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
+    image_base64: Optional[str] = Field(None, description="Base64 formatında soru/not görseli")
+    image_mime_type: Optional[str] = Field("image/jpeg", description="Yüklenen görselin MIME türü")
+    selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'ler üzerinde çalışma filtresi")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "question": "Fotovoltaik hücrelerin çalışma prensibi nedir?",
+                    "course_name": "Güneş Enerjisi",
+                    "eli5_mode": False,
+                    "user_id": "user_123",
+                    "selected_docs": ["Lesson-1.pdf"]
+                }
+            ]
+        }
+    }
 
 
 class SourceInfo(BaseModel):
-    document_name: str
-    page_number: int
-    snippet: str
+    document_name: str = Field(..., description="Referans bilginin yer aldığı PDF dosya adı")
+    page_number: int = Field(..., description="Referans sayfa numarası (1-tabanlı)")
+    snippet: str = Field(..., description="Sayfadan alınan alıntı bağlam metni")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "document_name": "Lesson-1.pdf",
+                    "page_number": 4,
+                    "snippet": "Enerji yoktan var edilemez, vardan yok edilemez; sadece biçim değiştirir..."
+                }
+            ]
+        }
+    }
 
 
 class ChatResponse(BaseModel):
-    answer: str
-    sources: list[SourceInfo]
+    answer: str = Field(..., description="Yapay zeka asistanı tarafından üretilen yanıt")
+    sources: list[SourceInfo] = Field(default_factory=list, description="Cevabın dayandığı kaynak döküman ve sayfa referansları")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "answer": "Fotovoltaik hücreler fotonları doğrudan elektrik enerjisine çevirir...",
+                    "sources": [
+                        {
+                            "document_name": "Lesson-1.pdf",
+                            "page_number": 4,
+                            "snippet": "Fotovoltaik etki ışık enerjisinin elektrik gerilimine dönüşmesidir..."
+                        }
+                    ]
+                }
+            ]
+        }
+    }
 
 
 # --- Quiz Şemaları (Structured Output için) ---
@@ -535,61 +603,155 @@ class QuizQuestion(BaseModel):
     source_document: str = Field(description="Bilginin alındığı PDF adı")
     page_number: int = Field(description="Bilginin alındığı sayfa numarası")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "question_type": "mcq",
+                    "question_text": "Aşağıdakilerden hangisi yenilenebilir enerji kaynağıdır?",
+                    "options": ["A) Güneş", "B) Kömür", "C) Doğalgaz", "D) Linyit"],
+                    "correct_answer": "A) Güneş",
+                    "explanation": "Güneş enerjisi tükenmeyen ve kendini yenileyen bir kaynaktır.",
+                    "source_document": "Lesson-7 Solar Energy-2.pdf",
+                    "page_number": 3
+                }
+            ]
+        }
+    }
+
 
 class QuizListResponse(BaseModel):
-    questions: list[QuizQuestion]
+    questions: list[QuizQuestion] = Field(..., description="Oluşturulan sınav soruları listesi")
 
 
 class QuizGenerateRequest(BaseModel):
-    question_type: Literal["mixed", "mcq", "tf", "fill", "open"] = "mixed"
-    difficulty: str = "Orta"
-    count: int = 5
-    course_name: Optional[str] = None
-    user_id: Optional[str] = "default_user"
-    focus_weak_topics: bool = False  # Hata yapılan zayıf konulara odaklan
-    focus_pages: Optional[list[int]] = None  # Odaklanılacak belirli sayfa listesi
-    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden quiz üretme filtresi
+    question_type: Literal["mixed", "mcq", "tf", "fill", "open"] = Field("mixed", description="Sınav soru formatı")
+    difficulty: str = Field("Orta", description="Sınav zorluk derecesi (Kolay, Orta, Zor)")
+    count: int = Field(5, description="Üretilecek soru sayısı (5, 10 veya 20)")
+    course_name: Optional[str] = Field(None, description="Hedef ders adı")
+    user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
+    focus_weak_topics: bool = Field(False, description="Hata yapılan zayıf konulara odaklan")
+    focus_pages: Optional[list[int]] = Field(None, description="Odaklanılacak belirli sayfa listesi")
+    selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'lerden quiz üretme filtresi")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_name": "Yenilenebilir Enerji",
+                    "difficulty": "Orta",
+                    "count": 5,
+                    "question_type": "mixed",
+                    "focus_weak_topics": False,
+                    "selected_docs": ["Lesson-7 Solar Energy-2.pdf"]
+                }
+            ]
+        }
+    }
 
 
 # --- Flashcard Şemaları ---
 class FlashcardItem(BaseModel):
     front: str = Field(description="Kartın ön yüzü: Kavram veya kısa soru")
     back: str = Field(description="Kartın arka yüzü: Net ve kısa açıklama")
-    source_document: str
-    page_number: int
+    source_document: str = Field(..., description="Bilginin alındığı PDF adı")
+    page_number: int = Field(..., description="Bilginin alındığı sayfa numarası")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "front": "Fotovoltaik Etki",
+                    "back": "Işığın yarı iletken maddeler tarafından soğurularak elektrik gerilimi oluşturması olayıdır.",
+                    "source_document": "Lesson-6 Introduction to Solar Energy.pdf",
+                    "page_number": 5
+                }
+            ]
+        }
+    }
 
 
 class FlashcardListResponse(BaseModel):
-    cards: list[FlashcardItem]
+    cards: list[FlashcardItem] = Field(..., description="Üretilen çalışma kartları listesi")
 
 
 
 class CheatSheetRequest(BaseModel):
-    course_name: Optional[str] = None
-    user_id: Optional[str] = "default_user"
-    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden formül kağıdı üretme filtresi
+    course_name: Optional[str] = Field(None, description="Hedef ders adı")
+    user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
+    selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'lerden formül kağıdı üretme filtresi")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_name": "Termal Bilimler",
+                    "selected_docs": ["Lesson-4 Thermal Science-2 (1).pdf"]
+                }
+            ]
+        }
+    }
 
 
 class CheatSheetResponse(BaseModel):
-    course_name: str
-    title: str
-    markdown_content: str
+    course_name: str = Field(..., description="Ders adı")
+    title: str = Field(..., description="Formül kağıdı başlığı")
+    markdown_content: str = Field(..., description="KaTeX uyumlu formüller, kanunlar ve sınav ipuçları")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_name": "Termal Bilimler",
+                    "title": "Termal Bilimler - Sınav Formül & Kavram Kağıdı",
+                    "markdown_content": "# 📑 Termal Bilimler Formül Kağıdı\n## 📐 1. Temel Formüller\n$$Q = m \\cdot c \\cdot \\Delta T$$"
+                }
+            ]
+        }
+    }
+
 
 class FlashcardGenerateRequest(BaseModel):
-    count: Optional[int] = 5
-    course_name: Optional[str] = None
-    user_id: Optional[str] = "default_user"
-    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden flashcard üretme filtresi
+    count: Optional[int] = Field(5, description="Üretilecek flashcard sayısı (3-5 arası)")
+    course_name: Optional[str] = Field(None, description="Hedef ders adı")
+    user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
+    selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'lerden flashcard üretme filtresi")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_name": "Termal Bilimler",
+                    "count": 5,
+                    "selected_docs": ["Lesson-5 Thermal Science-3.pdf"]
+                }
+            ]
+        }
+    }
 
 
 # --- Zihin Haritası Modelleri ---
 class MindMapRequest(BaseModel):
-    course_id: Optional[str] = None
-    course_name: Optional[str] = None
-    user_id: Optional[str] = None
-    focus: Optional[str] = None
-    refresh: Optional[bool] = False
-    selected_docs: Optional[list[str]] = None  # Sadece seçili PDF'lerden zihin haritası çıkarma filtresi
+    course_id: Optional[str] = Field(None, description="Ders kimliği veya adı")
+    course_name: Optional[str] = Field(None, description="Hedef ders adı")
+    user_id: Optional[str] = Field(None, description="Kullanıcı kimliği")
+    focus: Optional[str] = Field(None, description="Özel olarak odaklanılacak konu/kavram")
+    refresh: Optional[bool] = Field(False, description="True ise önbelleği yok sayıp sıfırdan üretir")
+    selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'lerden zihin haritası çıkarma filtresi")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_name": "Güneş Enerjisi",
+                    "focus": "Güneş Kollektörleri",
+                    "refresh": False,
+                    "selected_docs": ["Lesson-7 Solar Energy-2.pdf"]
+                }
+            ]
+        }
+    }
+
 
 class MindMapLeaf(BaseModel):
     title: str = Field(description="Alt kavram veya detay (en fazla 6 kelime)")
@@ -607,13 +769,46 @@ class MindMapResponse(BaseModel):
     title: str = Field(description="Zihin haritası kök başlığı / ders adı (en fazla 6 kelime)")
     children: list[MindMapBranch] = Field(default_factory=list, description="Dersin ana dalları (en fazla 8 ana dal)")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "title": "Güneş Enerjisi",
+                    "children": [
+                        {
+                            "title": "Temel Prensipler",
+                            "page": 2,
+                            "children": [
+                                {"title": "Güneş Sabiti", "page": 3, "children": []},
+                                {"title": "Işınım Spektrumu", "page": 4, "children": []}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
 
 # --- Quiz Sonuç Gönderme (Zayıf Konu Tespiti) ---
 class QuizAnswerSubmit(BaseModel):
-    is_correct: bool
-    source_document: str
-    page_number: int
-    user_id: Optional[str] = "default_user"
+    is_correct: bool = Field(..., description="Verilen cevabın doğru olup olmadığı")
+    source_document: str = Field(..., description="Sorunun ait olduğu kaynak PDF adı")
+    page_number: int = Field(..., description="Sorunun ait olduğu sayfa numarası")
+    user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "is_correct": False,
+                    "source_document": "Lesson-1.pdf",
+                    "page_number": 5,
+                    "user_id": "user_123"
+                }
+            ]
+        }
+    }
 
 
 # ==========================================
@@ -621,16 +816,27 @@ class QuizAnswerSubmit(BaseModel):
 # ==========================================
 
 # Render ve Harici Cronjob'lar için Ultra Hafif Canlılık / Ping Kontrolü (Response Data Too Big Hatasını Önler)
-@app.get("/health")
-@app.get("/ping")
-@app.head("/health")
-@app.head("/ping")
+@app.get(
+    "/health",
+    tags=["Sistem"],
+    summary="Sistem Canlılık ve Sağlık Kontrolü",
+    description="Sunucunun ve arka plan servislerinin ayakta olduğunu teyit eden hafif durum kontrolü."
+)
+@app.get("/ping", include_in_schema=False)
+@app.head("/health", include_in_schema=False)
+@app.head("/ping", include_in_schema=False)
 async def health_check():
     return {"status": "ok"}
 
 
 # Ana sayfaya girildiğinde index.html varsa onu açar (Mobil ve tarayıcı önbellek kilidini kırmak için no-cache eklendi)
-@app.get("/")
+@app.get(
+    "/",
+    tags=["Sistem"],
+    summary="Ana Sayfa (Web Arayüzü)",
+    description="Tek sayfa uygulamasını (SPA - index.html) tarayıcıya sunar.",
+    include_in_schema=False
+)
 async def serve_frontend():
     if os.path.exists("index.html"):
         response = FileResponse("index.html")
@@ -643,12 +849,17 @@ async def serve_frontend():
 
 
 # 1. PDF Yükleme ve Qdrant'a Kaydetme (Kota Dostu 25'lik Batch, Slayt Bütünlüğü & Güçlü Hata Yönetimi)
-@app.post("/upload-pdf")
+@app.post(
+    "/upload-pdf",
+    tags=["Döküman Yönetimi"],
+    summary="Ders Notu (PDF) Yükleme ve Vektörleştirme",
+    description="Gönderilen PDF dosyasını alır, sayfa/metin denetimi yapar, 2200 karaktere kadar slayt bütünlüğünü korur ve 25'li batch'ler halinde vektörleştirerek Qdrant ve yerel depoya kaydeder."
+)
 async def upload_pdf(
-    file: UploadFile = File(...),
-    course_name: str = Form("Genel Ders"),
-    user_id: Optional[str] = Form(None),
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    file: UploadFile = File(..., description="Yüklenecek PDF ders notu dosyası"),
+    course_name: str = Form("Genel Ders", description="Materyalin ait olduğu ders adı"),
+    user_id: Optional[str] = Form(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "").strip()
     if not uid:
@@ -783,11 +994,16 @@ async def upload_pdf(
 
 
 # 2. Yüklü PDF'leri Listeleme (Kesin Kullanıcı ve Ders filtreli - Cihaz Ayrımı Garantili)
-@app.get("/documents")
+@app.get(
+    "/documents",
+    tags=["Döküman Yönetimi"],
+    summary="Yüklü Dökümanları Listeleme",
+    description="Aktif kullanıcının seçili dersteki veya tüm derslerdeki yüklenmiş PDF dökümanlarını, sayfa sayılarını ve meta verilerini listeler."
+)
 async def get_documents(
-    course_name: Optional[str] = None,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    course_name: Optional[str] = Query(None, description="Filtrelenecek ders adı (boşsa kullanıcının tüm dökümanları listelenir)"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "").strip()
     if not uid:
@@ -803,12 +1019,17 @@ async def get_documents(
 
 
 # 2.1 PDF Silme Endpoint'i (Garantili Silme & İzolasyon)
-@app.delete("/documents/{filename}")
+@app.delete(
+    "/documents/{filename}",
+    tags=["Döküman Yönetimi"],
+    summary="Ders Notunu Silme",
+    description="Belirtilen PDF dosyasını disk deposundan kaldırır, Qdrant vektör koleksiyonundaki noktalarını temizler ve zihin haritası önbelleğini sıfırlar."
+)
 async def delete_document(
     filename: str,
-    course_name: Optional[str] = None,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    course_name: Optional[str] = Query(None, description="PDF'in ait olduğu ders adı"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     global uploaded_documents
     uid = (x_user_id or user_id or "default_user").strip()
@@ -868,11 +1089,16 @@ async def delete_document(
 
 
 # 2.1.1 Ders Silme Endpoint'i (Kullanıcının o dersteki tüm PDF'lerini ve vektörlerini temizler)
-@app.delete("/courses/{course_name}")
+@app.delete(
+    "/courses/{course_name}",
+    tags=["Döküman Yönetimi"],
+    summary="Dersi ve Tüm Materyallerini Silme",
+    description="Belirtilen dersi, o derse ait tüm PDF dosyalarını, Qdrant vektör kayıtlarını ve zihin haritası önbelleğini tamamen temizler."
+)
 async def delete_course(
     course_name: str,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     global uploaded_documents
     uid = (x_user_id or user_id or "default_user").strip()
@@ -921,13 +1147,18 @@ async def delete_course(
 
 
 # 2.2 PDF Sayfa Görseli Önizleme Endpoint'i (Ultra Hızlı PyMuPDF Renderer)
-@app.get("/pdf-page-image")
+@app.get(
+    "/pdf-page-image",
+    tags=["Döküman Yönetimi"],
+    summary="PDF Sayfa Görseli Önizleme",
+    description="İstenen sayfa numarasını PyMuPDF ile anında render ederek PNG görseli olarak döner. Kaynak teyidi için arayüz modalında ve rozetlerde kullanılır."
+)
 async def get_pdf_page_image(
-    filename: str,
-    page: int = 1,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-    dpi: int = 140
+    filename: str = Query(..., description="Görüntülenecek PDF dosya adı"),
+    page: int = Query(1, description="Sayfa numarası (1-tabanlı)"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı"),
+    dpi: int = Query(140, description="Render çözünürlüğü (DPI, varsayılan 140)")
 ):
     uid = (x_user_id or user_id or "default_user").strip()
     pdf_path = find_pdf_file_path(filename, uid)
@@ -964,11 +1195,16 @@ async def get_pdf_page_image(
 
 
 # 2.3 Tam PDF İndirme / Görüntüleme Endpoint'i
-@app.get("/pdf-file/{filename}")
+@app.get(
+    "/pdf-file/{filename}",
+    tags=["Döküman Yönetimi"],
+    summary="Orijinal PDF Dosyasını İndirme / Görüntüleme",
+    description="Diskte saklanan orijinal PDF dosyasını tarayıcıda görüntülemek veya indirmek üzere stream eder."
+)
 async def get_pdf_file(
     filename: str,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "default_user").strip()
     pdf_path = find_pdf_file_path(filename, uid)
@@ -978,11 +1214,16 @@ async def get_pdf_file(
 
 
 # 2.4 PDF Sayfa Sayısı ve Bilgi Endpoint'i
-@app.get("/pdf-info")
+@app.get(
+    "/pdf-info",
+    tags=["Döküman Yönetimi"],
+    summary="PDF Sayfa ve Durum Bilgisi",
+    description="Belirtilen PDF'in toplam sayfa sayısını ve disk deposundaki mevcudiyet durumunu kontrol eder."
+)
 async def get_pdf_info(
-    filename: str,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    filename: str = Query(..., description="Sorgulanacak PDF dosya adı"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "default_user").strip()
     pdf_path = find_pdf_file_path(filename, uid)
@@ -1198,7 +1439,13 @@ Tarzın: {style_instruction}
 
 
 # 3. RAG Sohbet & Özet (Standart JSON Yanıt)
-@app.post("/chat", response_model=ChatResponse)
+@app.post(
+    "/chat",
+    response_model=ChatResponse,
+    tags=["Sohbet"],
+    summary="RAG Tabanlı Soru-Cevap (Standart JSON)",
+    description="Kullanıcı sorusunu ve opsiyonel görselini ilgili ders notlarıyla eşleştirerek sayfa referanslı yanıt döner."
+)
 async def chat_with_pdf(request: ChatRequest):
     try:
         prompt, sources, image_part, direct_answer = build_chat_context_and_prompt(request)
@@ -1235,7 +1482,12 @@ def format_user_friendly_ai_error(e: Exception) -> str:
 
 
 # 3.1 Canlı Akış (Streaming SSE - Kayan Metin & Multimodal Görsel)
-@app.post("/chat-stream")
+@app.post(
+    "/chat-stream",
+    tags=["Sohbet"],
+    summary="Canlı Akışlı RAG Asistanı (Server-Sent Events)",
+    description="İlgili kaynak sayfaları ilk paket olarak iletir, ardından Gemini modelinin ürettiği token'ları SSE (text/event-stream) protokolüyle sıfır gecikmeli canlı akar."
+)
 async def chat_stream_with_pdf(request: ChatRequest):
     try:
         prompt, sources, image_part, direct_answer = build_chat_context_and_prompt(request)
@@ -1309,10 +1561,16 @@ async def chat_stream_with_pdf(request: ChatRequest):
 
 
 # 4. Pydantic Şemalı Otomatik Quiz Üretici
-@app.post("/generate-quiz", response_model=QuizListResponse)
+@app.post(
+    "/generate-quiz",
+    response_model=QuizListResponse,
+    tags=["Çalışma Araçları"],
+    summary="Kişiselleştirilmiş Sınav Simülatörü",
+    description="Seçili ders veya PDF'lerden, belirlenen zorluk ve adede (5, 10, 20) göre yapılandırılmış test üretir. İsteğe bağlı olarak geçmişte hata yapılan zayıf konulara odaklanır."
+)
 async def generate_quiz(
     request: QuizGenerateRequest,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or request.user_id or "default_user").strip()
     scroll_filter = build_course_filter(uid, request.course_name, request.selected_docs)
@@ -1425,13 +1683,19 @@ Her sorunun doğru cevabını, açıklamasını ve kaynak PDF ile sayfa numaras�
 
 
 # 5. Otomatik Flashcard Üretici (Ultra Hızlı ve Non-blocking)
-@app.post("/generate-flashcards", response_model=FlashcardListResponse)
+@app.post(
+    "/generate-flashcards",
+    response_model=FlashcardListResponse,
+    tags=["Çalışma Araçları"],
+    summary="Hızlı Tekrar Çalışma Kartları (Flashcards)",
+    description="Ders notlarındaki en kritik kavramları ön ve arka yüz olarak soru-cevap kart seti halinde derler."
+)
 async def generate_flashcards(
     payload: Optional[FlashcardGenerateRequest] = None,
-    count: int = 5,
-    course_name: Optional[str] = None,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    count: int = Query(5, description="Üretilecek kart sayısı"),
+    course_name: Optional[str] = Query(None, description="Hedef ders adı"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or (payload.user_id if payload else None) or user_id or "default_user").strip()
     target_count = (payload.count if payload and payload.count else count) or 5
@@ -1492,12 +1756,18 @@ KURALLAR (HIZLI VE ETKİLİ ÖĞRENME İÇİN):
 
 
 # 5.1 Sınav Öncesi Formül & Kavram Kağıdı (Cheat Sheet Generator)
-@app.post("/generate-cheatsheet", response_model=CheatSheetResponse)
+@app.post(
+    "/generate-cheatsheet",
+    response_model=CheatSheetResponse,
+    tags=["Çalışma Araçları"],
+    summary="Sınav Öncesi Formül & Kavram Kağıdı (Cheat Sheet)",
+    description="Ders notlarındaki formülleri, teoremleri, tanımları ve sınav tuzaklarını KaTeX uyumlu markdown formatında tek sayfalık özet kağıdı olarak üretir."
+)
 async def generate_cheatsheet(
     payload: Optional[CheatSheetRequest] = None,
-    course_name: Optional[str] = None,
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    course_name: Optional[str] = Query(None, description="Hedef ders adı"),
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or (payload.user_id if payload else None) or user_id or "default_user").strip()
     target_course = (payload.course_name if payload and payload.course_name else course_name) or None
@@ -1586,10 +1856,15 @@ Aşağıdaki ders notlarını incele ve öğrencinin sınavdan hemen önce tek b
 
 
 # 5.2 Ders Zihin Haritası (Hierarchical Mind Map Generator)
-@app.post("/api/mindmap")
+@app.post(
+    "/api/mindmap",
+    tags=["Çalışma Araçları"],
+    summary="Hiyerarşik Ders Zihin Haritası (Mindmap)",
+    description="Dersin veya seçili PDF'lerin kavram ağacını ve sayfa referanslarını hiyerarşik JSON olarak üretir. Tekrar üretimleri SQLite önbelleğinden 5 milisaniyede döner."
+)
 async def generate_mindmap(
     payload: MindMapRequest,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or payload.user_id or "default_user").strip()
     target_course = (payload.course_id or payload.course_name or "").strip()
@@ -1808,10 +2083,15 @@ Ağaç yapısı kuralları:
 
 
 # 6. Zayıf Konu Tespiti & Dashboard İstatistikleri
-@app.post("/submit-answer")
+@app.post(
+    "/submit-answer",
+    tags=["İlerleme"],
+    summary="Quiz Sorusu Cevap Kaydı & Zayıf Konu Tespiti",
+    description="Öğrencinin quiz sorusuna verdiği yanıtı kaydeder. Yanlış yapılan soruların sayfa ve konu bilgilerini zayıf konu analitiğine ekler."
+)
 async def submit_answer(
     submission: QuizAnswerSubmit,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or submission.user_id or "default_user").strip()
     u_stats = get_user_quiz_stats(uid)
@@ -1829,10 +2109,15 @@ async def submit_answer(
     return {"status": "recorded", "stats": u_stats}
 
 
-@app.get("/dashboard-stats")
+@app.get(
+    "/dashboard-stats",
+    tags=["İlerleme"],
+    summary="Öğrenci Başarı ve İstatistik Paneli",
+    description="Kullanıcının toplam çözdüğü soru adedini, doğru/yanlış oranlarını ve en çok zorlandığı sayfa/konu dağılımını döner."
+)
 async def get_dashboard_stats(
-    user_id: Optional[str] = None,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+    user_id: Optional[str] = Query(None, description="Kullanıcı kimliği"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "default_user").strip()
     return get_user_quiz_stats(uid)
