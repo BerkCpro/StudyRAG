@@ -2442,6 +2442,15 @@
             if (typeof renderSidebarPdfListOnly === 'function') {
                 renderSidebarPdfListOnly();
             }
+            // Modal listesini de canlı güncelle
+            if (typeof renderDocFilterModalList === 'function') {
+                renderDocFilterModalList();
+            }
+        }
+
+        function togglePdfSelectionByIndex(idx) {
+            if (!currentCoursePdfList || !currentCoursePdfList[idx]) return;
+            togglePdfSelection(currentCoursePdfList[idx].filename);
         }
 
         function togglePdfSelection(filename) {
@@ -2493,22 +2502,22 @@
             const selected = getSelectedDocs();
             const isAllMode = selected.length === 0;
 
-            listEl.innerHTML = currentCoursePdfList.map(doc => {
+            listEl.innerHTML = currentCoursePdfList.map((doc, idx) => {
                 const isChecked = isAllMode ? false : selected.includes(doc.filename);
                 return `
-                    <div onclick="togglePdfSelection('${escapeHtml(doc.filename)}')"
-                        class="flex items-center justify-between p-2.5 rounded-xl border transition cursor-pointer select-none ${isChecked ? 'bg-accent/15 border-accent/60 text-text shadow-xs' : 'bg-surface-2 hover:bg-border/60 border-border text-text-muted hover:text-text'}">
-                        <div class="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
-                            <div class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition ${isChecked ? 'bg-accent border-accent text-accent-contrast' : 'border-border bg-surface text-transparent'}">
-                                <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
+                    <div onclick="togglePdfSelectionByIndex(${idx})"
+                        class="flex items-center justify-between p-3 rounded-xl border transition cursor-pointer select-none ${isChecked ? 'bg-accent/15 border-accent text-text shadow-xs ring-1 ring-accent/30' : 'bg-surface-2 hover:bg-border/60 border-border text-text-muted hover:text-text'}">
+                        <div class="flex items-center gap-3 min-w-0 flex-1 mr-2">
+                            <div class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition ${isChecked ? 'bg-accent border-accent text-accent-contrast font-bold' : 'border-border bg-surface text-transparent'}">
+                                ${isChecked ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ''}
                             </div>
                             <div class="min-w-0 truncate">
                                 <p class="text-xs font-medium truncate ${isChecked ? 'text-accent font-semibold' : 'text-text'}">${escapeHtml(doc.filename)}</p>
                                 <p class="text-[10px] text-text-muted">${doc.total_pages || 1} Sayfa</p>
                             </div>
                         </div>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full shrink-0 font-medium ${isChecked ? 'bg-accent text-accent-contrast font-semibold' : (isAllMode ? 'bg-surface text-text-muted' : 'bg-surface-2 text-text-muted/60')}">
-                            ${isChecked ? 'Dahil' : (isAllMode ? 'Tümü Aktif' : 'Hariç')}
+                        <span class="text-[10px] px-2.5 py-1 rounded-full shrink-0 font-medium transition ${isChecked ? 'bg-accent text-accent-contrast font-semibold' : (isAllMode ? 'bg-surface border border-border text-text-muted' : 'bg-surface-2 text-text-muted/60')}">
+                            ${isChecked ? '✓ Seçili' : (isAllMode ? 'Tümü Aktif' : 'Hariç')}
                         </span>
                     </div>
                 `;
@@ -2585,6 +2594,11 @@
                 if (span) {
                     span.textContent = isFiltered ? `${selected.length}/${total} PDF Seçili` : `${total} PDF (Tümü)`;
                 }
+            }
+
+            const modal = document.getElementById('docFilterModal');
+            if (modal && !modal.classList.contains('hidden') && typeof renderDocFilterModalList === 'function') {
+                renderDocFilterModalList();
             }
 
             if (window.lucide) lucide.createIcons();
@@ -5164,12 +5178,12 @@
             const sel = getSelectedDocs();
             const isFilteredMode = sel.length > 0;
 
-            listEl.innerHTML = currentCoursePdfList.map(d => {
+            listEl.innerHTML = currentCoursePdfList.map((d, idx) => {
                 const isExplicit = isFilteredMode && sel.includes(d.filename);
                 return `
-                    <div class="flex items-center justify-between ${isExplicit ? 'bg-accent/10 border-accent/60' : 'bg-surface-2 hover:bg-border/60 border-border'} border rounded-xl p-2 text-xs group transition">
+                    <div class="flex items-center justify-between ${isExplicit ? 'bg-accent/15 border-accent shadow-xs' : 'bg-surface-2 hover:bg-border/60 border-border'} border rounded-xl p-2 text-xs group transition">
                         <!-- Seçim Checkbox Butonu -->
-                        <button type="button" onclick="event.stopPropagation(); togglePdfSelection('${escapeHtml(d.filename)}')"
+                        <button type="button" onclick="event.stopPropagation(); togglePdfSelectionByIndex(${idx})"
                             title="${isExplicit ? 'Seçimi kaldır' : (isFilteredMode ? 'Filtreye ekle' : 'Yalnızca bu PDF\'i seç')}"
                             class="mr-2 p-1 rounded-lg transition shrink-0 cursor-pointer ${isExplicit ? 'text-accent hover:text-accent-hover' : (isFilteredMode ? 'text-text-muted/40 hover:text-text-muted' : 'text-text-muted hover:text-accent')}">
                             <i data-lucide="${isExplicit ? 'check-square-2' : (isFilteredMode ? 'square' : 'check-square')}" class="w-4 h-4"></i>
