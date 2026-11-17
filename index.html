@@ -816,7 +816,8 @@
         html.light #onboardingModal>div,
         html.light #sourceSnippetModal>div,
         html.light #newCourseModal>div,
-        html.light #deleteCourseModal>div {
+        html.light #deleteCourseModal>div,
+        html.light #deletePdfModal>div {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #0f172a !important;
@@ -1676,20 +1677,20 @@
             class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden p-3 md:p-5 space-y-3">
             <!-- Üst Kontrol & Arama Çubuğu -->
             <div
-                class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 md:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shrink-0">
+                class="bg-surface/90 border border-border rounded-2xl p-3 md:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shrink-0 backdrop-blur-md">
                 <div class="flex items-center gap-2.5">
                     <div
-                        class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                        class="w-9 h-9 rounded-xl bg-accent-soft border border-accent/25 text-accent flex items-center justify-center shrink-0">
                         <i data-lucide="network" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h2 class="text-sm font-bold text-zinc-100">Ders Zihin Haritası</h2>
+                            <h2 class="text-sm font-bold text-text">Ders Zihin Haritası</h2>
                             <span id="mindmapCourseBadge"
-                                class="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/25 px-2 py-0.5 rounded-full font-medium">Ders
+                                class="text-[10px] bg-accent-soft text-accent border border-accent/30 px-2 py-0.5 rounded-full font-medium">Ders
                                 Seçilmedi</span>
                         </div>
-                        <p class="text-[11px] text-zinc-400">Konu hiyerarşisi ve sayfa referansları (Sayfa rozetine
+                        <p class="text-[11px] text-text-muted">Konu hiyerarşisi ve sayfa referansları (Sayfa rozetine
                             tıklayarak inceleyin)</p>
                     </div>
                 </div>
@@ -1698,28 +1699,28 @@
                 <div class="flex items-center flex-wrap gap-2">
                     <div class="relative flex-1 sm:w-64">
                         <input id="mindmapFocusInput" type="text" placeholder="Konu (opsiyonel, örn: Termodinamik)"
-                            class="w-full bg-zinc-950/80 border border-zinc-700/70 rounded-xl px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500/80 transition"
+                            class="w-full bg-surface-2 border border-border rounded-xl px-3 py-1.5 text-xs text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition"
                             onkeydown="if(event.key==='Enter') generateMindmap(false)">
                     </div>
                     <button id="mindmapGenerateBtn" onclick="generateMindmap(false)"
-                        class="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-purple-600/25 cursor-pointer shrink-0">
+                        class="bg-accent hover:bg-accent-hover text-accent-contrast font-semibold text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-accent/20 cursor-pointer shrink-0">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                         <span>Oluştur</span>
                     </button>
                     <button id="mindmapRefreshBtn" onclick="generateMindmap(true)"
-                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 border border-zinc-700/80 cursor-pointer shrink-0"
+                        class="bg-surface-2 hover:bg-border text-text text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 border border-border cursor-pointer shrink-0"
                         title="Önbelleği atlayıp yeniden üret">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                         <span>Yeniden Oluştur</span>
                     </button>
                     <button id="mindmapExportBtn" onclick="exportMindmapPNG()"
-                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0"
+                        class="bg-surface-2 hover:bg-border text-text-muted hover:text-text text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-border cursor-pointer shrink-0"
                         title="Zihin Haritasını PNG Olarak İndir">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         <span class="hidden sm:inline">PNG İndir</span>
                     </button>
                     <button onclick="fitMindmapView()"
-                        class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-zinc-700/80 cursor-pointer shrink-0"
+                        class="bg-surface-2 hover:bg-border text-text-muted hover:text-text text-xs py-1.5 px-2.5 rounded-xl transition flex items-center gap-1 border border-border cursor-pointer shrink-0"
                         title="Görünümü Sığdır">
                         <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                     </button>
@@ -1728,17 +1729,17 @@
 
             <!-- Zihin Haritası Çizim Sahnesi (SVG Canvas) -->
             <div id="mindmapCanvasContainer"
-                class="flex-1 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl relative overflow-hidden flex flex-col shadow-inner min-h-[350px]">
+                class="flex-1 w-full bg-surface border border-border rounded-2xl relative overflow-hidden flex flex-col shadow-inner min-h-[350px]">
                 <!-- Yükleniyor Durumu (Skeleton / Spinner) -->
                 <div id="mindmapLoading"
                     class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-xs gap-3 text-center p-4">
                     <div
-                        class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                        class="w-12 h-12 rounded-2xl bg-accent-soft border border-accent/30 flex items-center justify-center text-accent">
                         <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-zinc-100">Zihin Haritası Çıkarılıyor...</h4>
-                        <p class="text-xs text-zinc-400 max-w-sm mt-1">Ders notlarındaki ana temalar ve sayfa
+                        <h4 class="text-sm font-bold text-text">Zihin Haritası Çıkarılıyor...</h4>
+                        <p class="text-xs text-text-muted max-w-sm mt-1">Ders notlarındaki ana temalar ve sayfa
                             bağlantıları hiyerarşik olarak analiz ediliyor.</p>
                     </div>
                 </div>
@@ -1746,18 +1747,18 @@
                 <!-- Boş Başlangıç Durumu -->
                 <div id="mindmapEmptyState"
                     class="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3">
-                    <div
-                        class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/70 flex items-center justify-center text-purple-400">
+                    <div id="mindmapEmptyIcon"
+                        class="w-14 h-14 rounded-2xl bg-surface-2 border border-border flex items-center justify-center text-accent">
                         <i data-lucide="network" class="w-7 h-7"></i>
                     </div>
                     <div class="max-w-md">
-                        <h3 class="text-sm font-bold text-zinc-200">Görsel Zihin Haritası</h3>
-                        <p class="text-xs text-zinc-400 mt-1">Ders notlarınızın büyük resmini görmek için yukarıdaki
-                            <strong class="text-purple-400 font-semibold">"Oluştur"</strong> butonuna basın. Belirli bir
+                        <h3 id="mindmapEmptyTitle" class="text-sm font-bold text-text">Görsel Zihin Haritası</h3>
+                        <p id="mindmapEmptyDesc" class="text-xs text-text-muted mt-1 leading-relaxed">Ders notlarınızın büyük resmini görmek için yukarıdaki
+                            <strong class="text-accent font-semibold">"Oluştur"</strong> butonuna basın. Belirli bir
                             üniteye odaklanmak isterseniz konu kutusunu kullanabilirsiniz.</p>
                     </div>
-                    <button onclick="generateMindmap(false)"
-                        class="mt-2 text-xs bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-purple-600/25">
+                    <button id="mindmapEmptyActionBtn" onclick="generateMindmap(false)"
+                        class="mt-2 text-xs bg-accent hover:bg-accent-hover text-accent-contrast font-semibold py-2.5 px-5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-accent/20 cursor-pointer">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
                         <span>Zihin Haritası Oluştur</span>
                     </button>
@@ -1765,7 +1766,7 @@
 
                 <!-- Hata Durumu -->
                 <div id="mindmapErrorState"
-                    class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3 bg-zinc-950/80">
+                    class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center gap-3 bg-zinc-950/80 backdrop-blur-xs">
                     <div
                         class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
                         <i data-lucide="alert-circle" class="w-6 h-6"></i>
@@ -1773,7 +1774,7 @@
                     <p id="mindmapErrorMessage"
                         class="text-xs sm:text-sm text-rose-300 font-medium max-w-md leading-relaxed"></p>
                     <button onclick="generateMindmap(true)"
-                        class="mt-2 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-1.5 px-3 rounded-lg transition border border-zinc-700">
+                        class="mt-2 text-xs bg-surface-2 hover:bg-border text-text py-1.5 px-3 rounded-lg transition border border-border cursor-pointer">
                         Tekrar Dene
                     </button>
                 </div>
@@ -2243,6 +2244,40 @@
         </div>
     </div>
 
+    <!-- ================= PDF SİLME ONAY MODALI ================= -->
+    <div id="deletePdfModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-md p-4 animate-in fade-in"
+        onclick="if(event.target === this) closeDeletePdfModal()">
+        <div class="bg-zinc-900 border border-rose-500/30 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl relative space-y-4"
+            onclick="event.stopPropagation()">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="file-minus" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-sm sm:text-base font-semibold text-zinc-100">Dökümanı Silmek İstediğinize Emin Misiniz?</h3>
+                    <p id="deletePdfTargetName" class="text-xs text-rose-400 font-medium mt-0.5 truncate"></p>
+                </div>
+            </div>
+
+            <p class="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/80">
+                Bu dökümanı sildiğinizde, PDF dosyası ve ilgili tüm indeks kayıtları sistemden kalıcı olarak kaldırılacaktır.
+            </p>
+
+            <div class="flex items-center justify-end gap-2 pt-1 border-t border-zinc-800/80">
+                <button type="button" onclick="closeDeletePdfModal()"
+                    class="px-3.5 py-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition cursor-pointer">
+                    Vazgeç
+                </button>
+                <button id="confirmDeletePdfBtn" type="button" onclick="confirmDeletePdfAction()"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>Evet, Dökümanı Sil</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Lucide İkonlarını Başlat
         lucide.createIcons();
@@ -2274,6 +2309,7 @@
         let currentCoursePdfList = [];
         let currentMindmapInstance = null;
         let currentMindmapData = null;
+        let currentMindmapCourse = '';
 
         // Multimodal Görsel Takibi (Soru / Not Fotoğrafı)
         let currentSelectedImageBase64 = null;
@@ -3020,6 +3056,101 @@
             }
         }
 
+        function checkAndSyncMindmapTab() {
+            updateMindmapCourseBadge();
+            const svg = document.getElementById('mindmapSvg');
+            const fallbackContainer = document.getElementById('mermaidFallbackContainer');
+            const loadingEl = document.getElementById('mindmapLoading');
+            const emptyEl = document.getElementById('mindmapEmptyState');
+            const errorEl = document.getElementById('mindmapErrorState');
+            const emptyTitle = document.getElementById('mindmapEmptyTitle');
+            const emptyDesc = document.getElementById('mindmapEmptyDesc');
+            const emptyBtn = document.getElementById('mindmapEmptyActionBtn');
+
+            const hasCourse = Boolean(currentCourse && currentCourse.trim());
+            const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
+
+            // 1. Hiç ders seçilmemiş veya seçili derste hiç PDF yoksa:
+            if (!hasCourse || !hasPdfs) {
+                if (currentMindmapInstance) {
+                    try { currentMindmapInstance.destroy(); } catch (_) { }
+                    currentMindmapInstance = null;
+                }
+                currentMindmapData = null;
+                currentMindmapCourse = '';
+                if (svg) {
+                    svg.innerHTML = '';
+                    svg.classList.add('hidden');
+                }
+                if (fallbackContainer) fallbackContainer.classList.add('hidden');
+                if (loadingEl) loadingEl.classList.add('hidden');
+                if (errorEl) errorEl.classList.add('hidden');
+
+                if (emptyEl) {
+                    emptyEl.classList.remove('hidden');
+                    if (!hasCourse) {
+                        if (emptyTitle) emptyTitle.textContent = "Ders Seçilmedi";
+                        if (emptyDesc) emptyDesc.innerHTML = "Zihin haritası oluşturmak için lütfen sol menüden veya ana ekrandan bir ders seçin.";
+                        if (emptyBtn) {
+                            emptyBtn.innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i><span>Ders Ekle</span>`;
+                            emptyBtn.onclick = () => openNewCourseModal();
+                        }
+                    } else {
+                        if (emptyTitle) emptyTitle.textContent = "Bu Derse Henüz PDF Yüklenmedi";
+                        if (emptyDesc) emptyDesc.innerHTML = `<span class="text-accent font-semibold">${escapeHtml(currentCourse)}</span> dersine ait zihin haritası oluşturmak için önce ders notlarınızı yüklemeniz gerekmektedir.`;
+                        if (emptyBtn) {
+                            emptyBtn.innerHTML = `<i data-lucide="file-plus" class="w-4 h-4"></i><span>+ PDF Notu Yükle</span>`;
+                            emptyBtn.onclick = () => triggerHomePdfUpload();
+                        }
+                    }
+                }
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // 2. Derste PDF var:
+            // Eğer çizilmiş harita farklı bir derse aitse temizle
+            if (currentMindmapCourse && currentMindmapCourse !== currentCourse) {
+                if (currentMindmapInstance) {
+                    try { currentMindmapInstance.destroy(); } catch (_) { }
+                    currentMindmapInstance = null;
+                }
+                currentMindmapData = null;
+                currentMindmapCourse = '';
+                if (svg) svg.innerHTML = '';
+            }
+
+            // Eğer bu ders için harita çizilmişse göster
+            if (currentMindmapInstance && currentMindmapCourse === currentCourse && currentMindmapData) {
+                if (svg) svg.classList.remove('hidden');
+                if (emptyEl) emptyEl.classList.add('hidden');
+                if (errorEl) errorEl.classList.add('hidden');
+                if (loadingEl) loadingEl.classList.add('hidden');
+                setTimeout(() => fitMindmapView(), 120);
+                return;
+            }
+
+            // Harita henüz oluşturulmamışsa başlangıç boş durumunu hazırla
+            if (svg) {
+                svg.innerHTML = '';
+                svg.classList.add('hidden');
+            }
+            if (fallbackContainer) fallbackContainer.classList.add('hidden');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (errorEl) errorEl.classList.add('hidden');
+
+            if (emptyEl) {
+                emptyEl.classList.remove('hidden');
+                if (emptyTitle) emptyTitle.textContent = "Görsel Zihin Haritası";
+                if (emptyDesc) emptyDesc.innerHTML = `<span class="text-accent font-semibold">${escapeHtml(currentCourse)}</span> ders notlarınızın büyük resmini ve konu ağacını görmek için aşağıdaki butona basın.`;
+                if (emptyBtn) {
+                    emptyBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>Zihin Haritası Oluştur</span>`;
+                    emptyBtn.onclick = () => generateMindmap(false);
+                }
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
         function mindmapJsonToMarkdown(data) {
             if (!data) return '';
             const rootTitle = data.title || (currentCourse ? `${currentCourse} Zihin Haritası` : "Ders Zihin Haritası");
@@ -3049,7 +3180,14 @@
 
         async function generateMindmap(refresh = false) {
             if (!currentCourse || !currentCourse.trim()) {
-                alert("Lütfen önce sol üst menüden bir ders seçiniz veya yeni bir ders oluşturunuz.");
+                showToast("Lütfen önce bir ders seçiniz.", "error");
+                checkAndSyncMindmapTab();
+                return;
+            }
+
+            if (!Array.isArray(currentCoursePdfList) || currentCoursePdfList.length === 0) {
+                showToast(`"${currentCourse}" dersinde henüz PDF ders notu bulunmuyor.`, "error");
+                checkAndSyncMindmapTab();
                 return;
             }
 
@@ -3103,6 +3241,7 @@
 
                 const data = await res.json();
                 currentMindmapData = data;
+                currentMindmapCourse = currentCourse;
                 if (loadingEl) loadingEl.classList.add('hidden');
                 renderMindmap(data);
             } catch (err) {
@@ -3121,9 +3260,15 @@
 
         function renderMindmap(data) {
             if (!data) return;
+            currentMindmapData = data;
+            currentMindmapCourse = currentCourse;
             const svg = document.getElementById('mindmapSvg');
             const fallbackContainer = document.getElementById('mermaidFallbackContainer');
+            const emptyEl = document.getElementById('mindmapEmptyState');
+            const errorEl = document.getElementById('mindmapErrorState');
 
+            if (emptyEl) emptyEl.classList.add('hidden');
+            if (errorEl) errorEl.classList.add('hidden');
             if (svg) svg.classList.remove('hidden');
             if (fallbackContainer) fallbackContainer.classList.add('hidden');
 
@@ -4405,6 +4550,7 @@
             localStorage.setItem('study_materials_open', 'true');
             initMaterialsAccordion();
             fetchDocumentsForCurrentCourse();
+            checkAndSyncMindmapTab();
         }
 
         // -------------------------------------------------------------
@@ -4663,6 +4809,7 @@
                         </div>
                     `;
                 }
+                checkAndSyncMindmapTab();
                 return;
             }
 
@@ -4705,6 +4852,7 @@
                     if (document.getElementById('tab-home') && !document.getElementById('tab-home').classList.contains('hidden')) {
                         renderHomeScreen();
                     }
+                    checkAndSyncMindmapTab();
                     return;
                 }
 
@@ -4871,8 +5019,31 @@
             }
         }
 
-        async function deletePdfFile(filename) {
-            if (!confirm(`'${filename}' dökümanını bu dersten silmek istediğinize emin misiniz?`)) return;
+        let _pdfToDeletePending = '';
+
+        function promptDeletePdf(filename) {
+            _pdfToDeletePending = filename;
+            const modal = document.getElementById('deletePdfModal');
+            const targetEl = document.getElementById('deletePdfTargetName');
+            if (targetEl) targetEl.textContent = `"${filename}"`;
+            if (modal) modal.classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeDeletePdfModal() {
+            _pdfToDeletePending = '';
+            const modal = document.getElementById('deletePdfModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function confirmDeletePdfAction() {
+            const filename = _pdfToDeletePending;
+            closeDeletePdfModal();
+            if (!filename) return;
+
+            const deleteBtn = document.getElementById('confirmDeletePdfBtn');
+            if (deleteBtn) deleteBtn.disabled = true;
+
             try {
                 const res = await fetch(`/documents/${encodeURIComponent(filename)}?course_name=${encodeURIComponent(currentCourse)}&user_id=${encodeURIComponent(currentUserId)}`, {
                     method: 'DELETE',
@@ -4882,13 +5053,27 @@
                     }
                 });
                 if (res.ok) {
+                    showToast(`'${filename}' dökümanı başarıyla silindi.`, 'success');
                     await fetchDocumentsForCurrentCourse();
+                    checkAndSyncMindmapTab();
                 } else {
-                    alert("Silme işlemi başarısız oldu.");
+                    let errMsg = 'Silme işlemi başarısız oldu.';
+                    try {
+                        const err = await res.json();
+                        if (err.detail) errMsg = err.detail;
+                    } catch (_) { }
+                    showToast(errMsg, 'error');
                 }
             } catch (err) {
                 console.error("Silme hatası:", err);
+                showToast("Sunucuya ulaşılamadı.", 'error');
+            } finally {
+                if (deleteBtn) deleteBtn.disabled = false;
             }
+        }
+
+        function deletePdfFile(filename) {
+            promptDeletePdf(filename);
         }
 
         // -------------------------------------------------------------
@@ -5267,6 +5452,12 @@
 
         // Klavye ile sayfa geçişleri (Sol/Sağ ok ve Esc)
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDeletePdfModal();
+                closeDeleteCourseModal();
+                closeNewCourseModal();
+                closeAllCourseMenus();
+            }
             const modal = document.getElementById('sourceSnippetModal');
             if (modal && !modal.classList.contains('hidden')) {
                 if (e.key === 'ArrowLeft') {
@@ -6508,10 +6699,7 @@
                 renderDailyFocusCard();
                 renderMistakesCount();
             } else if (tabName === 'mindmap') {
-                updateMindmapCourseBadge();
-                if (currentMindmapInstance) {
-                    setTimeout(() => fitMindmapView(), 120);
-                }
+                checkAndSyncMindmapTab();
             }
             if (window.lucide) lucide.createIcons();
         }

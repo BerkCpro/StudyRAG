@@ -170,6 +170,22 @@ def set_mindmap_cache(cache_key: str, data: dict):
         print(f"[WARN] Mindmap DB kaydetme hatası: {e}", flush=True)
 
 
+def clear_mindmap_cache(uid: str, course_name: Optional[str] = None):
+    try:
+        conn = sqlite3.connect(MINDMAP_DB_FILE)
+        cursor = conn.cursor()
+        if course_name:
+            pattern = f"{uid}_{course_name.strip().lower()}_%"
+            cursor.execute("DELETE FROM mindmaps WHERE cache_key LIKE ?", (pattern,))
+        else:
+            pattern = f"{uid}_%"
+            cursor.execute("DELETE FROM mindmaps WHERE cache_key LIKE ?", (pattern,))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[WARN] Mindmap DB temizleme hatası: {e}", flush=True)
+
+
 def sync_documents_from_qdrant():
     """Qdrant vektör tabanında mevcut noktaları tarayarak uploaded_documents listesini otomatik senkronize eder."""
     global uploaded_documents
@@ -724,6 +740,7 @@ async def upload_pdf(
 
         # Değişiklikleri diske kalıcı olarak yaz
         save_storage()
+        clear_mindmap_cache(uid, course_name)
 
         print(f"[UPLOAD OK] '{file.filename}' ({course_name}) [User: {uid}] -> {len(doc)} sayfa, {len(points)} parca basariyla eklendi.", flush=True)
 
@@ -820,6 +837,7 @@ async def delete_document(
 
     # Değişiklikleri diske kalıcı olarak yaz
     save_storage()
+    clear_mindmap_cache(uid, target_course)
 
     return {"message": f"'{filename}' başarıyla silindi.", "documents": user_docs}
 
@@ -872,6 +890,7 @@ async def delete_course(
         )
     ]
     save_storage()
+    clear_mindmap_cache(uid, target_course)
 
     return {"message": f"'{target_course}' dersi ve tüm materyalleri başarıyla silindi."}
 
@@ -1556,19 +1575,12 @@ async def generate_mindmap(
             detail="Lütfen bir ders seçiniz. Zihin haritası oluşturmak için aktif bir ders gereklidir."
         )
 
-    # 1. SQLite Önbellek Kontrolü (Refresh istenmediyse)
-    cache_key = f"{uid}_{target_course.lower()}_{(focus or '').lower()}"
-    if not refresh:
-        cached_result = get_mindmap_cache(cache_key)
-        if cached_result:
-            return JSONResponse(content=cached_result)
-
-    # 2. Qdrant üzerinde ders ve kullanıcı filtreleri
+    # 1. Qdrant üzerinde ders ve kullanıcı filtreleri
     must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
     must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
     course_filter = Filter(must=must_conditions)
 
-    # 2.1 Ders boş mu kontrolü (Ders boşsa 400 dön)
+    # 1.1 Ders boş mu kontrolü (Ders boşsa önbelleği de temizle ve 400 dön)
     check_records, _ = qdrant_client.scroll(
         collection_name=COLLECTION_NAME,
         scroll_filter=course_filter,
@@ -1577,10 +1589,18 @@ async def generate_mindmap(
         with_vectors=False
     )
     if not check_records:
+        clear_mindmap_cache(uid, target_course)
         raise HTTPException(
             status_code=400,
             detail=f"'{target_course}' dersi için henüz hiç PDF ders notu yüklenmemiş. Lütfen önce sol menüden ders notu yükleyiniz."
         )
+
+    # 2. SQLite Önbellek Kontrolü (Refresh istenmediyse)
+    cache_key = f"{uid}_{target_course.lower()}_{(focus or '').lower()}"
+    if not refresh:
+        cached_result = get_mindmap_cache(cache_key)
+        if cached_result:
+            return JSONResponse(content=cached_result)
 
     sampled_points = []
     valid_pages = set()
