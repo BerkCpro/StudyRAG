@@ -25,3 +25,16 @@ study_storage.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Binaries & Executables
+*.exe
+cloudflared
+
+# Local Uploads & Tool Outputs
+pdf_storage/
+graphify-out/
+
+# Local Temporary Backups
+*_backup*/
+backup_*/
+
