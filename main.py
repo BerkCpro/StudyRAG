@@ -603,22 +603,6 @@ class QuizQuestion(BaseModel):
     source_document: str = Field(description="Bilginin alındığı PDF adı")
     page_number: int = Field(description="Bilginin alındığı sayfa numarası")
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "question_type": "mcq",
-                    "question_text": "Aşağıdakilerden hangisi yenilenebilir enerji kaynağıdır?",
-                    "options": ["A) Güneş", "B) Kömür", "C) Doğalgaz", "D) Linyit"],
-                    "correct_answer": "A) Güneş",
-                    "explanation": "Güneş enerjisi tükenmeyen ve kendini yenileyen bir kaynaktır.",
-                    "source_document": "Lesson-7 Solar Energy-2.pdf",
-                    "page_number": 3
-                }
-            ]
-        }
-    }
-
 
 class QuizListResponse(BaseModel):
     questions: list[QuizQuestion] = Field(..., description="Oluşturulan sınav soruları listesi")
@@ -656,19 +640,6 @@ class FlashcardItem(BaseModel):
     back: str = Field(description="Kartın arka yüzü: Net ve kısa açıklama")
     source_document: str = Field(..., description="Bilginin alındığı PDF adı")
     page_number: int = Field(..., description="Bilginin alındığı sayfa numarası")
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "front": "Fotovoltaik Etki",
-                    "back": "Işığın yarı iletken maddeler tarafından soğurularak elektrik gerilimi oluşturması olayıdır.",
-                    "source_document": "Lesson-6 Introduction to Solar Energy.pdf",
-                    "page_number": 5
-                }
-            ]
-        }
-    }
 
 
 class FlashcardListResponse(BaseModel):
@@ -768,26 +739,6 @@ class MindMapBranch(BaseModel):
 class MindMapResponse(BaseModel):
     title: str = Field(description="Zihin haritası kök başlığı / ders adı (en fazla 6 kelime)")
     children: list[MindMapBranch] = Field(default_factory=list, description="Dersin ana dalları (en fazla 8 ana dal)")
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "title": "Güneş Enerjisi",
-                    "children": [
-                        {
-                            "title": "Temel Prensipler",
-                            "page": 2,
-                            "children": [
-                                {"title": "Güneş Sabiti", "page": 3, "children": []},
-                                {"title": "Işınım Spektrumu", "page": 4, "children": []}
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    }
 
 
 # --- Quiz Sonuç Gönderme (Zayıf Konu Tespiti) ---
