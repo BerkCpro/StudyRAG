@@ -3787,28 +3787,64 @@
                     }
 
                     const foX = parseFloat(liveFo.getAttribute('x') || 0);
-                    const foY = parseFloat(liveFo.getAttribute('y') || -20);
-                    const foH = parseFloat(liveFo.getAttribute('height') || 22);
+                    const foH = parseFloat(liveFo.getAttribute('height') || (isRoot ? 26 : 20));
+
+                    // Markmap'te alt çizgi (underline) y = lineY konumundadır.
+                    // Yazı taban çizgisini (baseline) alt çizginin 4-5px üstüne oturtarak tam hizalıyoruz.
+                    const lineEl = liveNode.querySelector('line');
+                    let lineY = foH + 1;
+                    if (lineEl && lineEl.getAttribute('y1')) {
+                        const parsedY1 = parseFloat(lineEl.getAttribute('y1'));
+                        if (!isNaN(parsedY1) && parsedY1 > 0) {
+                            lineY = parsedY1;
+                        }
+                    }
+                    const textY = Math.round(lineY - (isRoot ? 6 : 5));
+                    const textX = Math.round(foX + 4);
 
                     const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    textEl.setAttribute('x', (foX + 4).toString());
-                    textEl.setAttribute('y', '-5');
-                    textEl.setAttribute('font-family', 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+                    textEl.setAttribute('x', textX.toString());
+                    textEl.setAttribute('y', textY.toString());
+                    textEl.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif');
                     textEl.setAttribute('font-size', isRoot ? '16px' : '13px');
                     textEl.setAttribute('font-weight', isRoot ? '800' : '600');
                     textEl.setAttribute('fill', isRoot ? (isDark ? '#ffffff' : '#020617') : (isDark ? '#f8fafc' : '#0f172a'));
 
-                    const textNode = document.createTextNode(titleText);
-                    textEl.appendChild(textNode);
-
-                    if (badgeText) {
-                        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                        tspan.setAttribute('dx', '8');
-                        tspan.setAttribute('font-size', '10.5px');
-                        tspan.setAttribute('font-weight', '700');
-                        tspan.setAttribute('fill', isDark ? '#2dd4bf' : '#0f9488');
-                        tspan.textContent = badgeText;
-                        textEl.appendChild(tspan);
+                    const lines = titleText.split('\n').map(l => l.trim()).filter(Boolean);
+                    if (lines.length <= 1) {
+                        const textNode = document.createTextNode(titleText);
+                        textEl.appendChild(textNode);
+                        if (badgeText) {
+                            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                            tspan.setAttribute('dx', '8');
+                            tspan.setAttribute('font-size', '10.5px');
+                            tspan.setAttribute('font-weight', '700');
+                            tspan.setAttribute('fill', isDark ? '#2dd4bf' : '#0f9488');
+                            tspan.textContent = badgeText;
+                            textEl.appendChild(tspan);
+                        }
+                    } else {
+                        lines.forEach((lineStr, lineIdx) => {
+                            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                            tspan.setAttribute('x', textX.toString());
+                            if (lineIdx === 0) {
+                                const firstLineY = textY - (lines.length - 1) * 16;
+                                tspan.setAttribute('y', firstLineY.toString());
+                            } else {
+                                tspan.setAttribute('dy', '16');
+                            }
+                            tspan.textContent = lineStr;
+                            textEl.appendChild(tspan);
+                        });
+                        if (badgeText) {
+                            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                            tspan.setAttribute('dx', '8');
+                            tspan.setAttribute('font-size', '10.5px');
+                            tspan.setAttribute('font-weight', '700');
+                            tspan.setAttribute('fill', isDark ? '#2dd4bf' : '#0f9488');
+                            tspan.textContent = badgeText;
+                            textEl.appendChild(tspan);
+                        }
                     }
 
                     if (clonedFo.parentNode) {
@@ -3820,11 +3856,14 @@
                 clonedSvg.querySelectorAll('foreignObject').forEach(fo => {
                     const txt = (fo.textContent || '').trim();
                     if (txt) {
+                        const foX = parseFloat(fo.getAttribute('x') || 0);
+                        const foH = parseFloat(fo.getAttribute('height') || 20);
                         const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                        textEl.setAttribute('x', fo.getAttribute('x') || '0');
-                        textEl.setAttribute('y', fo.getAttribute('y') || '0');
-                        textEl.setAttribute('font-family', 'system-ui, sans-serif');
+                        textEl.setAttribute('x', (foX + 4).toString());
+                        textEl.setAttribute('y', (foH - 4).toString());
+                        textEl.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
                         textEl.setAttribute('font-size', '13px');
+                        textEl.setAttribute('font-weight', '600');
                         textEl.setAttribute('fill', isDark ? '#f8fafc' : '#0f172a');
                         textEl.textContent = txt;
                         if (fo.parentNode) fo.parentNode.replaceChild(textEl, fo);
