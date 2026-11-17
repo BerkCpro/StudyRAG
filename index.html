@@ -1100,7 +1100,7 @@
         </section>
 
         <!-- ================= SEKME 1: NOTEBOOKLM STİLİ SOHBET & DERS ASİSTANI ================= -->
-        <section id="tab-chat" class="flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
+        <section id="tab-chat" class="hidden flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
             
             <!-- Mesaj Akışı Alanı (Chat Messages) -->
             <div id="chatMessages" class="flex-1 min-h-0 overflow-y-auto p-3.5 md:p-6 space-y-4 md:space-y-6 touch-scroll">
@@ -3164,233 +3164,266 @@
             const container = document.getElementById('homeContainer');
             if (!container) return;
 
-            const courses = getSavedUserCourses();
-            const studentName = escapeHtml(localStorage.getItem('study_student_name') || 'Öğrenci');
+            try {
+                const rawCourses = (typeof getSavedUserCourses === 'function') ? (getSavedUserCourses() || []) : [];
+                const courses = Array.isArray(rawCourses) ? rawCourses.filter(Boolean) : [];
 
-            // --- DURUM A: İLK KULLANICI DENEYİMİ (HİÇ DERS YOKSA) ---
-            if (courses.length === 0) {
-                container.innerHTML = `
-                    <div class="w-full max-w-xl mx-auto text-center space-y-6 animate-in fade-in py-8">
-                        <div class="space-y-2">
-                            <div class="w-14 h-14 mx-auto rounded-2xl bg-accent-soft text-accent flex items-center justify-center shadow-sm">
-                                <i data-lucide="sparkles" class="w-7 h-7"></i>
+                const rawName = (localStorage.getItem('study_student_name') || localStorage.getItem('study_user_name') || '').trim();
+                const studentName = rawName ? escapeHtml(rawName) : '';
+
+                // --- DURUM A: İLK KULLANICI DENEYİMİ (HİÇ DERS YOKSA) ---
+                if (courses.length === 0) {
+                    const welcomeHeading = studentName 
+                        ? `StudyRAG'e hoş geldin, <span class="text-accent">${studentName}</span>!`
+                        : `StudyRAG'e hoş geldin!`;
+
+                    container.innerHTML = `
+                        <div class="w-full max-w-xl mx-auto text-center space-y-6 animate-in fade-in py-8">
+                            <div class="space-y-2">
+                                <div class="w-14 h-14 mx-auto rounded-2xl bg-accent-soft text-accent flex items-center justify-center shadow-sm">
+                                    <i data-lucide="sparkles" class="w-7 h-7"></i>
+                                </div>
+                                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-text">
+                                    ${welcomeHeading}
+                                </h2>
+                                <p class="text-xs sm:text-sm text-text-muted">
+                                    Başlamak için bir ders oluştur ve ders notlarını (PDF) yükle.
+                                </p>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-text">
-                                StudyRAG'e hoş geldin, <span class="text-accent">${studentName}</span>!
-                            </h2>
-                            <p class="text-xs sm:text-sm text-text-muted">
-                                Başlamak için bir ders oluştur ve ders notlarını (PDF) yükle.
-                            </p>
+
+                            <!-- Tek Geniş Kart -->
+                            <div class="bg-surface border border-border rounded-2xl p-6 sm:p-7 shadow-lg space-y-5 text-left">
+                                <div class="space-y-1.5">
+                                    <label for="firstCourseNameInput" class="text-xs font-semibold text-text flex items-center gap-1.5">
+                                        <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent"></i> Ders Adı
+                                    </label>
+                                    <input type="text" id="firstCourseNameInput" placeholder='Örn: "Fizik 101" veya "Organik Kimya"'
+                                        class="w-full bg-surface-2 border border-border rounded-xl px-3.5 py-2.5 text-xs text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-semibold text-text flex items-center gap-1.5">
+                                        <i data-lucide="file-up" class="w-3.5 h-3.5 text-accent"></i> Ders Notu (PDF)
+                                    </label>
+                                    <label for="firstCoursePdfInput" class="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-accent/60 bg-surface-2 rounded-xl p-6 cursor-pointer group transition">
+                                        <input type="file" id="firstCoursePdfInput" accept="application/pdf" class="hidden" onchange="handleFirstCoursePdfSelected(this)">
+                                        <div class="w-10 h-10 rounded-xl bg-surface group-hover:bg-accent-soft text-text-muted group-hover:text-accent flex items-center justify-center transition mb-2">
+                                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                                        </div>
+                                        <span id="firstCoursePdfLabel" class="text-xs font-semibold text-text text-center">PDF Seç veya Buraya Sürükle</span>
+                                        <span class="text-[11px] text-text-muted mt-0.5">Yalnızca PDF dosyaları desteklenir</span>
+                                    </label>
+                                </div>
+
+                                <button id="firstCourseStartBtn" onclick="handleFirstTimeSetupStart()" class="w-full bg-accent text-accent-contrast hover:bg-accent-hover font-semibold text-xs py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                    <span>Başla</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                    return;
+                }
+
+                // --- DURUM B: STANDART HOME EKRANI (DERSLER MEVCUT) ---
+                if (!currentCourse && courses.length > 0) {
+                    currentCourse = courses[0];
+                }
+
+                const activeMode = (Array.isArray(HOME_MODES) ? HOME_MODES.find(m => m.id === currentHomeMode) : null) || HOME_MODES[0];
+                const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
+
+                // 1. Büyük Karşılama Başlığı
+                const greetingText = studentName 
+                    ? `Bugün ne çalışmak istiyorsun, <span class="font-bold text-accent">${studentName}</span>?`
+                    : `Bugün ne çalışmak istiyorsun?`;
+
+                const titleHtml = `
+                    <div class="text-center space-y-2">
+                        <h2 class="text-2xl sm:text-4xl font-medium tracking-tight text-text">
+                            ${greetingText}
+                        </h2>
+                    </div>
+                `;
+
+                // 2. Mod Seçim Kartları (2x2 mobilde, 4 yan yana masaüstünde)
+                const modeCardsHtml = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 w-full">
+                        ${HOME_MODES.map(m => {
+                            const isSelected = m.id === currentHomeMode;
+                            const containerClasses = isSelected
+                                ? 'border-accent bg-accent-soft text-text ring-2 ring-accent/30 shadow-md'
+                                : 'border-border bg-surface text-text hover:bg-surface-2 hover:border-accent/40 shadow-sm';
+                            const iconBgClasses = isSelected
+                                ? 'bg-accent text-accent-contrast'
+                                : 'bg-surface-2 text-text-muted group-hover:text-accent';
+
+                            return `
+                                <button onclick="selectHomeMode('${m.id}')" class="p-3.5 sm:p-4 rounded-2xl border text-left transition-all flex flex-col items-start gap-2.5 group cursor-pointer relative ${containerClasses}">
+                                    <div class="flex items-center justify-between w-full">
+                                        <div class="w-8 h-8 rounded-xl flex items-center justify-center transition shadow-sm ${iconBgClasses}">
+                                            <i data-lucide="${m.icon}" class="w-4 h-4"></i>
+                                        </div>
+                                        ${isSelected ? '<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>' : ''}
+                                    </div>
+                                    <div class="min-w-0 w-full">
+                                        <span class="font-bold text-xs sm:text-sm text-text block truncate">${escapeHtml(m.label)}</span>
+                                        <span class="text-[11px] text-text-muted block truncate mt-0.5 leading-snug">${escapeHtml(m.desc)}</span>
+                                    </div>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // 3. Tek Akıllı Giriş Kutusu
+                const imagePreviewHtml = homeSelectedImageBase64 ? `
+                    <div class="flex items-center gap-2 mb-2 p-1.5 bg-surface-2 border border-border rounded-xl w-fit">
+                        <img src="${homeSelectedImageBase64}" class="w-7 h-7 object-cover rounded-lg border border-border">
+                        <span class="text-[11px] text-text-muted font-medium">Görsel eklendi</span>
+                        <button onclick="clearHomeSelectedImage()" class="text-text-muted hover:text-danger p-0.5 rounded cursor-pointer">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                ` : '';
+
+                // Ders seçenekleri dropdown
+                const courseOptions = courses.map(c => `
+                    <option value="${escapeHtml(c)}" ${c === currentCourse ? 'selected' : ''}>${escapeHtml(c)}</option>
+                `).join('');
+
+                // Başla butonu durumu
+                const startBtnDisabled = !hasPdfs;
+                const startBtnTitle = !hasPdfs ? 'Önce bir PDF eklemelisin' : '';
+
+                const inputBoxHtml = `
+                    <div class="w-full bg-surface border border-border rounded-2xl p-3.5 sm:p-4 shadow-xl focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
+                        ${imagePreviewHtml}
+                        <div class="relative">
+                            <textarea id="homeMainInput" rows="2" placeholder="${escapeHtml(activeMode.placeholder)}"
+                                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleHomeStart(); }"
+                                class="w-full bg-transparent text-xs sm:text-sm text-text placeholder-text-muted focus:outline-none resize-none leading-relaxed"></textarea>
                         </div>
 
-                        <!-- Tek Geniş Kart -->
-                        <div class="bg-surface border border-border rounded-2xl p-6 sm:p-7 shadow-lg space-y-5 text-left">
-                            <div class="space-y-1.5">
-                                <label for="firstCourseNameInput" class="text-xs font-semibold text-text flex items-center gap-1.5">
-                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent"></i> Ders Adı
-                                </label>
-                                <input type="text" id="firstCourseNameInput" placeholder='Örn: "Fizik 101" veya "Organik Kimya"'
-                                    class="w-full bg-surface-2 border border-border rounded-xl px-3.5 py-2.5 text-xs text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
+                        <!-- Alt Kontroller & Başla Butonu -->
+                        <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-border mt-2">
+                            <!-- Sol: Ders Seçimi & PDF Ekle & Ek Araçlar -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Hızlı Ders Seçici -->
+                                <div class="relative flex items-center">
+                                    <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent absolute left-2.5 pointer-events-none"></i>
+                                    <select onchange="handleHomeCourseChange(this.value)" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border pl-7 pr-6 py-1.5 rounded-xl font-medium cursor-pointer transition focus:outline-none focus:border-accent">
+                                        ${courseOptions}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 text-text-muted absolute right-2 pointer-events-none"></i>
+                                </div>
+
+                                <!-- + PDF Ekle Butonu -->
+                                <button onclick="triggerHomePdfUpload()" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border px-2.5 py-1.5 rounded-xl font-medium flex items-center gap-1 transition cursor-pointer" title="Bu derse PDF notu yükle">
+                                    <i data-lucide="file-plus" class="w-3.5 h-3.5 text-accent"></i>
+                                    <span>+ PDF Ekle</span>
+                                </button>
+
+                                <!-- Sohbet moduna özel: Görsel Ekle ve Mikrofon -->
+                                ${activeMode.allowImage ? `
+                                    <label for="homeImageInput" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Soru veya Not Görseli Yükle">
+                                        <input type="file" id="homeImageInput" accept="image/*" class="hidden" onchange="handleHomeImageSelect(this)">
+                                        <i data-lucide="image" class="w-3.5 h-3.5 text-accent"></i>
+                                    </label>
+                                ` : ''}
+
+                                ${activeMode.allowSpeech ? `
+                                    <button onclick="toggleHomeSpeechRecognition()" id="homeSpeechBtn" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Sesli Soru Sor">
+                                        <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                ` : ''}
                             </div>
 
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-semibold text-text flex items-center gap-1.5">
-                                    <i data-lucide="file-up" class="w-3.5 h-3.5 text-accent"></i> Ders Notu (PDF)
-                                </label>
-                                <label for="firstCoursePdfInput" class="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-accent/60 bg-surface-2 rounded-xl p-6 cursor-pointer group transition">
-                                    <input type="file" id="firstCoursePdfInput" accept="application/pdf" class="hidden" onchange="handleFirstCoursePdfSelected(this)">
-                                    <div class="w-10 h-10 rounded-xl bg-surface group-hover:bg-accent-soft text-text-muted group-hover:text-accent flex items-center justify-center transition mb-2">
-                                        <i data-lucide="file-text" class="w-5 h-5"></i>
-                                    </div>
-                                    <span id="firstCoursePdfLabel" class="text-xs font-semibold text-text text-center">PDF Seç veya Buraya Sürükle</span>
-                                    <span class="text-[11px] text-text-muted mt-0.5">Yalnızca PDF dosyaları desteklenir</span>
-                                </label>
+                            <!-- Sağ: Başla Butonu & PDF Uyarısı -->
+                            <div class="flex flex-col sm:items-end">
+                                <button id="homeStartBtn" onclick="handleHomeStart()" ${startBtnDisabled ? 'disabled' : ''}
+                                    title="${startBtnTitle}"
+                                    class="bg-accent text-accent-contrast hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs sm:text-sm px-5 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer">
+                                    <span>${escapeHtml(activeMode.btnText)}</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                </button>
+                                ${!hasPdfs ? `<span class="text-[10px] text-danger font-medium mt-1">Önce bir PDF ekle</span>` : ''}
                             </div>
-
-                            <button id="firstCourseStartBtn" onclick="handleFirstTimeSetupStart()" class="w-full bg-accent text-accent-contrast hover:bg-accent-hover font-semibold text-xs py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                <span>Başla</span>
-                            </button>
                         </div>
                     </div>
                 `;
-                if (window.lucide) lucide.createIcons();
-                return;
-            }
 
-            // --- DURUM B: STANDART HOME EKRANI (DERSLER MEVCUT) ---
-            const activeMode = HOME_MODES.find(m => m.id === currentHomeMode) || HOME_MODES[0];
-            const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
-
-            // 1. Büyük Karşılama Başlığı
-            const titleHtml = `
-                <div class="text-center space-y-2">
-                    <h2 class="text-2xl sm:text-4xl font-medium tracking-tight text-text">
-                        Bugün ne çalışmak istiyorsun, <span class="font-bold text-accent">${studentName}</span>?
-                    </h2>
-                </div>
-            `;
-
-            // 2. Mod Seçim Kartları (2x2 mobilde, 4 yan yana masaüstünde)
-            const modeCardsHtml = `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 w-full">
-                    ${HOME_MODES.map(m => {
-                        const isSelected = m.id === currentHomeMode;
-                        const containerClasses = isSelected
-                            ? 'border-accent bg-accent-soft text-text ring-2 ring-accent/30 shadow-md'
-                            : 'border-border bg-surface text-text hover:bg-surface-2 hover:border-accent/40 shadow-sm';
-                        const iconBgClasses = isSelected
-                            ? 'bg-accent text-accent-contrast'
-                            : 'bg-surface-2 text-text-muted group-hover:text-accent';
-
-                        return `
-                            <button onclick="selectHomeMode('${m.id}')" class="p-3.5 sm:p-4 rounded-2xl border text-left transition-all flex flex-col items-start gap-2.5 group cursor-pointer relative ${containerClasses}">
-                                <div class="flex items-center justify-between w-full">
-                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center transition shadow-sm ${iconBgClasses}">
-                                        <i data-lucide="${m.icon}" class="w-4 h-4"></i>
-                                    </div>
-                                    ${isSelected ? '<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>' : ''}
-                                </div>
-                                <div class="min-w-0 w-full">
-                                    <span class="font-bold text-xs sm:text-sm text-text block truncate">${escapeHtml(m.label)}</span>
-                                    <span class="text-[11px] text-text-muted block truncate mt-0.5 leading-snug">${escapeHtml(m.desc)}</span>
-                                </div>
-                            </button>
+                // 4. İnce Durum Şeridi (Sınav geri sayımı, zayıf sayfalar, bekleyen kartlar)
+                let statusStripHtml = '';
+                try {
+                    const stripText = getExamStripSummary();
+                    if (stripText) {
+                        statusStripHtml = `
+                            <div class="w-full flex items-center justify-center">
+                                <button onclick="openExamDateModal()" class="inline-flex items-center gap-2 text-xs text-text-muted hover:text-text bg-surface border border-border hover:border-accent/50 px-3.5 py-1.5 rounded-full transition shadow-sm cursor-pointer" title="Sınav tarihi ve çalışma planını yönet">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i>
+                                    <span>${escapeHtml(stripText)}</span>
+                                </button>
+                            </div>
                         `;
-                    }).join('')}
-                </div>
-            `;
+                    }
+                } catch (_) {}
 
-            // 3. Tek Akıllı Giriş Kutusu
-            const imagePreviewHtml = homeSelectedImageBase64 ? `
-                <div class="flex items-center gap-2 mb-2 p-1.5 bg-surface-2 border border-border rounded-xl w-fit">
-                    <img src="${homeSelectedImageBase64}" class="w-7 h-7 object-cover rounded-lg border border-border">
-                    <span class="text-[11px] text-text-muted font-medium">Görsel eklendi</span>
-                    <button onclick="clearHomeSelectedImage()" class="text-text-muted hover:text-danger p-0.5 rounded cursor-pointer">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-            ` : '';
+                // 5. "Devam Et" Bölümü (Son 2-3 oturum/ders - Sadece varsa göster)
+                let recentSectionHtml = '';
+                try {
+                    const rawChats = Array.isArray(chats) ? chats : (JSON.parse(localStorage.getItem('study_chats') || '[]') || []);
+                    const recentSessions = (Array.isArray(rawChats) ? rawChats : [])
+                        .filter(c => c && Array.isArray(c.messages) && c.messages.length > 0)
+                        .slice(0, 3);
 
-            // Ders seçenekleri dropdown
-            const courseOptions = courses.map(c => `
-                <option value="${escapeHtml(c)}" ${c === currentCourse ? 'selected' : ''}>${escapeHtml(c)}</option>
-            `).join('');
-
-            // Başla butonu durumu
-            const startBtnDisabled = !hasPdfs;
-            const startBtnTitle = !hasPdfs ? 'Önce bir PDF eklemelisin' : '';
-
-            const inputBoxHtml = `
-                <div class="w-full bg-surface border border-border rounded-2xl p-3.5 sm:p-4 shadow-xl focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
-                    ${imagePreviewHtml}
-                    <div class="relative">
-                        <textarea id="homeMainInput" rows="2" placeholder="${escapeHtml(activeMode.placeholder)}"
-                            onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleHomeStart(); }"
-                            class="w-full bg-transparent text-xs sm:text-sm text-text placeholder-text-muted focus:outline-none resize-none leading-relaxed"></textarea>
-                    </div>
-
-                    <!-- Alt Kontroller & Başla Butonu -->
-                    <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-border mt-2">
-                        <!-- Sol: Ders Seçimi & PDF Ekle & Ek Araçlar -->
-                        <div class="flex flex-wrap items-center gap-2">
-                            <!-- Hızlı Ders Seçici -->
-                            <div class="relative flex items-center">
-                                <i data-lucide="book-marked" class="w-3.5 h-3.5 text-accent absolute left-2.5 pointer-events-none"></i>
-                                <select onchange="handleHomeCourseChange(this.value)" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border pl-7 pr-6 py-1.5 rounded-xl font-medium cursor-pointer transition focus:outline-none focus:border-accent">
-                                    ${courseOptions}
-                                </select>
-                                <i data-lucide="chevron-down" class="w-3 h-3 text-text-muted absolute right-2 pointer-events-none"></i>
+                    if (recentSessions.length > 0) {
+                        recentSectionHtml = `
+                            <div class="w-full space-y-2.5 pt-2">
+                                <div class="flex items-center justify-between px-1">
+                                    <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
+                                        <i data-lucide="clock" class="w-3.5 h-3.5 text-accent"></i> Devam et
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    ${recentSessions.map(c => `
+                                        <button onclick="resumeRecentChat('${c.id}')" class="p-3 rounded-xl bg-surface hover:bg-surface-2 border border-border hover:border-accent/40 text-left transition flex items-center gap-2.5 group cursor-pointer shadow-sm">
+                                            <div class="w-7 h-7 rounded-lg bg-surface-2 text-text-muted group-hover:text-accent flex items-center justify-center shrink-0">
+                                                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-xs font-medium text-text group-hover:text-accent truncate transition">${escapeHtml(c.title || 'Çalışma Oturumu')}</p>
+                                                <p class="text-[10px] text-text-muted truncate">${escapeHtml(c.course || 'Genel')} • ${escapeHtml(c.createdAt || '')}</p>
+                                            </div>
+                                        </button>
+                                    `).join('')}
+                                </div>
                             </div>
+                        `;
+                    }
+                } catch (_) {}
 
-                            <!-- + PDF Ekle Butonu -->
-                            <button onclick="triggerHomePdfUpload()" class="text-[11px] bg-surface-2 hover:bg-border text-text border border-border px-2.5 py-1.5 rounded-xl font-medium flex items-center gap-1 transition cursor-pointer" title="Bu derse PDF notu yükle">
-                                <i data-lucide="file-plus" class="w-3.5 h-3.5 text-accent"></i>
-                                <span>+ PDF Ekle</span>
-                            </button>
-
-                            <!-- Sohbet moduna özel: Görsel Ekle ve Mikrofon -->
-                            ${activeMode.allowImage ? `
-                                <label for="homeImageInput" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Soru veya Not Görseli Yükle">
-                                    <input type="file" id="homeImageInput" accept="image/*" class="hidden" onchange="handleHomeImageSelect(this)">
-                                    <i data-lucide="image" class="w-3.5 h-3.5 text-accent"></i>
-                                </label>
-                            ` : ''}
-
-                            ${activeMode.allowSpeech ? `
-                                <button onclick="toggleHomeSpeechRecognition()" id="homeSpeechBtn" class="p-1.5 text-text-muted hover:text-text bg-surface-2 hover:bg-border border border-border rounded-xl cursor-pointer transition flex items-center justify-center" title="Sesli Soru Sor">
-                                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-
-                        <!-- Sağ: Başla Butonu & PDF Uyarısı -->
-                        <div class="flex flex-col sm:items-end">
-                            <button id="homeStartBtn" onclick="handleHomeStart()" ${startBtnDisabled ? 'disabled' : ''}
-                                title="${startBtnTitle}"
-                                class="bg-accent text-accent-contrast hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs sm:text-sm px-5 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer">
-                                <span>${escapeHtml(activeMode.btnText)}</span>
-                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                            </button>
-                            ${!hasPdfs ? `<span class="text-[10px] text-danger font-medium mt-1">Önce bir PDF ekle</span>` : ''}
-                        </div>
+                container.innerHTML = `
+                    <div class="w-full max-w-2xl mx-auto space-y-6 sm:space-y-7 flex flex-col items-center animate-in fade-in">
+                        ${titleHtml}
+                        ${modeCardsHtml}
+                        ${inputBoxHtml}
+                        ${statusStripHtml}
+                        ${recentSectionHtml}
                     </div>
-                </div>
-            `;
+                `;
 
-            // 4. İnce Durum Şeridi (Sınav geri sayımı, zayıf sayfalar, bekleyen kartlar)
-            const stripText = getExamStripSummary();
-            const statusStripHtml = `
-                <div class="w-full flex items-center justify-center">
-                    <button onclick="openExamDateModal()" class="inline-flex items-center gap-2 text-xs text-text-muted hover:text-text bg-surface border border-border hover:border-accent/50 px-3.5 py-1.5 rounded-full transition shadow-sm cursor-pointer" title="Sınav tarihi ve çalışma planını yönet">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i>
-                        <span>${escapeHtml(stripText)}</span>
-                    </button>
-                </div>
-            `;
-
-            // 5. "Devam Et" Bölümü (Son 2-3 oturum/ders)
-            const recentSessions = (Array.isArray(chats) ? chats : [])
-                .filter(c => c.messages && c.messages.length > 0)
-                .slice(0, 3);
-
-            let recentSectionHtml = '';
-            if (recentSessions.length > 0) {
-                recentSectionHtml = `
-                    <div class="w-full space-y-2.5 pt-2">
-                        <div class="flex items-center justify-between px-1">
-                            <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
-                                <i data-lucide="clock" class="w-3.5 h-3.5 text-accent"></i> Devam et
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            ${recentSessions.map(c => `
-                                <button onclick="resumeRecentChat('${c.id}')" class="p-3 rounded-xl bg-surface hover:bg-surface-2 border border-border hover:border-accent/40 text-left transition flex items-center gap-2.5 group cursor-pointer shadow-sm">
-                                    <div class="w-7 h-7 rounded-lg bg-surface-2 text-text-muted group-hover:text-accent flex items-center justify-center shrink-0">
-                                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-xs font-medium text-text group-hover:text-accent truncate transition">${escapeHtml(c.title || 'Çalışma Oturumu')}</p>
-                                        <p class="text-[10px] text-text-muted truncate">${escapeHtml(c.course || 'Genel')} • ${escapeHtml(c.createdAt || '')}</p>
-                                    </div>
-                                </button>
-                            `).join('')}
-                        </div>
+                if (window.lucide) lucide.createIcons();
+            } catch (err) {
+                console.error("renderHomeScreen hatası:", err);
+                container.innerHTML = `
+                    <div class="p-6 text-center text-text-muted bg-surface rounded-2xl border border-border space-y-2">
+                        <p class="font-semibold text-text">Ana ekran yüklenirken bir sorun oluştu.</p>
+                        <button onclick="renderHomeScreen()" class="px-3 py-1.5 bg-accent text-accent-contrast rounded-xl text-xs font-semibold">Yeniden Dene</button>
                     </div>
                 `;
             }
-
-            container.innerHTML = `
-                <div class="w-full max-w-2xl mx-auto space-y-6 sm:space-y-7 flex flex-col items-center animate-in fade-in">
-                    ${titleHtml}
-                    ${modeCardsHtml}
-                    ${inputBoxHtml}
-                    ${statusStripHtml}
-                    ${recentSectionHtml}
-                </div>
-            `;
-
-            if (window.lucide) lucide.createIcons();
         }
 
         async function handleHomeStart() {
@@ -3671,34 +3704,65 @@
             }
         });
 
-        function getExamStripSummary() {
-            // 1. Sınav Geri Sayımı
-            const examDateStr = getStoredExamDate();
-            let examText = "Sınav Tarihi Ekle";
-            if (examDateStr) {
-                const targetDate = new Date(examDateStr + 'T00:00:00');
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const diffTime = targetDate - today;
-                const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (days > 1) examText = `Sınava ${days} gün kaldı`;
-                else if (days === 1) examText = "Yarın sınav var!";
-                else if (days === 0) examText = "Bugün sınav günü!";
-                else examText = "Sınav tarihi geçti";
+        function getStoredWeakPages() {
+            try {
+                const key = 'study_weak_pages_' + (currentUserId || 'default') + '_' + (currentCourse || 'default');
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : {};
+            } catch (_) {
+                return {};
             }
+        }
 
-            // 2. Zayıf Sayfalar
-            const weakPages = getStoredWeakPages();
-            const weakCount = Object.keys(weakPages || {}).length;
-            const weakText = weakCount > 0 ? `${weakCount} zayıf sayfa` : "Zayıf sayfa yok";
+        function getStoredFlashcards() {
+            try {
+                const key = 'study_flashcards_' + (currentUserId || 'default') + '_' + (currentCourse || 'default');
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : (Array.isArray(generatedCards) ? generatedCards : []);
+            } catch (_) {
+                return Array.isArray(generatedCards) ? generatedCards : [];
+            }
+        }
 
-            // 3. Kartlar
-            const cardsCount = (typeof generatedCards !== 'undefined' && generatedCards.length > 0) 
-                ? generatedCards.length 
-                : (getStoredFlashcards() ? getStoredFlashcards().length : 0);
-            const cardText = cardsCount > 0 ? `${cardsCount} kart çalış` : "Kart çalış";
+        function getExamStripSummary() {
+            try {
+                // 1. Sınav Geri Sayımı
+                const examDateStr = (typeof getStoredExamDate === 'function') ? getStoredExamDate() : '';
+                let examText = "Sınav Tarihi Ekle";
+                if (examDateStr) {
+                    const targetDate = new Date(examDateStr + 'T00:00:00');
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const diffTime = targetDate - today;
+                    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (days > 1) examText = `Sınava ${days} gün kaldı`;
+                    else if (days === 1) examText = "Yarın sınav var!";
+                    else if (days === 0) examText = "Bugün sınav günü!";
+                    else examText = "Sınav tarihi geçti";
+                }
 
-            return `${examText} · ${weakText} · ${cardText}`;
+                // 2. Zayıf Sayfalar
+                let weakText = "Zayıf sayfa yok";
+                try {
+                    const weakPages = getStoredWeakPages();
+                    const weakCount = Object.keys(weakPages || {}).length;
+                    if (weakCount > 0) weakText = `${weakCount} zayıf sayfa`;
+                } catch (_) {}
+
+                // 3. Kartlar
+                let cardText = "Kart çalış";
+                try {
+                    const fcList = getStoredFlashcards();
+                    const cardsCount = (Array.isArray(generatedCards) && generatedCards.length > 0) 
+                        ? generatedCards.length 
+                        : (Array.isArray(fcList) ? fcList.length : 0);
+                    if (cardsCount > 0) cardText = `${cardsCount} kart çalış`;
+                } catch (_) {}
+
+                return `${examText} · ${weakText} · ${cardText}`;
+            } catch (_) {
+                return "Sınav Tarihi Ekle · Zayıf sayfa yok · Kart çalış";
+            }
         }
 
         function updateEmptyStateStrip() {
