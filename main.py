@@ -1355,15 +1355,16 @@ async def generate_quiz(
                 other_points.append(p)
 
         if weak_points:
-            # Zayıf konulardan ağırlıklı (maksimum 4-5 parça) seç, gerekirse kalanlardan tamamla
-            needed = min(len(scroll_result), 5)
+            # Zayıf konulardan ağırlıklı seç, soru sayısına göre dinamik parça al
+            needed = min(len(scroll_result), max(6, min(20, request.count)))
             sample_weak_count = min(len(weak_points), needed)
             sampled_points = random.sample(weak_points, sample_weak_count)
             if len(sampled_points) < needed and other_points:
                 rem_count = min(len(other_points), needed - len(sampled_points))
                 sampled_points.extend(random.sample(other_points, rem_count))
         else:
-            sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
+            sample_k = min(len(scroll_result), max(6, min(20, request.count)))
+            sampled_points = random.sample(scroll_result, sample_k)
 
         focus_details = []
         if focus_pages_set:
@@ -1379,8 +1380,9 @@ async def generate_quiz(
 Lütfen soruları ÖNCELİKLE bu sayfa ve kavramlardaki püf noktaları, eksik anlaşılan ilkeleri ve yanılgıları pekiştirecek, öğrenciye konuyu tam kavratacak şekilde üret!
 """
     else:
-        # Genel / farklı konulardan dengeli rastgele seçim
-        sampled_points = random.sample(scroll_result, min(len(scroll_result), 5))
+        # Genel / farklı konulardan dengeli rastgele seçim (soru sayısına göre dinamik)
+        sample_k = min(len(scroll_result), max(6, min(20, request.count)))
+        sampled_points = random.sample(scroll_result, sample_k)
 
     context_text = "\n\n---\n\n".join(
         [f"[PDF: {p.payload['document_name']} | Sayfa: {p.payload['page_number']}]\n{p.payload['text']}" for p in sampled_points]

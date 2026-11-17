@@ -1519,10 +1519,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                         <!-- Soru Tipi -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru
+                            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Soru
                                 Tipi</label>
                             <select id="quizType"
-                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                                class="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
                                 <option value="mixed">Karışık (Önerilen)</option>
                                 <option value="mcq">Çoktan Seçmeli (Test)</option>
                                 <option value="tf">Doğru / Yanlış</option>
@@ -1532,10 +1532,10 @@
 
                         <!-- Zorluk Seviyesi -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Zorluk
+                            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Zorluk
                                 Seviyesi</label>
                             <select id="quizDifficulty"
-                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                                class="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
                                 <option value="medium">Orta Seviye</option>
                                 <option value="easy">Kolay (Kavram Temeli)</option>
                                 <option value="hard">Zor (Vize / Final Düzeyi)</option>
@@ -1544,33 +1544,33 @@
 
                         <!-- Soru Sayısı -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Soru
+                            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Soru
                                 Sayısı</label>
                             <select id="quizCount"
-                                class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-indigo-500">
+                                class="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
                                 <option value="5">5 Soru (Hızlı Test)</option>
-                                <option value="3">3 Soru (Mikro Test)</option>
-                                <option value="10">10 Soru (Kapsamlı Sınav)</option>
+                                <option value="10" selected>10 Soru (Standart Sınav)</option>
+                                <option value="20">20 Soru (Kapsamlı Sınav)</option>
                             </select>
                         </div>
 
                         <!-- Zayıf Sayfalara Odaklan -->
                         <div class="space-y-1">
-                            <label class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Odak
+                            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Odak
                                 Alanı</label>
                             <label
-                                class="flex items-center gap-2 h-[38px] px-3 bg-zinc-950 border border-zinc-700/80 rounded-xl cursor-pointer hover:border-zinc-600 transition">
+                                class="flex items-center gap-2 h-[38px] px-3 bg-surface-2 border border-border rounded-xl cursor-pointer hover:border-accent/40 transition">
                                 <input type="checkbox" id="quizFocusWeakToggle"
-                                    class="accent-indigo-500 cursor-pointer">
-                                <span class="text-xs text-zinc-200 truncate">Zayıf Sayfalara Odaklan</span>
+                                    class="accent-accent cursor-pointer">
+                                <span class="text-xs text-text truncate">Zayıf Sayfalara Odaklan</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Quiz Üret Butonu -->
                     <button id="generateQuizBtn" onclick="generateQuizFromBackend()"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
-                        <i data-lucide="wand-2" class="w-4 h-4"></i>
+                        class="w-full bg-accent hover:bg-accent-hover text-accent-contrast font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-md shadow-accent/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
                         <span>PDF'ten Yeni Quiz Üret</span>
                     </button>
                 </div>
