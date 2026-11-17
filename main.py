@@ -1,5 +1,8 @@
-import os
+import warnings
+warnings.filterwarnings("ignore")
 import sys
+sys.modules['fastembed'] = None
+import os
 import ssl
 
 if sys.platform == "win32":
@@ -23,17 +26,20 @@ if sys.platform == "win32":
 
     ssl.SSLContext._load_windows_store_certs = _patched_load_windows_store_certs
 
+import time
+from collections import defaultdict
 import uuid
 import json
 import base64
 import random
 import asyncio
+import sqlite3
 import pymupdf
 from typing import Literal, Optional
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, Response
+from fastapi.responses import FileResponse, StreamingResponse, Response, JSONResponse
 from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
@@ -110,6 +116,55 @@ def save_storage():
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[STORAGE ERR] Kaydedilirken hata: {e}", flush=True)
+
+
+# ==========================================
+# ZİHİN HARİTASI (MIND MAP) SQLITE CACHE
+# ==========================================
+MINDMAP_DB_FILE = "mindmap_cache.db"
+
+def init_mindmap_db():
+    try:
+        conn = sqlite3.connect(MINDMAP_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS mindmaps (
+                cache_key TEXT PRIMARY KEY,
+                data TEXT NOT NULL,
+                created_at REAL NOT NULL
+            )
+        """)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[WARN] MindMap DB başlatma hatası: {e}", flush=True)
+
+def get_mindmap_cache(cache_key: str) -> Optional[dict]:
+    try:
+        conn = sqlite3.connect(MINDMAP_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT data FROM mindmaps WHERE cache_key = ?", (cache_key,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return json.loads(row[0])
+    except Exception as e:
+        print(f"[WARN] Mindmap DB okuma hatası: {e}", flush=True)
+    return None
+
+def set_mindmap_cache(cache_key: str, data: dict):
+    try:
+        conn = sqlite3.connect(MINDMAP_DB_FILE)
+        cursor = conn.cursor()
+        data_json = json.dumps(data, ensure_ascii=False)
+        cursor.execute("""
+            INSERT OR REPLACE INTO mindmaps (cache_key, data, created_at)
+            VALUES (?, ?, ?)
+        """, (cache_key, data_json, time.time()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[WARN] Mindmap DB kaydetme hatası: {e}", flush=True)
 
 
 def sync_documents_from_qdrant():
@@ -224,6 +279,7 @@ async def lifespan(app: FastAPI):
     # 3. Diskten dökümanları ve istatistikleri yükle, Qdrant ile senkronize et
     load_storage()
     sync_documents_from_qdrant()
+    init_mindmap_db()
 
     print(f"[OK] Sistem hazır! Model: {GEMINI_MODEL}", flush=True)
     print("-> Arayüz: http://127.0.0.1:8000", flush=True)
@@ -248,6 +304,53 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==========================================
+# GÜVENLİK & RATE LIMITING MIDDLEWARE
+# ==========================================
+# 1. Genel endpoint limiti: Dakikada 150 istek (IP bazlı kaba kuvvet / scanning koruması)
+# 2. Ağır AI endpoint limiti (/chat, /chat-stream, /generate-quiz, /generate-flashcards): Dakikada 25 istek
+_rate_limit_general = defaultdict(list)
+_rate_limit_ai = defaultdict(list)
+AI_RATE_LIMITED_PATHS = {"/chat", "/chat-stream", "/generate-quiz", "/generate-flashcards", "/api/mindmap"}
+
+@app.middleware("http")
+async def rate_limiting_middleware(request, call_next):
+    path = request.url.path
+    if path in ("/", "/health") or path.startswith("/static"):
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    window = 60.0
+
+    # Ağır AI İşlem Kontrolü
+    if path in AI_RATE_LIMITED_PATHS:
+        user_id_hdr = request.headers.get("X-User-Id", "")
+        track_key = f"{client_ip}_{user_id_hdr}" if user_id_hdr else client_ip
+        timestamps = _rate_limit_ai[track_key]
+        _rate_limit_ai[track_key] = [t for t in timestamps if now - t < window]
+        if len(_rate_limit_ai[track_key]) >= 25:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Çok fazla yapay zeka isteği gönderildi. Lütfen bir dakika bekleyin."},
+                headers={"Retry-After": "60"}
+            )
+        _rate_limit_ai[track_key].append(now)
+
+    # Genel İstek Kontrolü
+    gen_timestamps = _rate_limit_general[client_ip]
+    _rate_limit_general[client_ip] = [t for t in gen_timestamps if now - t < window]
+    if len(_rate_limit_general[client_ip]) >= 150:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "İstek kotası aşıldı. Lütfen bir dakika bekleyin."},
+            headers={"Retry-After": "60"}
+        )
+    _rate_limit_general[client_ip].append(now)
+
+    return await call_next(request)
+
 
 
 # ==========================================
@@ -419,10 +522,46 @@ class FlashcardListResponse(BaseModel):
     cards: list[FlashcardItem]
 
 
+
+class CheatSheetRequest(BaseModel):
+    course_name: Optional[str] = None
+    user_id: Optional[str] = "default_user"
+
+
+class CheatSheetResponse(BaseModel):
+    course_name: str
+    title: str
+    markdown_content: str
+
 class FlashcardGenerateRequest(BaseModel):
     count: Optional[int] = 5
     course_name: Optional[str] = None
     user_id: Optional[str] = "default_user"
+
+
+# --- Zihin Haritası Modelleri ---
+class MindMapRequest(BaseModel):
+    course_id: Optional[str] = None
+    course_name: Optional[str] = None
+    user_id: Optional[str] = None
+    focus: Optional[str] = None
+    refresh: Optional[bool] = False
+
+class MindMapLeaf(BaseModel):
+    title: str = Field(description="Alt kavram veya detay (en fazla 6 kelime)")
+    page: Optional[int] = Field(default=None, description="Metindeki [Sayfa N] sayfa numarası veya null")
+    children: list["MindMapLeaf"] = Field(default_factory=list, description="Varsa daha alt detaylar (boş liste olabilir)")
+
+MindMapLeaf.model_rebuild()
+
+class MindMapBranch(BaseModel):
+    title: str = Field(description="Ana dal veya alt konu başlığı (en fazla 6 kelime)")
+    page: Optional[int] = Field(default=None, description="Metindeki [Sayfa N] sayfa numarası veya null")
+    children: list[MindMapLeaf] = Field(default_factory=list, description="Bu dala ait alt kavramlar (en fazla 6 adet)")
+
+class MindMapResponse(BaseModel):
+    title: str = Field(description="Zihin haritası kök başlığı / ders adı (en fazla 6 kelime)")
+    children: list[MindMapBranch] = Field(default_factory=list, description="Dersin ana dalları (en fazla 8 ana dal)")
 
 
 # --- Quiz Sonuç Gönderme (Zayıf Konu Tespiti) ---
@@ -849,19 +988,30 @@ def build_chat_context_and_prompt(request: ChatRequest):
     # Öğrenci PDF yüklemeden de "Bana şu konuyu anlat" diyebilmeli.
     context_parts = []
     sources = []
-    seen_sources = set()
+    seen_sources = {}
+    ref_idx = 1
 
     for hit in search_results:
         p = hit.payload or {}
-        doc_key = f"{p.get('document_name')}_{p.get('page_number')}"
-        context_parts.append(f"[Kaynak: {p.get('document_name')}, Sayfa {p.get('page_number')}]\n{p.get('text')}")
-        if doc_key not in seen_sources and p.get('document_name'):
-            seen_sources.add(doc_key)
+        doc_name = p.get('document_name')
+        page_num = p.get('page_number')
+        text_content = p.get('text') or ''
+        if not doc_name or not page_num:
+            continue
+        doc_key = f"{doc_name}_{page_num}"
+        if doc_key not in seen_sources:
+            current_ref = ref_idx
+            seen_sources[doc_key] = current_ref
+            ref_idx += 1
             sources.append(SourceInfo(
-                document_name=p.get("document_name", "Bilinmeyen"),
-                page_number=p.get("page_number", 1),
-                snippet=(p.get("text") or "")[:140] + "..."
+                document_name=doc_name,
+                page_number=page_num,
+                snippet=text_content[:140] + "..."
             ))
+        else:
+            current_ref = seen_sources[doc_key]
+
+        context_parts.append(f"[KAYNAK {current_ref} | Dosya: {doc_name} | Sayfa: {page_num}]\n{text_content}")
 
     if context_parts:
         context_text = "\n\n---\n\n".join(context_parts)
@@ -891,12 +1041,12 @@ def build_chat_context_and_prompt(request: ChatRequest):
     prompt = f"""Sen üniversite öğrencilerine ders çalışma ve sınav hazırlığında rehberlik eden uzman bir yapay zeka asistanısın.
 Tarzın: {style_instruction}
 
-Aşağıda öğrencinin yüklediği ilgili [DERS NOTLARI] parçaları verilmiştir.
+Aşağıda öğrencinin yüklediği ilgili [DERS NOTLARI] parçaları [KAYNAK 1], [KAYNAK 2]... etiketleriyle verilmiştir.
 
 YÖNERGELER:
 1. Öğrencinin [SORU]'sunu verilen [DERS NOTLARI]'ndan ve (varsa) eklenen [GÖRSEL]'den faydalanarak kapsamlı, anlaşılır ve eğitici bir şekilde yanıtla.
 2. Öğrenci "özet", "en kritik sınav konuları", "önemli kavramlar" gibi genel bir soru soruyorsa; notlardaki ana başlıkları, tanımları ve önemli konuları sentezleyerek öğrencinin sınava çalışabileceği maddeli net bir analiz hazırla.
-3. Notlardaki bilgileri açıklarken ilgili sayfayı cümle sonlarında mutlaka [Sayfa X] şeklinde belirt.
+3. KESİNLİKLE KENDİN SAYFA NUMARASI UYDURMA. Bir bilgiyi DERS NOTLARI'ndan alarak açıklıyorsan, cümlenin veya bilginin sonuna sadece ilgili kaynak etiketini ekle: örn. [KAYNAK 1] veya [KAYNAK 2]. Yalnızca aşağıda listelenen kaynak numaralarını kullan.
 4. Matematiksel veya teknik formülleri KaTeX uyumlu standart LaTeX ($ ... $ veya $$ ... $$) formatında yaz.
 
 [DERS NOTLARI]:
@@ -1151,6 +1301,317 @@ KURALLAR (HIZLI VE ETKİLİ ÖĞRENME İÇİN):
         response = await asyncio.to_thread(_call_gemini_flashcards, GEMINI_FALLBACK_MODEL)
 
     return FlashcardListResponse.model_validate_json(response.text)
+
+
+# 5.1 Sınav Öncesi Formül & Kavram Kağıdı (Cheat Sheet Generator)
+@app.post("/generate-cheatsheet", response_model=CheatSheetResponse)
+async def generate_cheatsheet(
+    payload: Optional[CheatSheetRequest] = None,
+    course_name: Optional[str] = None,
+    user_id: Optional[str] = None,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or (payload.user_id if payload else None) or user_id or "default_user").strip()
+    target_course = (payload.course_name if payload and payload.course_name else course_name) or None
+
+    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
+    if target_course:
+        must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
+
+    # Formül, denklem ve kilit kavramları öne çıkaran semantik arama
+    search_query = "temel formüller denklemler tanımlar teoremler bağıntılar hesaplama kurallar özet"
+    query_vector = get_embeddings([search_query])[0]
+    
+    search_results = []
+    try:
+        search_results = qdrant_client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_vector,
+            query_filter=Filter(must=must_conditions),
+            limit=16
+        ).points
+    except Exception as e:
+        print(f"[WARN] CheatSheet arama: {e}", flush=True)
+
+    if not search_results:
+        scroll_result, _ = qdrant_client.scroll(
+            collection_name=COLLECTION_NAME,
+            scroll_filter=Filter(must=must_conditions),
+            limit=16
+        )
+        search_results = scroll_result
+
+    if not search_results:
+        course_msg = f"'{target_course}' dersi için" if target_course else "Bu çalışma alanı için"
+        raise HTTPException(status_code=404, detail=f"{course_msg} henüz PDF notu yüklenmemiş. Lütfen önce ders notu yükleyin.")
+
+    context_parts = []
+    for hit in search_results:
+        p = hit.payload or {}
+        context_parts.append(f"[Dosya: {p.get('document_name')}, Sayfa: {p.get('page_number')}]\n{p.get('text')}")
+
+    context_text = "\n\n---\n\n".join(context_parts)
+    course_title = target_course or "Genel Ders Notları"
+
+    prompt = f"""Sen üniversite sınavları için ders notlarından yüksek yoğunluklu, net ve hatasız bir 'Sınav Formül & Kavram Kağıdı (Cheat Sheet)' hazırlayan bir akademisyensin.
+Ders: {course_title}
+
+Aşağıdaki ders notlarını incele ve öğrencinin sınavdan hemen önce tek bakışta tüm kilit bilgileri görebileceği 1-2 sayfalık kapsamlı bir Formül Kağıdı oluştur.
+
+İÇERİK YAPISI:
+1. # 📑 {course_title} - Sınav Formül & Kavram Kağıdı (Cheat Sheet)
+2. ## 📐 1. Temel Formüller, Denklemler ve Değişkenler
+   - Tüm formülleri KaTeX uyumlu standart LaTeX ($...$ veya $$...$$) ile yaz.
+   - Her formülün yanına değişkenlerin ne anlama geldiğini ve birimlerini belirt.
+3. ## 🔑 2. Sınavda Kesin Çıkabilecek Tanımlar & Kanunlar
+   - En kritik 5-10 terim ve kavramın net sınav tanımları.
+4. ## ⚠️ 3. Sınav İpuçları, Birim Dönüşümleri & Tuzaklar
+   - Soru çözerken öğrencilerin en sık yaptığı hatalar ve pratik çözüm yolları.
+5. ## 📄 4. Hızlı Sayfa Referansları
+   - Hangi konunun hangi slayt/sayfada olduğuna dair özet fihrist.
+
+[DERS NOTLARI]:
+{context_text}
+"""
+
+    client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+
+    def _call_gemini_cheatsheet(model_name: str):
+        return client.models.generate_content(
+            model=model_name,
+            contents=prompt
+        )
+
+    try:
+        response = await asyncio.to_thread(_call_gemini_cheatsheet, GEMINI_MODEL)
+    except Exception as e:
+        print(f"[WARN] CheatSheet fallback modele geçiliyor: {e}", flush=True)
+        response = await asyncio.to_thread(_call_gemini_cheatsheet, GEMINI_FALLBACK_MODEL)
+
+    return CheatSheetResponse(
+        course_name=course_title,
+        title=f"{course_title} - Formül & Kavram Kağıdı",
+        markdown_content=response.text
+    )
+
+
+# 5.2 Ders Zihin Haritası (Hierarchical Mind Map Generator)
+@app.post("/api/mindmap")
+async def generate_mindmap(
+    payload: MindMapRequest,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or payload.user_id or "default_user").strip()
+    target_course = (payload.course_id or payload.course_name or "").strip()
+    focus = (payload.focus or "").strip() or None
+    refresh = bool(payload.refresh)
+
+    if not target_course:
+        raise HTTPException(
+            status_code=400,
+            detail="Lütfen bir ders seçiniz. Zihin haritası oluşturmak için aktif bir ders gereklidir."
+        )
+
+    # 1. SQLite Önbellek Kontrolü (Refresh istenmediyse)
+    cache_key = f"{uid}_{target_course.lower()}_{(focus or '').lower()}"
+    if not refresh:
+        cached_result = get_mindmap_cache(cache_key)
+        if cached_result:
+            return JSONResponse(content=cached_result)
+
+    # 2. Qdrant üzerinde ders ve kullanıcı filtreleri
+    must_conditions = [FieldCondition(key="user_id", match=MatchValue(value=uid))]
+    must_conditions.append(FieldCondition(key="course_name", match=MatchValue(value=target_course)))
+    course_filter = Filter(must=must_conditions)
+
+    # 2.1 Ders boş mu kontrolü (Ders boşsa 400 dön)
+    check_records, _ = qdrant_client.scroll(
+        collection_name=COLLECTION_NAME,
+        scroll_filter=course_filter,
+        limit=1,
+        with_payload=False,
+        with_vectors=False
+    )
+    if not check_records:
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{target_course}' dersi için henüz hiç PDF ders notu yüklenmemiş. Lütfen önce sol menüden ders notu yükleyiniz."
+        )
+
+    sampled_points = []
+    valid_pages = set()
+
+    # 2.2 İçerik seçimi:
+    # - focus varsa: focus metniyle similarity search yap, top 15-20 chunk al.
+    # - focus yoksa: Qdrant'tan dersin chunk'larını sayfalara dağılacak şekilde örnekle (tüm dökümanı kapsasın, 30-40 chunk).
+    if focus:
+        try:
+            focus_vector = get_embeddings([focus])[0]
+            search_res = qdrant_client.query_points(
+                collection_name=COLLECTION_NAME,
+                query=focus_vector,
+                query_filter=course_filter,
+                limit=20
+            ).points
+            sampled_points = search_res
+        except Exception as e:
+            print(f"[WARN] Mindmap focus search hatası: {e}", flush=True)
+
+    if not sampled_points:
+        all_chunks = []
+        next_offset = None
+        while True:
+            records, next_offset = qdrant_client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=course_filter,
+                limit=100,
+                offset=next_offset,
+                with_payload=True,
+                with_vectors=False
+            )
+            all_chunks.extend(records)
+            if not next_offset or len(all_chunks) >= 600:
+                break
+
+        if not all_chunks:
+            raise HTTPException(
+                status_code=400,
+                detail=f"'{target_course}' dersinin döküman içeriği okunamadı."
+            )
+
+        # Sayfa ve döküman sırasına göre sırala
+        all_chunks.sort(key=lambda pt: (
+            str((pt.payload or {}).get("document_name", "")),
+            int((pt.payload or {}).get("page_number", 0) or 0)
+        ))
+
+        # Toplam bağlam yaklaşık 30-40 chunk'ı geçmesin
+        target_sample_size = min(len(all_chunks), 35)
+        if len(all_chunks) <= target_sample_size:
+            sampled_points = all_chunks
+        else:
+            step = len(all_chunks) / float(target_sample_size)
+            sampled_points = [all_chunks[int(i * step)] for i in range(target_sample_size)]
+
+    # 3. Sayfa Numaraları & Bağlam Metnini Hazırla
+    context_parts = []
+    for pt in sampled_points:
+        p = pt.payload or {}
+        pno = p.get("page_number")
+        doc_name = p.get("document_name", "")
+        text = (p.get("text") or "").strip()
+        if pno is not None:
+            try:
+                pno_int = int(pno)
+                valid_pages.add(pno_int)
+                context_parts.append(f"[Döküman: {doc_name} | Sayfa {pno_int}]\n{text}")
+            except (ValueError, TypeError):
+                context_parts.append(f"[Döküman: {doc_name}]\n{text}")
+        else:
+            context_parts.append(f"[Döküman: {doc_name}]\n{text}")
+
+    context_text = "\n\n---\n\n".join(context_parts)
+    allowed_pages_str = ", ".join(str(p) for p in sorted(valid_pages)) if valid_pages else "Belirtilmemiş"
+
+    # 4. Gemini Sistem Prompt ve İstek Metni
+    system_prompt = (
+        "Sen bir ders notu analiz asistanısın. Sana verilen ders notu parçalarından, "
+        "bir öğrencinin sınav öncesi büyük resmi görmesini sağlayacak hiyerarşik bir "
+        "zihin haritası çıkar.\n"
+        "Kurallar:\n"
+        "- Sadece verilen metne dayan, dışarıdan bilgi ekleme.\n"
+        "- Düğüm başlıkları kısa olsun (en fazla 6 kelime), cümle değil kavram olsun.\n"
+        "- Ana dallar dersin gerçek ana konularını yansıtsın; benzer şeyleri birleştir.\n"
+        "- Her düğüm için, o bilginin geçtiği sayfa numarasını SADECE bağlamdaki "
+        "[Sayfa N] etiketlerinden seç. Emin değilsen null yaz.\n"
+        "- Dil: notların dili Türkçe ve İngilizce karışıksa terimleri orijinal dilinde "
+        "bırak, açıklayıcı başlıkları Türkçe yaz.\n"
+        "- Çıktı yalnızca şemaya uygun JSON olsun."
+    )
+
+    focus_desc = f"Özellikle şu konuya odaklan: '{focus}'. " if focus else "Dersin genelini kapsayan bir konu ağacı oluştur. "
+    user_prompt = f"""Ders: {target_course}
+{focus_desc}
+Bağlamdaki geçerli sayfa numaraları şunlardır: [{allowed_pages_str}]. Sayfa numarasını (page) SADECE bu listeden seç; listede olmayan bir sayfa numarası asla yazma, emin değilsen null bırak.
+
+Ağaç yapısı kuralları:
+- Kök düğüm (title): Dersin veya odak konusunun adı (en fazla 6 kelime).
+- Kökün altında en fazla 8 ana dal (children).
+- Her ana dalın altında en fazla 6 alt kavram (children).
+- Maksimum derinlik 3 seviyedir.
+
+[DERS NOTLARI]:
+{context_text}
+"""
+
+    client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+
+    async def _call_gemini_mindmap(model_name: str):
+        def _exec():
+            return client.models.generate_content(
+                model=model_name,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                    response_schema=MindMapResponse,
+                    temperature=0.2,
+                ),
+            )
+        return await asyncio.to_thread(_exec)
+
+    # 5. Model çağrısı & Hata Yönetimi (Model geçersiz JSON dönerse 1 kez tekrar dene)
+    mindmap_data = None
+    last_error = ""
+
+    for attempt in range(2):
+        model_name = GEMINI_MODEL if attempt == 0 else GEMINI_FALLBACK_MODEL
+        try:
+            resp = await _call_gemini_mindmap(model_name)
+            raw_text = (resp.text or "").strip()
+            parsed_json = json.loads(raw_text)
+            validated_obj = MindMapResponse.model_validate(parsed_json)
+            mindmap_data = validated_obj.model_dump()
+            break
+        except Exception as e:
+            last_error = str(e)
+            print(f"[WARN] Mindmap deneme {attempt+1} başarısız ({model_name}): {e}", flush=True)
+            if attempt == 0:
+                await asyncio.sleep(0.8)
+                continue
+
+    if not mindmap_data:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Yapay zeka zihin haritasını yapılandırılmış JSON formatında üretemedi ({last_error[:100]}). Lütfen 'Yeniden Oluştur' butonuyla tekrar deneyiniz."
+        )
+
+    # 6. Sayfa Doğrulama (Hallucination Guard): Bağlamda olmayan sayfaları null yap
+    def _sanitize_node(node: dict):
+        p = node.get("page")
+        if p is not None:
+            try:
+                p_int = int(p)
+                if p_int in valid_pages:
+                    node["page"] = p_int
+                else:
+                    node["page"] = None
+            except (ValueError, TypeError):
+                node["page"] = None
+        # Başlığı en fazla 6 kelimeye sınırla
+        t = str(node.get("title", "")).strip()
+        words = t.split()
+        if len(words) > 7:
+            node["title"] = " ".join(words[:7])
+        for child in node.get("children", []):
+            _sanitize_node(child)
+
+    _sanitize_node(mindmap_data)
+
+    # 7. Sonucu SQLite tarafında cache'le
+    set_mindmap_cache(cache_key, mindmap_data)
+
+    return JSONResponse(content=mindmap_data)
 
 
 # 6. Zayıf Konu Tespiti & Dashboard İstatistikleri
