@@ -28,6 +28,9 @@ if sys.platform == "win32":
 
 import time
 from collections import defaultdict
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger("studyrag")
 import uuid
 import json
 import base64
@@ -1061,25 +1064,36 @@ YÖNERGELER:
 # 3. RAG Sohbet & Özet (Standart JSON Yanıt)
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_pdf(request: ChatRequest):
-    prompt, sources, image_part = build_chat_context_and_prompt(request)
-    client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+    try:
+        prompt, sources, image_part = build_chat_context_and_prompt(request)
+        client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
 
-    contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
+        contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
 
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=contents
-    )
-    return ChatResponse(answer=response.text, sources=sources)
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=contents
+        )
+        return ChatResponse(answer=response.text, sources=sources)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Sohbet endpoint'inde (/chat) hata oluştu:")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # 3.1 Canlı Akış (Streaming SSE - Kayan Metin & Multimodal Görsel)
 @app.post("/chat-stream")
 async def chat_stream_with_pdf(request: ChatRequest):
-    prompt, sources, image_part = build_chat_context_and_prompt(request)
-    client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
-
-    contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
+    try:
+        prompt, sources, image_part = build_chat_context_and_prompt(request)
+        client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
+        contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Sohbet akışı hazırlığında (/chat-stream) hata oluştu:")
+        raise HTTPException(status_code=500, detail=str(e))
 
     async def event_generator():
         # 1. İlk olarak kaynakları gönder
@@ -1095,6 +1109,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
                 if chunk.text:
                     yield f"data: {json.dumps({'text': chunk.text})}\n\n"
         except Exception as e:
+            logger.exception("Gemini akışında (/chat-stream) birincil model hatası, yedek modele geçiliyor:")
             # Yedek modele düş
             try:
                 stream = client.models.generate_content_stream(
@@ -1105,6 +1120,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
                     if chunk.text:
                         yield f"data: {json.dumps({'text': chunk.text})}\n\n"
             except Exception as e2:
+                logger.exception("Gemini akışında (/chat-stream) yedek model de hata verdi:")
                 yield f"data: {json.dumps({'error': str(e2)})}\n\n"
 
         # 3. Tamamlandı sinyali

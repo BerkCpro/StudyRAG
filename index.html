@@ -25,7 +25,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- KaTeX CSS & JS for Math / Technical Formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
     <!-- Marked.js & DOMPurify for Clean Markdown Rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
@@ -727,6 +728,22 @@
             color: #3730a3 !important;
         }
 
+        /* Custom Select & Option Styling for Modern Dark/Light Mode */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        select option {
+            background-color: #18181b;
+            color: #f4f4f5;
+            padding: 8px 12px;
+        }
+        html.light select option {
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 h-full h-[100dvh] min-h-0 flex overflow-hidden antialiased select-none relative">
@@ -795,9 +812,14 @@
                     </div>
                     
                     <div class="flex items-center gap-1.5">
-                        <select id="courseSelect" onchange="onCourseChange()" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500 font-medium">
-                            <option value="">-- Henüz Ders Eklenmedi --</option>
-                        </select>
+                        <div class="relative w-full">
+                            <select id="courseSelect" onchange="onCourseChange()" class="w-full appearance-none bg-zinc-900 border border-zinc-700/80 rounded-xl pl-3 pr-8 py-2 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500 font-medium cursor-pointer transition shadow-sm">
+                                <option value="">-- Henüz Ders Eklenmedi --</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-zinc-400">
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                            </div>
+                        </div>
                         <span id="deleteCourseTextBtn" class="hidden"></span>
                     </div>
                 </div>
@@ -1002,10 +1024,13 @@
                         <textarea id="chatInput" rows="1" placeholder="Ders notlarından bir soru sor veya konu anlatımı iste... (Shift + Enter: yeni satır)" class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none transition shadow-inner max-h-32 leading-relaxed" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleChatSubmit(event); }"></textarea>
                     </div>
 
-                    <!-- Sadeleştirilmiş Anlatım (ELI5) Toggle -->
-                    <label class="flex items-center gap-1.5 cursor-pointer select-none bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/70 px-2.5 py-2.5 md:py-3 rounded-2xl text-zinc-300 hover:text-white transition shrink-0 shadow-sm" title="Basitçe Anlat (ELI5): Cevapları karmaşık terimlerden arındırarak sade bir dille açıklar">
-                        <input type="checkbox" id="eli5Toggle" class="accent-indigo-500 w-3.5 h-3.5 cursor-pointer rounded">
+                    <!-- Sadeleştirilmiş Anlatım (ELI5) Toggle Switch -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/70 px-3 py-2 md:py-2.5 rounded-2xl text-zinc-300 hover:text-white transition shrink-0 shadow-sm" title="Basitçe Anlat (ELI5): Cevapları karmaşık terimlerden arındırarak sade bir dille açıklar">
                         <span class="text-xs font-semibold hidden sm:inline">ELI5</span>
+                        <div class="relative inline-flex items-center">
+                            <input type="checkbox" id="eli5Toggle" class="sr-only peer">
+                            <div class="w-8 h-4 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </div>
                     </label>
 
                     <!-- Gönder Butonu (Mor Dolgu) -->
@@ -4107,20 +4132,31 @@
                             </div>
                         </div>
                     `;
-                } else {
-                    const sourcesHtml = (msg.sources && msg.sources.length > 0) ? `
-                        <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-800/60 mt-3">
-                            <span class="text-[11px] text-zinc-400 font-medium mr-1 flex items-center gap-1">
-                                <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynaklar:
-                            </span>
-                            ${msg.sources.map(s => `
-                                <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-zinc-300 hover:text-white transition cursor-pointer group shadow-sm" title="${escapeHtml(s.document_name)} - Sayfa ${s.page_number}">
-                                    <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
-                                    <span class="text-[11px] text-zinc-400 font-mono font-semibold bg-zinc-900/60 px-1.5 py-0.5 rounded">p.${s.page_number}</span>
-                                </button>
-                            `).join('')}
+                } else if (msg.isError) {
+                    return `
+                        <div class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-2.5 md:gap-3">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center shrink-0 mt-0.5 text-rose-400 shadow-sm">
+                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
+                            </div>
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <div class="bg-rose-950/20 border border-rose-800/40 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-rose-200 shadow-sm">
+                                    <div class="markdown-body prose prose-invert max-w-none space-y-2 break-words">
+                                        ${formatMarkdownText(msg.text)}
+                                    </div>
+                                    ${msg.canRetry ? `
+                                        <div class="pt-3 mt-2 border-t border-rose-900/40 flex items-center gap-2">
+                                            <button type="button" onclick="retryLastChatMessage()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/50 text-rose-100 hover:text-white text-xs font-semibold transition cursor-pointer shadow-sm">
+                                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                                <span>Tekrar Dene</span>
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
                         </div>
-                    ` : '';
+                    `;
+                } else {
+                    const sourcesHtml = renderSourcesRow(msg.sources);
 
                     const msgActionsHtml = `
                         <div class="flex items-center flex-wrap gap-2 pt-2 text-xs text-zinc-400 border-t border-zinc-800/40 mt-3">
@@ -4134,11 +4170,11 @@
                             </button>
                             <button type="button" onclick="createFlashcardFromMessage(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-zinc-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-zinc-800/60 transition cursor-pointer font-medium ml-auto" title="Bu cevaptan bilgi kartı (Flashcard) üret">
                                 <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400"></i>
-                                <span>📇 Kart Yap</span>
+                                <span>Kart Yap</span>
                             </button>
                             <button type="button" onclick="createQuizFromMessage(this)" data-text="${escapeHtml(msg.text)}" class="hover:text-zinc-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-zinc-800/60 transition cursor-pointer font-medium" title="Bu konudan hemen test sorusu üret">
                                 <i data-lucide="help-circle" class="w-3.5 h-3.5 text-zinc-400"></i>
-                                <span>❓ Quiz Üret</span>
+                                <span>Quiz Üret</span>
                             </button>
                         </div>
                     `;
@@ -4163,6 +4199,17 @@
             }).join('');
 
             lucide.createIcons();
+            if (window.renderMathInElement) {
+                try {
+                    renderMathInElement(container, {
+                        delimiters: [
+                            { left: '$$', right: '$$', display: true },
+                            { left: '$', right: '$', display: false }
+                        ],
+                        throwOnError: false
+                    });
+                } catch (_) {}
+            }
             container.scrollTop = container.scrollHeight;
         }
 
@@ -4227,120 +4274,31 @@
             lucide.createIcons();
             container.scrollTop = container.scrollHeight;
 
-            const eli5 = document.getElementById('eli5Toggle').checked;
+            const eli5 = document.getElementById('eli5Toggle') ? document.getElementById('eli5Toggle').checked : false;
 
             let fullText = '';
             let sources = [];
             let isSuccess = false;
+            let assistantMsgId = null;
 
-            // 1. ADIM: Canlı Akış (Streaming SSE)
+            // 90 saniye zaman aşımı kontrolü (AbortController)
+            const controller = new AbortController();
+            let isTimeout = false;
+            const timeoutTimer = setTimeout(() => {
+                isTimeout = true;
+                controller.abort();
+            }, 90000);
+
+            let lastError = null;
+            let lastStatus = 0;
+            let lastDetail = '';
+
             try {
-                const response = await fetch('/chat-stream', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-User-Id': currentUserId
-                    },
-                    body: JSON.stringify({
-                        question: displayText,
-                        course_name: currentCourse,
-                        eli5_mode: eli5,
-                        user_id: currentUserId,
-                        image_base64: userImage,
-                        image_mime_type: userMime
-                    })
-                });
-
-                if (response.ok && response.body) {
-                    document.getElementById(loadingId)?.remove();
-
-                    const assistantMsgId = 'msg_' + Date.now();
-                    container.innerHTML += `
-                        <div id="${assistantMsgId}" class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-2.5 md:gap-3">
-                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                                <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
-                            </div>
-                            <div class="space-y-2 flex-1 min-w-0">
-                                <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
-                                    <div id="${assistantMsgId}_text" class="prose prose-invert max-w-none space-y-2 break-words">
-                                        <span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse align-middle"></span>
-                                    </div>
-                                    <div id="${assistantMsgId}_sources" class="hidden flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/60 mt-2"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    lucide.createIcons();
-                    container.scrollTop = container.scrollHeight;
-
-                    const textEl = document.getElementById(`${assistantMsgId}_text`);
-                    const sourcesEl = document.getElementById(`${assistantMsgId}_sources`);
-
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = '';
-
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop();
-
-                        for (const line of lines) {
-                            const trimmed = line.trim();
-                            if (!trimmed.startsWith('data:')) continue;
-                            const jsonStr = trimmed.slice(5).trim();
-                            if (!jsonStr) continue;
-
-                            try {
-                                const parsed = JSON.parse(jsonStr);
-                                if (parsed.sources && parsed.sources.length > 0) {
-                                    sources = parsed.sources;
-                                    sourcesEl.innerHTML = `
-                                        <span class="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
-                                            <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400"></i> Kaynak:
-                                        </span>
-                                    ` + sources.map(s => `
-                                        <button type="button" onclick="showSourceSnippetModal('${escapeHtml(s.document_name)}', ${s.page_number}, '${encodeURIComponent(s.snippet || '')}')" class="bg-slate-100 dark:bg-slate-950/70 hover:bg-indigo-50 dark:hover:bg-slate-850 border border-slate-300 dark:border-slate-800/80 hover:border-indigo-500/50 rounded-lg px-2.5 py-1 text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-white transition cursor-pointer group shadow-sm" title="Sayfayı aç">
-                                            <span class="truncate max-w-[140px] font-medium">${escapeHtml(s.document_name)}</span>
-                                            <span class="text-[11px] text-indigo-700 dark:text-indigo-400 font-mono font-semibold bg-indigo-100 dark:bg-transparent px-1.5 py-0.5 rounded">s. ${s.page_number}</span>
-                                        </button>
-                                    `).join('');
-                                    sourcesEl.classList.remove('hidden');
-                                    lucide.createIcons();
-                                }
-                                if (parsed.text) {
-                                    fullText += parsed.text;
-                                    textEl.innerHTML = formatMarkdownText(fullText, sources) + '<span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle"></span>';
-                                    container.scrollTop = container.scrollHeight;
-                                }
-                                if (parsed.error) {
-                                    fullText += `\n\n⚠️ **Hata:** ${parsed.error}`;
-                                    textEl.innerHTML = formatMarkdownText(fullText, sources);
-                                }
-                            } catch (e) {
-                                console.error('SSE parse error:', e);
-                            }
-                        }
-                    }
-
-                    if (fullText.trim().length > 0) {
-                        textEl.innerHTML = formatMarkdownText(fullText, sources);
-                        isSuccess = true;
-                    }
-                }
-            } catch (streamError) {
-                console.warn("Canlı akış hatası, standart JSON moduna geçiliyor...", streamError);
-            }
-
-            // 2. ADIM: Yedek Standart /chat Endpoint'i
-            if (!isSuccess) {
+                // 1. ADIM: Canlı Akış (Streaming SSE)
                 try {
-                    const fallbackRes = await fetch('/chat', {
+                    const response = await fetch('/chat-stream', {
                         method: 'POST',
+                        signal: controller.signal,
                         headers: { 
                             'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
@@ -4356,31 +4314,143 @@
                         })
                     });
 
-                    document.getElementById(loadingId)?.remove();
+                    if (response.ok && response.body) {
+                        document.getElementById(loadingId)?.remove();
 
-                    if (!fallbackRes.ok) {
-                        let errMsg = 'Cevap alınamadı';
+                        assistantMsgId = 'msg_' + Date.now();
+                        container.innerHTML += `
+                            <div id="${assistantMsgId}" class="w-full max-w-4xl xl:max-w-5xl mx-auto flex gap-2.5 md:gap-3">
+                                <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i data-lucide="bot" class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-400"></i>
+                                </div>
+                                <div class="space-y-2 flex-1 min-w-0">
+                                    <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 md:p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                                        <div id="${assistantMsgId}_text" class="prose prose-invert max-w-none space-y-2 break-words">
+                                            <span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse align-middle"></span>
+                                        </div>
+                                        <div id="${assistantMsgId}_sources" class="hidden"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                        container.scrollTop = container.scrollHeight;
+
+                        const textEl = document.getElementById(`${assistantMsgId}_text`);
+                        const sourcesEl = document.getElementById(`${assistantMsgId}_sources`);
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split('\n');
+                            buffer = lines.pop();
+
+                            for (const line of lines) {
+                                const trimmed = line.trim();
+                                if (!trimmed.startsWith('data:')) continue;
+                                const jsonStr = trimmed.slice(5).trim();
+                                if (!jsonStr) continue;
+
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    if (parsed.sources && parsed.sources.length > 0) {
+                                        sources = parsed.sources;
+                                        sourcesEl.innerHTML = renderSourcesRow(sources);
+                                        sourcesEl.classList.remove('hidden');
+                                        lucide.createIcons();
+                                    }
+                                    if (parsed.text) {
+                                        fullText += parsed.text;
+                                        textEl.innerHTML = formatMarkdownText(fullText, sources) + '<span class="inline-block w-1.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle"></span>';
+                                        container.scrollTop = container.scrollHeight;
+                                    }
+                                    if (parsed.error) {
+                                        fullText += `\n\n⚠️ **Hata:** ${parsed.error}`;
+                                        textEl.innerHTML = formatMarkdownText(fullText, sources);
+                                    }
+                                } catch (e) {
+                                    console.error('SSE parse error:', e);
+                                }
+                            }
+                        }
+
+                        if (fullText.trim().length > 0) {
+                            textEl.innerHTML = formatMarkdownText(fullText, sources);
+                            isSuccess = true;
+                        }
+                    } else if (!response.ok) {
+                        lastStatus = response.status;
                         try {
-                            const errData = await fallbackRes.json();
-                            errMsg = errData.detail || errMsg;
+                            const errJson = await response.json();
+                            lastDetail = errJson.detail || '';
                         } catch (_) {}
-                        throw new Error(errMsg);
+                        throw new Error(lastDetail || `HTTP ${response.status}`);
                     }
+                } catch (streamError) {
+                    lastError = streamError;
+                    console.warn("Canlı akış hatası, standart JSON moduna geçiliyor...", streamError);
+                    if (isTimeout || controller.signal.aborted) {
+                        throw streamError;
+                    }
+                }
 
-                    const data = await fallbackRes.json();
-                    fullText = data.answer || '';
-                    sources = data.sources || [];
-                    isSuccess = true;
+                // 2. ADIM: Yedek Standart /chat Endpoint'i
+                if (!isSuccess && !isTimeout && !controller.signal.aborted) {
+                    try {
+                        const fallbackRes = await fetch('/chat', {
+                            method: 'POST',
+                            signal: controller.signal,
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-User-Id': currentUserId
+                            },
+                            body: JSON.stringify({
+                                question: displayText,
+                                course_name: currentCourse,
+                                eli5_mode: eli5,
+                                user_id: currentUserId,
+                                image_base64: userImage,
+                                image_mime_type: userMime
+                            })
+                        });
 
-                } catch (fallbackError) {
-                    document.getElementById(loadingId)?.remove();
-                    chat.messages.push({
-                        role: 'assistant',
-                        text: `⚠️ **Hata:** ${fallbackError.message}\n\nLütfen sol menüden bu ders için bir PDF yüklendiğinden veya geçerli bir soru sorduğunuzdan emin olun.`
-                    });
-                    saveChatsToStorage();
-                    renderActiveChatMessages();
-                    return;
+                        document.getElementById(loadingId)?.remove();
+
+                        if (!fallbackRes.ok) {
+                            lastStatus = fallbackRes.status;
+                            let errMsg = 'Cevap alınamadı';
+                            try {
+                                const errData = await fallbackRes.json();
+                                errMsg = errData.detail || errMsg;
+                                lastDetail = errMsg;
+                            } catch (_) {}
+                            throw new Error(errMsg);
+                        }
+
+                        const data = await fallbackRes.json();
+                        fullText = data.answer || '';
+                        sources = data.sources || [];
+                        isSuccess = true;
+
+                    } catch (fallbackError) {
+                        lastError = fallbackError;
+                        throw fallbackError;
+                    }
+                }
+            } catch (err) {
+                lastError = err;
+            } finally {
+                clearTimeout(timeoutTimer);
+                document.getElementById(loadingId)?.remove();
+                if (assistantMsgId && !isSuccess) {
+                    document.getElementById(assistantMsgId)?.remove();
                 }
             }
 
@@ -4389,6 +4459,19 @@
                     role: 'assistant',
                     text: fullText,
                     sources: sources
+                });
+                saveChatsToStorage();
+                renderActiveChatMessages();
+            } else {
+                if (isTimeout) {
+                    lastError = { name: 'AbortError', message: 'Timeout' };
+                }
+                const errorInfo = classifyChatError(lastError, lastStatus, lastDetail);
+                chat.messages.push({
+                    role: 'assistant',
+                    text: `⚠️ **${errorInfo.title}**\n\n${errorInfo.message}`,
+                    isError: true,
+                    canRetry: errorInfo.canRetry
                 });
                 saveChatsToStorage();
                 renderActiveChatMessages();
@@ -5103,54 +5186,226 @@
         function renderCitationBadge(docName, pageNum, snippet) {
             const escapedDoc = escapeHtml(docName || '');
             const encodedSnip = encodeURIComponent(snippet || '');
-            return `<button type="button" onclick="showSourceSnippetModal('${escapedDoc}', ${pageNum}, '${encodedSnip}')" class="inline-flex items-center gap-1 font-mono text-[10px] font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800/90 hover:bg-zinc-700/90 border border-zinc-700/60 rounded px-1.5 py-0.5 transition cursor-pointer mx-0.5 align-baseline shadow-sm" title="${escapedDoc} - Sayfa ${pageNum} (Önizlemek için tıkla)"><span>📄</span><span>p.${pageNum}</span></button>`;
+            return `<button type="button" onclick="showSourceSnippetModal('${escapedDoc}', ${pageNum}, '${encodedSnip}')" class="inline-flex items-center gap-1 font-mono text-[10px] font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800/90 hover:bg-zinc-700/90 border border-zinc-700/60 rounded px-1.5 py-0.5 transition cursor-pointer mx-0.5 align-baseline shadow-sm" title="${escapedDoc} - Sayfa ${pageNum} (Önizlemek için tıkla)"><svg class="w-2.5 h-2.5 text-indigo-400 shrink-0 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><span>p.${pageNum}</span></button>`;
+        }
+
+        function renderSourcesRow(sources) {
+            if (!sources || !Array.isArray(sources) || sources.length === 0) return '';
+
+            const docMap = new Map();
+            sources.forEach(s => {
+                const docName = (s.document_name || 'Ders Notu').trim();
+                const pageNum = parseInt(s.page_number, 10);
+                if (!docMap.has(docName)) {
+                    docMap.set(docName, new Map());
+                }
+                if (!isNaN(pageNum) && pageNum > 0) {
+                    if (!docMap.get(docName).has(pageNum) || s.snippet) {
+                        docMap.get(docName).set(pageNum, s.snippet || '');
+                    }
+                }
+            });
+
+            if (docMap.size === 0) return '';
+
+            let groupsHtml = '';
+            docMap.forEach((pagesMap, docName) => {
+                const sortedPages = Array.from(pagesMap.keys()).sort((a, b) => a - b);
+                if (sortedPages.length === 0) return;
+
+                const visiblePages = sortedPages.slice(0, 6);
+                const extraPages = sortedPages.slice(6);
+
+                const renderChip = (p) => {
+                    const snip = pagesMap.get(p) || '';
+                    const encDoc = escapeHtml(docName);
+                    const encSnip = encodeURIComponent(snip);
+                    return `<button type="button" onclick="showSourceSnippetModal('${encDoc}', ${p}, '${encSnip}')" class="font-mono text-[11px] font-semibold text-zinc-300 hover:text-white bg-zinc-800/90 hover:bg-zinc-700 border border-zinc-700/70 hover:border-indigo-500/50 rounded-md px-2 py-0.5 transition cursor-pointer shadow-sm" title="${encDoc} - Sayfa ${p} (Görüntüle)">p.${p}</button>`;
+                };
+
+                const visibleChipsHtml = visiblePages.map(renderChip).join(' ');
+                let extraChipsHtml = '';
+                if (extraPages.length > 0) {
+                    extraChipsHtml = `
+                        <span class="extra-source-pages hidden inline-flex flex-wrap gap-1">
+                            ${extraPages.map(renderChip).join(' ')}
+                        </span>
+                        <button type="button" onclick="toggleMoreSourcePages(this)" class="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-800/60 rounded-md px-1.5 py-0.5 transition cursor-pointer" data-count="${extraPages.length}">+${extraPages.length}</button>
+                    `;
+                }
+
+                groupsHtml += `
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs text-zinc-300 py-0.5">
+                        <span class="font-medium text-zinc-400 truncate max-w-[220px]" title="${escapeHtml(docName)}">${escapeHtml(docName)}:</span>
+                        <div class="inline-flex flex-wrap items-center gap-1">
+                            ${visibleChipsHtml}
+                            ${extraChipsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (!groupsHtml) return '';
+
+            return `
+                <div class="flex flex-col gap-1 pt-2.5 border-t border-zinc-800/60 mt-3">
+                    <div class="flex items-center gap-1.5 text-[11px] text-zinc-400 font-semibold">
+                        <i data-lucide="file-check" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+                        <span>Kaynaklar:</span>
+                    </div>
+                    ${groupsHtml}
+                </div>
+            `;
+        }
+
+        function toggleMoreSourcePages(btn) {
+            const parent = btn.parentElement;
+            if (!parent) return;
+            const extraContainer = parent.querySelector('.extra-source-pages');
+            if (!extraContainer) return;
+
+            const isHidden = extraContainer.classList.contains('hidden');
+            if (isHidden) {
+                extraContainer.classList.remove('hidden');
+                btn.textContent = 'Gizle';
+            } else {
+                extraContainer.classList.add('hidden');
+                const count = btn.getAttribute('data-count') || '';
+                btn.textContent = '+' + count;
+            }
+        }
+
+        function classifyChatError(err, status = 0, detail = '') {
+            // 1. Ders boş / PDF yok
+            if (!currentCourse || !currentCoursePdfList || currentCoursePdfList.length === 0) {
+                return {
+                    type: 'no_pdf',
+                    title: 'Ders Notu (PDF) Bulunamadı',
+                    message: 'Bu derste henüz bir ders notu (PDF) yüklü değil. Sol menüdeki <strong>Kaynak Dokümanlar</strong> alanından bir PDF yükleyerek notlarınla çalışmaya başlayabilirsin.',
+                    canRetry: false
+                };
+            }
+
+            // 2. Zaman Aşımı (Timeout - 90 sn)
+            if (err && (err.name === 'AbortError' || err.message?.toLowerCase().includes('abort') || err.message?.toLowerCase().includes('timeout'))) {
+                return {
+                    type: 'timeout',
+                    title: 'İstek Zaman Aşımına Uğradı (90 sn)',
+                    message: 'Sunucu 90 saniye içinde yanıt veremedi. Yapay zeka modeli yoğun olabilir ya da soru uzun bir analiz gerektiriyor olabilir.',
+                    canRetry: true
+                };
+            }
+
+            // 3. HTTP 4xx / 5xx
+            if (status > 0 || detail) {
+                const errorDetail = detail || err?.message || 'Bilinmeyen bir sunucu hatası oluştu.';
+                return {
+                    type: 'http',
+                    title: `Sunucu Hatası (${status || 'HTTP'})`,
+                    message: `Hata detayı: ${escapeHtml(errorDetail)}`,
+                    canRetry: status >= 500 || status === 429
+                };
+            }
+
+            // 4. Ağ / Sunucuya Ulaşılamadı
+            const isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+            const isNetworkErr = err && (err.message?.includes('Failed to fetch') || err.name === 'TypeError' || err.message?.includes('NetworkError'));
+            if (isOffline || isNetworkErr) {
+                return {
+                    type: 'network',
+                    title: 'Sunucuya Ulaşılamadı',
+                    message: 'Sunucuya ulaşılamadı. Bağlantını kontrol et ya da birazdan tekrar dene.',
+                    canRetry: true
+                };
+            }
+
+            return {
+                type: 'unknown',
+                title: 'Hata Oluştu',
+                message: escapeHtml(err?.message || 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.'),
+                canRetry: true
+            };
+        }
+
+        function retryLastChatMessage() {
+            const chat = chats.find(c => c.id === activeChatId);
+            if (!chat || chat.messages.length === 0) return;
+
+            if (chat.messages[chat.messages.length - 1].role === 'assistant') {
+                chat.messages.pop();
+            }
+
+            const lastUserMsg = [...chat.messages].reverse().find(m => m.role === 'user');
+            if (!lastUserMsg) return;
+
+            const userText = lastUserMsg.text;
+            const userImg = lastUserMsg.image;
+
+            const lastUserIdx = chat.messages.lastIndexOf(lastUserMsg);
+            if (lastUserIdx !== -1) {
+                chat.messages.splice(lastUserIdx, 1);
+            }
+
+            saveChatsToStorage();
+            renderActiveChatMessages();
+
+            executeChatMessage(userText, userImg);
         }
 
         function formatMarkdownText(text, currentSources = []) {
             if (!text) return '';
 
-            // 1. $5$ veya $10.5$ gibi tek başına duran sayılardaki gereksiz dolar sembollerini temizle
-            let processed = text.replace(/\$(\d+(?:[.,]\d+)?)\$/g, '$1');
+            let processed = String(text);
 
-            // 2. KaTeX matematik bloklarını HTML ve Markdown kaçışından önce güvenle token'lara ayır
-            const mathTokens = [];
+            // 1. Kod bloklarını ve satır içi kodları korumaya al (içlerindeki $ veya formüller etkilenmesin)
+            const codeTokens = [];
+            processed = processed.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, (match) => {
+                const id = `@@CODEBLOCK${codeTokens.length}@@`;
+                codeTokens.push({ id, content: match });
+                return id;
+            });
 
+            // 2. $5$ veya $10.5$ gibi tek başına duran sayılardaki gereksiz dolar sembollerini temizle
+            processed = processed.replace(/\$(\d+(?:[.,]\d+)?)\$/g, '$1');
+
+            // 3. KaTeX Matematik Bloklarını Güvenli Token'lara Ayır (Markdown karakteri _ * ` vb. İÇERMEZ)
+            const mathDispTokens = [];
             // Display Math: $$ ... $$
             processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
-                const id = `___MATH_DISP_${mathTokens.length}___`;
+                const id = `@@MATHDISP${mathDispTokens.length}@@`;
                 let rendered = '';
-                if (window.katex) {
+                if (window.katex && typeof katex.renderToString === 'function') {
                     try {
                         rendered = `<div class="my-2 py-1 text-center overflow-x-auto">${katex.renderToString(math.trim(), { displayMode: true, throwOnError: false })}</div>`;
                     } catch (e) {
-                        rendered = `<pre class="my-1.5 p-2 bg-zinc-950/70 border border-zinc-800 rounded font-mono text-xs overflow-x-auto">${escapeHtml(math)}</pre>`;
+                        rendered = `<div class="my-1.5 p-2 bg-zinc-950/70 border border-zinc-800 rounded font-mono text-xs overflow-x-auto text-indigo-300">${escapeHtml(math.trim())}</div>`;
                     }
                 } else {
-                    rendered = `<div class="my-1.5 p-2 bg-zinc-950/70 border border-zinc-800 rounded font-mono text-xs overflow-x-auto text-indigo-300">${escapeHtml(math)}</div>`;
+                    rendered = `<div class="my-1.5 p-2 bg-zinc-950/70 border border-zinc-800 rounded font-mono text-xs overflow-x-auto text-indigo-300">${escapeHtml(math.trim())}</div>`;
                 }
-                mathTokens.push({ id, html: rendered });
+                mathDispTokens.push({ id, html: rendered });
                 return id;
             });
 
+            const mathInlTokens = [];
             // Inline Math: $ ... $
             processed = processed.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
-                const id = `___MATH_INL_${mathTokens.length}___`;
+                const id = `@@MATHINL${mathInlTokens.length}@@`;
                 let rendered = '';
-                if (window.katex) {
+                if (window.katex && typeof katex.renderToString === 'function') {
                     try {
                         rendered = katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
                     } catch (e) {
-                        rendered = `<code class="bg-zinc-800 text-indigo-300 px-1 py-0.5 rounded font-mono text-[11px]">${escapeHtml(math)}</code>`;
+                        rendered = `<code class="bg-zinc-800 text-indigo-300 px-1 py-0.5 rounded font-mono text-[11px]">${escapeHtml(math.trim())}</code>`;
                     }
                 } else {
-                    rendered = `<code class="bg-zinc-800 text-indigo-300 px-1 py-0.5 rounded font-mono text-[11px]">${escapeHtml(math)}</code>`;
+                    rendered = `<code class="bg-zinc-800 text-indigo-300 px-1 py-0.5 rounded font-mono text-[11px]">${escapeHtml(math.trim())}</code>`;
                 }
-                mathTokens.push({ id, html: rendered });
+                mathInlTokens.push({ id, html: rendered });
                 return id;
             });
 
-            // 3. Kaynak ve Sayfa Rozetlerini Çıkar (Anti-Hallucination & Deduplication)
-            // Cümle veya paragraftaki ardışık referansları grupla: [Sayfa 4] [Sayfa 4] veya [KAYNAK 1] [KAYNAK 2]
+            // 4. Kaynak ve Sayfa Rozetlerini Güvenli Token'lara Ayır (Deduplication & Clustering)
             const citeTokens = [];
             const clusterRegex = /(?:\[(?:KAYNAK|REF|Sayfa|sayfa)\s*:?\s*(\d+)\][\s,]*)+/gi;
 
@@ -5192,15 +5447,20 @@
 
                 if (badges.length === 0) return '';
 
-                const id = `___CITE_CLUSTER_${citeTokens.length}___`;
+                const id = `@@CITECLUSTER${citeTokens.length}@@`;
                 citeTokens.push({
                     id,
-                    html: `<span class="inline-flex items-center gap-1 my-0.5 align-baseline">${badges.join(' ')}</span>`
+                    html: `<span class="inline-flex items-center gap-0.5 my-0.5 align-baseline">${badges.join(' ')}</span>`
                 });
                 return id;
             });
 
-            // 4. Markdown Parsing (marked.js) & Sanitization (DOMPurify)
+            // Kod bloklarını marked öncesinde geri yerleştir ki kod olarak biçimlendirilsin
+            codeTokens.forEach(t => {
+                processed = processed.split(t.id).join(t.content);
+            });
+
+            // 5. Markdown Parsing (marked.js)
             let formatted = '';
             if (window.marked && typeof marked.parse === 'function') {
                 try {
@@ -5216,12 +5476,11 @@
                 formatted = escapeHtml(processed)
                     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-zinc-100">$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-                    .replace(/`([^`]+)`/g, '<code class="bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-mono text-indigo-300">$1</code>')
                     .replace(/\n\n/g, '<br><br>')
                     .replace(/\n/g, '<br>');
             }
 
-            // Güvenlik: DOMPurify ile temizle
+            // 6. Güvenlik: DOMPurify ile Temizle (Token'lar metin olduğu için korunur)
             if (window.DOMPurify && typeof DOMPurify.sanitize === 'function') {
                 try {
                     formatted = DOMPurify.sanitize(formatted, {
@@ -5232,14 +5491,20 @@
                 }
             }
 
-            // 5. Token'ları Geri Yerleştir (KaTeX ve Rozetler)
-            // Rozetler ve KaTeX HTML'i DOMPurify'dan sonra güvenle yerleştirilir (onclick korunur)
+            // 7. Token'ları Geri Yerleştir (Küresel Değiştirme: <em>, <strong>, <li> içindeki token'ları da kapsar)
             citeTokens.forEach(t => {
-                formatted = formatted.replace(t.id, t.html);
+                formatted = formatted.split(t.id).join(t.html);
             });
-            mathTokens.forEach(t => {
-                formatted = formatted.replace(t.id, t.html);
+            mathDispTokens.forEach(t => {
+                formatted = formatted.split(t.id).join(t.html);
             });
+            mathInlTokens.forEach(t => {
+                formatted = formatted.split(t.id).join(t.html);
+            });
+
+            // 8. Temizlik: Eşleşmeyen veya yarım kalan token'lar ekranda kesinlikle görünmesin
+            formatted = formatted.replace(/@@[A-Z0-9_]+@@/g, '');
+            formatted = formatted.replace(/___[A-Z0-9_]+___/g, '');
 
             return formatted;
         }
