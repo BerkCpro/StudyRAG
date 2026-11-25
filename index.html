@@ -14,11 +14,11 @@
     <script>
         try {
             const saved = localStorage.getItem("study_theme");
-            if (saved === "light" || saved === "dark") {
-                document.querySelector('meta[name="color-scheme"]').content = saved;
-                document.documentElement.classList.remove("light", "dark");
-                document.documentElement.classList.add(saved);
-            }
+            const sysTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? "dark" : "light";
+            const theme = (saved === "light" || saved === "dark") ? saved : sysTheme;
+            document.querySelector('meta[name="color-scheme"]').content = theme;
+            document.documentElement.classList.remove("light", "dark");
+            document.documentElement.classList.add(theme);
         } catch (e) { }
     </script>
 
@@ -1172,6 +1172,7 @@
 
                     <!-- PDF Yükleme Dropzone (Derste hiç dosya yokken görünür) -->
                     <label id="pdfDropzoneBig"
+                        onclick="if (!currentCourse) { event.preventDefault(); showToast('Lütfen önce bir ders ekleyin veya seçin; ders olmadan PDF yüklenemez.', 'error'); }"
                         class="border border-dashed border-zinc-700/80 hover:border-indigo-500/80 bg-zinc-950/50 hover:bg-indigo-950/10 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition group shadow-sm">
                         <input type="file" id="pdfFileInput" accept="application/pdf" multiple class="hidden"
                             onchange="handleRealPdfUpload(this)">
@@ -1298,42 +1299,47 @@
 
             <!-- Orta Kısım: Modern Segmentli Çalışma Hub'ları (Tabs) -->
             <div id="headerTabsContainer"
-                class="flex items-center p-1 bg-surface-2 border border-border rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-1">
+                class="flex items-center p-1 bg-surface-2 border border-border rounded-xl shadow-inner max-w-full overflow-x-auto no-scrollbar gap-0.5">
                 <button onclick="switchTab('home')" id="tab-btn-home"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer">
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-contrast shadow-sm transition shrink-0 cursor-pointer">
                     <i data-lucide="home" class="w-3.5 h-3.5"></i>
                     <span>Ana Ekran</span>
                 </button>
                 <button onclick="switchTab('chat')" id="tab-btn-chat"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="message-square-text" class="w-3.5 h-3.5"></i>
                     <span>Sohbet</span>
                 </button>
                 <button onclick="switchTab('quiz')" id="tab-btn-quiz"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
                     <span>Quiz</span>
                 </button>
                 <button onclick="switchTab('flashcards')" id="tab-btn-flashcards"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                     <span>Flashcard</span>
                 </button>
                 <button onclick="switchTab('mindmap')" id="tab-btn-mindmap"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer"
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer"
                     title="Dersin Zihin Haritası">
                     <i data-lucide="network" class="w-3.5 h-3.5"></i>
                     <span>Zihin Haritası</span>
                 </button>
                 <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
-                    class="tab-btn flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
+                    class="tab-btn flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface transition shrink-0 cursor-pointer">
                     <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
                     <span>Gelişim</span>
                 </button>
             </div>
 
-            <!-- Sağ Kısım: Tema Değiştirici & Profil / Sync ID Butonu -->
+            <!-- Sağ Kısım: Dil Değiştirici, Tema Değiştirici & Profil / Sync ID Butonu -->
             <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="toggleUiLanguage()" id="langToggleBtn" title="Dil Değiştir (TR / EN)"
+                    class="px-2 py-1.5 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition flex items-center gap-1 shrink-0 border border-border cursor-pointer text-xs font-semibold">
+                    <i data-lucide="globe" class="w-3.5 h-3.5 text-accent"></i>
+                    <span id="langToggleLabel">TR</span>
+                </button>
                 <button onclick="toggleTheme()" id="themeToggleBtn" title="Gece / Gündüz Modu Değiştir"
                     class="p-2 rounded-xl bg-surface-2 hover:bg-border text-text-muted hover:text-text transition flex items-center justify-center shrink-0 border border-border cursor-pointer">
                     <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-reward"></i>
@@ -1447,7 +1453,7 @@
                     <!-- Metin Giriş Alanı -->
                     <div class="flex-1 relative flex items-center">
                         <textarea id="chatInput" rows="1"
-                            placeholder="Ders notlarından bir soru sor veya konu anlatımı iste... (Shift + Enter: yeni satır)"
+                            placeholder="Ders notlarından bir soru sor..."
                             class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-indigo-500 rounded-2xl px-4 py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none transition shadow-inner max-h-32 leading-relaxed"
                             onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleChatSubmit(event); }"></textarea>
                     </div>
@@ -1551,6 +1557,17 @@
                                 <option value="5">5 Soru (Hızlı Test)</option>
                                 <option value="10" selected>10 Soru (Standart Sınav)</option>
                                 <option value="20">20 Soru (Kapsamlı Sınav)</option>
+                            </select>
+                        </div>
+
+                        <!-- Sınav Dili -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Sınav
+                                Dili</label>
+                            <select id="quizLanguage"
+                                class="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition">
+                                <option value="tr" selected>Türkçe</option>
+                                <option value="en">English</option>
                             </select>
                         </div>
 
@@ -1944,7 +1961,7 @@
                         <div class="flex items-center justify-between">
                             <h3 class="font-bold text-xs md:text-sm flex items-center gap-2 text-zinc-100">
                                 <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
-                                Zayıf Sayfa Tespiti
+                                Zayıf Konular
                             </h3>
                             <button onclick="refreshDashboardStats()"
                                 class="text-zinc-400 hover:text-indigo-400 p-1 rounded" title="Yenile">
@@ -2027,7 +2044,7 @@
                         <i data-lucide="fingerprint" class="w-3.5 h-3.5 text-emerald-400"></i>
                         Bu Cihazın Öğrenci ID'si
                     </span>
-                    <button onclick="copyUserIdToClipboard()"
+                    <button onclick="copyUserIdToClipboard()" id="profileCopyIdBtn"
                         class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium bg-indigo-950/60 border border-indigo-800/60 px-2 py-0.5 rounded transition">
                         <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
                     </button>
@@ -2054,6 +2071,99 @@
                         class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl transition font-medium">Eşle</button>
                 </div>
             </div>
+
+            <div class="pt-2 border-t border-zinc-800 flex items-center justify-between gap-2">
+                <span class="text-[10px] text-zinc-500">Test için yeni oturum başlat</span>
+                <button onclick="resetSessionForTest()"
+                    class="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/70 border border-red-800/60 text-red-300 hover:text-red-200 text-xs px-3 py-1.5 rounded-xl transition font-medium">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    Çıkış Yap / Sıfırla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= OTURUM SIFIRLAMA ONAY MODALI ================= -->
+    <div id="resetConfirmModal"
+        class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-zinc-950/85 backdrop-blur-sm p-4 animate-in fade-in">
+        <div
+            class="bg-zinc-900 border border-red-900/50 rounded-2xl w-full max-w-md p-5 shadow-2xl relative space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-zinc-100">Oturumu Sıfırla & Çıkış Yap</h3>
+                        <p class="text-[11px] text-zinc-400">Site yeni açılmış gibi temiz oturum başlatılır</p>
+                    </div>
+                </div>
+                <button onclick="closeResetConfirmModal()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3 space-y-2">
+                <p class="text-[11px] text-zinc-300 leading-relaxed">
+                    Sunucudaki PDF'lerin ve verilerin <span class="text-emerald-400 font-medium">silinmez</span>.
+                    Eski hesabına geri dönmek için aşağıdaki Öğrenci ID'ni kopyalayıp sakla; daha sonra
+                    <span class="text-indigo-300 font-medium">Öğrenci Profili → Cihaz Eşle</span> alanına yapıştırarak
+                    aynı hesaba dönebilirsin.
+                </p>
+                <div class="flex items-center justify-between gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5">
+                    <code id="resetModalCurrentId" class="font-mono text-[11px] text-emerald-400 truncate">...</code>
+                    <button onclick="copyResetModalUserId()" id="resetModalCopyBtn"
+                        class="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium bg-indigo-950/60 border border-indigo-800/60 px-2 py-0.5 rounded shrink-0 transition">
+                        <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button onclick="closeResetConfirmModal()"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 transition">
+                    İptal
+                </button>
+                <button onclick="confirmResetSession()"
+                    class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-medium text-white bg-red-600 hover:bg-red-500 transition">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    Evet, Sıfırla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= GENEL SİTE İÇİ ONAY MODALI ================= -->
+    <div id="appConfirmModal"
+        class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/85 backdrop-blur-sm p-4 animate-in fade-in">
+        <div
+            class="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-md p-5 shadow-2xl relative space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                        <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="appConfirmTitle" class="text-sm font-semibold text-zinc-100">Onay</h3>
+                </div>
+                <button onclick="closeAppConfirm()"
+                    class="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p id="appConfirmMessage" class="text-xs text-zinc-300 leading-relaxed"></p>
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button onclick="closeAppConfirm()"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 transition">
+                    İptal
+                </button>
+                <button id="appConfirmOkBtn"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition">
+                    Onayla
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2075,6 +2185,15 @@
                 <label class="text-xs font-semibold text-zinc-200">Sana nasıl hitap edelim?</label>
                 <input id="onboardingNameInput" type="text" placeholder="Adınızı giriniz (Örn: Berk, Zeynep...)"
                     class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="bg-zinc-950/70 border border-zinc-800 rounded-2xl p-3.5 text-left space-y-1.5">
+                <label class="text-xs font-semibold text-zinc-200 flex items-center justify-between">
+                    <span>Mevcut Öğrenci Kodun Var mı?</span>
+                    <span class="text-[10px] font-normal text-zinc-500">İsteğe bağlı</span>
+                </label>
+                <input id="onboardingSyncIdInput" type="text" placeholder="Örn: user_... (Varsa eski verilerin yüklenir)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:outline-none focus:border-indigo-500">
             </div>
 
             <button onclick="completeOnboarding()"
@@ -2769,62 +2888,233 @@
             if (modal) modal.classList.add('hidden');
         }
 
+        async function saveStudentNameToServer(name) {
+            try {
+                await fetch('/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+                    body: JSON.stringify({ student_name: name })
+                });
+            } catch (_) { }
+        }
+
+        async function fetchUserChatsFromServer() {
+            try {
+                const res = await fetch('/user-chats', {
+                    headers: { 'X-User-Id': currentUserId }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (Array.isArray(data.chats) && data.chats.length > 0) {
+                    chats = data.chats;
+                    localStorage.setItem('study_chats', JSON.stringify(chats));
+                    activeChatId = chats[0].id;
+                    localStorage.setItem('study_active_chat_id', activeChatId);
+                    renderChatList();
+                    renderActiveChatMessages();
+                }
+            } catch (_) { }
+        }
+
+        async function fetchUserCoursesFromServer() {
+            try {
+                const res = await fetch('/user-courses', {
+                    headers: { 'X-User-Id': currentUserId }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (Array.isArray(data.courses) && data.courses.length > 0) {
+                    const key = typeof getUserCoursesStorageKey === 'function' ? getUserCoursesStorageKey() : `study_courses_${currentUserId}`;
+                    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                    const merged = Array.from(new Set([...existing, ...data.courses]));
+                    localStorage.setItem(key, JSON.stringify(merged));
+                    if (!currentCourse || !merged.includes(currentCourse)) {
+                        currentCourse = merged[0];
+                        if (typeof getUserCurrentCourseKey === 'function') {
+                            localStorage.setItem(getUserCurrentCourseKey(), currentCourse);
+                        }
+                    }
+                    initCourseDropdown();
+                    if (typeof updateCourseDropdownUI === 'function') updateCourseDropdownUI();
+                    fetchDocumentsForCurrentCourse();
+                    if (typeof renderHomeScreen === 'function') renderHomeScreen();
+                }
+            } catch (_) { }
+        }
+
+        async function fetchStudentNameFromServer() {
+            try {
+                const res = await fetch('/profile', {
+                    headers: { 'X-User-Id': currentUserId }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.student_name) {
+                    localStorage.setItem('study_student_name', data.student_name);
+                    renderProfileWidget();
+                }
+            } catch (_) { }
+        }
+
         function saveStudentName() {
             const input = document.getElementById('inputStudentName');
             if (!input) return;
             const val = input.value.trim() || 'Öğrenci';
             localStorage.setItem('study_student_name', val);
+            saveStudentNameToServer(val);
             renderProfileWidget();
-            alert("Profil ismi güncellendi: " + val);
+            if (typeof renderActiveChatMessages === 'function') renderActiveChatMessages();
+            if (typeof renderHomeScreen === 'function') renderHomeScreen();
+            if (typeof showToast === 'function') {
+                showToast("Profil ismi güncellendi: " + val, 'success');
+            }
         }
 
         function copyUserIdToClipboard() {
+            const btn = document.getElementById('profileCopyIdBtn');
+            const showCopied = () => {
+                if (!btn) return;
+                btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Kopyalandı';
+                btn.classList.add('text-emerald-400', 'border-emerald-700/60', 'bg-emerald-950/60');
+                setTimeout(() => lucide.createIcons(), 20);
+                setTimeout(() => {
+                    btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Kopyala';
+                    btn.classList.remove('text-emerald-400', 'border-emerald-700/60', 'bg-emerald-950/60');
+                    setTimeout(() => lucide.createIcons(), 20);
+                }, 2000);
+            };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(currentUserId).then(() => {
-                    alert("Öğrenci ID panoya kopyalandı:\n" + currentUserId);
-                }).catch(() => {
-                    prompt("Öğrenci ID'niz:", currentUserId);
-                });
-            } else {
-                prompt("Öğrenci ID'niz:", currentUserId);
+                navigator.clipboard.writeText(currentUserId).then(showCopied).catch(() => {});
             }
         }
 
         function syncWithOtherDeviceId() {
             const input = document.getElementById('inputSyncId');
             if (!input || !input.value.trim()) {
-                alert("Lütfen diğer cihazdaki ID'yi girin.");
+                showToast("Lütfen diğer cihazdaki ID'yi girin.", "error");
                 return;
             }
             const newId = input.value.trim();
             if (newId === currentUserId) {
-                alert("Zaten bu ID ile bağlısınız.");
+                showToast("Zaten bu ID ile bağlısınız.", "info");
                 return;
             }
-            if (confirm("Bu cihazın kimliği '" + newId + "' olarak değiştirilecek ve o cihazdaki dökümanlar yüklenecektir. Devam edilsin mi?")) {
-                currentUserId = newId;
-                localStorage.setItem('study_user_id', currentUserId);
-                renderProfileWidget();
-                closeProfileModal();
-                fetchDocumentsForCurrentCourse();
-                refreshDashboardStats();
-                renderDailyFocusCard();
-                renderMistakesCount();
-                alert("Cihaz başarıyla eşlendi!");
+            showAppConfirm(
+                "Cihaz Eşle",
+                "Bu cihazın kimliği '" + newId + "' olarak değiştirilecek ve o cihazdaki dökümanlar yüklenecektir. Devam edilsin mi?",
+                () => {
+                    currentUserId = newId;
+                    localStorage.setItem('study_user_id', currentUserId);
+                    renderProfileWidget();
+                    closeProfileModal();
+                    fetchStudentNameFromServer();
+                    fetchUserCoursesFromServer();
+                    fetchUserChatsFromServer();
+                    fetchDocumentsForCurrentCourse();
+                    refreshDashboardStats();
+                    renderDailyFocusCard();
+                    renderMistakesCount();
+                    showToast("Cihaz başarıyla eşlendi!", "success");
+                }
+            );
+        }
+
+        let _appConfirmCallback = null;
+        function showAppConfirm(title, message, onConfirm) {
+            const modal = document.getElementById('appConfirmModal');
+            const titleEl = document.getElementById('appConfirmTitle');
+            const msgEl = document.getElementById('appConfirmMessage');
+            const okBtn = document.getElementById('appConfirmOkBtn');
+            if (!modal) return;
+            if (titleEl) titleEl.textContent = title || 'Onay';
+            if (msgEl) msgEl.textContent = message || '';
+            _appConfirmCallback = onConfirm;
+            if (okBtn) {
+                okBtn.onclick = () => {
+                    const cb = _appConfirmCallback;
+                    closeAppConfirm();
+                    if (typeof cb === 'function') cb();
+                };
+            }
+            modal.classList.remove('hidden');
+            setTimeout(() => lucide.createIcons(), 30);
+        }
+
+        function closeAppConfirm() {
+            const modal = document.getElementById('appConfirmModal');
+            if (modal) modal.classList.add('hidden');
+            _appConfirmCallback = null;
+        }
+
+        function resetSessionForTest() {
+            const idEl = document.getElementById('resetModalCurrentId');
+            if (idEl) idEl.textContent = currentUserId;
+            const modal = document.getElementById('resetConfirmModal');
+            if (modal) modal.classList.remove('hidden');
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function closeResetConfirmModal() {
+            const modal = document.getElementById('resetConfirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function copyResetModalUserId() {
+            const btn = document.getElementById('resetModalCopyBtn');
+            const done = () => {
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Kopyalandı';
+                    setTimeout(() => lucide.createIcons(), 20);
+                }
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUserId).then(done).catch(() => {});
             }
         }
 
+        function confirmResetSession() {
+            const savedLang = localStorage.getItem('study_ui_lang');
+            localStorage.clear();
+            sessionStorage.clear();
+            if (savedLang) localStorage.setItem('study_ui_lang', savedLang);
+            window.location.reload();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const appConfirm = document.getElementById('appConfirmModal');
+                if (appConfirm && !appConfirm.classList.contains('hidden')) {
+                    closeAppConfirm();
+                    return;
+                }
+                const resetModal = document.getElementById('resetConfirmModal');
+                if (resetModal && !resetModal.classList.contains('hidden')) {
+                    closeResetConfirmModal();
+                    return;
+                }
+                const profileModal = document.getElementById('profileModal');
+                if (profileModal && !profileModal.classList.contains('hidden')) {
+                    closeProfileModal();
+                }
+            }
+        });
+
         function generateFreshUserId() {
-            if (!confirm("Bu cihaz için yeni ve tamamen bağımsız bir öğrenci kimliği oluşturmak istiyor musunuz? (Mevcut cihaz diğer cihazlardan ayrılacaktır)")) return;
-            currentUserId = 'user_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36)));
-            localStorage.setItem('study_user_id', currentUserId);
-            renderProfileWidget();
-            closeProfileModal();
-            fetchDocumentsForCurrentCourse();
-            refreshDashboardStats();
-            renderDailyFocusCard();
-            renderMistakesCount();
-            alert("Yeni bağımsız öğrenci kimliği oluşturuldu!");
+            showAppConfirm(
+                "Yeni Öğrenci Kimliği",
+                "Bu cihaz için yeni ve tamamen bağımsız bir öğrenci kimliği oluşturmak istiyor musunuz? (Mevcut cihaz diğer cihazlardan ayrılacaktır)",
+                () => {
+                    currentUserId = 'user_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36)));
+                    localStorage.setItem('study_user_id', currentUserId);
+                    renderProfileWidget();
+                    closeProfileModal();
+                    fetchDocumentsForCurrentCourse();
+                    refreshDashboardStats();
+                    renderDailyFocusCard();
+                    renderMistakesCount();
+                    showToast("Yeni bağımsız öğrenci kimliği oluşturuldu!", "success");
+                }
+            );
         }
 
         // -------------------------------------------------------------
@@ -2842,7 +3132,7 @@
                 text = proseEl ? proseEl.innerText.trim() : '';
             }
             if (!text) {
-                alert("Kart yapılacak bir cevap metni bulunamadı.");
+                showToast("Kart yapılacak bir cevap metni bulunamadı.", "error");
                 return;
             }
 
@@ -3021,10 +3311,15 @@
         }
 
         function clearMistakeNotebookPrompt() {
-            if (!confirm("Yanlış defterindeki tüm soruları temizlemek istediğinize emin misiniz?")) return;
-            localStorage.removeItem(getMistakeStorageKey());
-            renderMistakesCount();
-            openMistakeNotebookModal();
+            showAppConfirm(
+                "Yanlış Defterini Temizle",
+                "Yanlış defterindeki tüm soruları temizlemek istediğinize emin misiniz?",
+                () => {
+                    localStorage.removeItem(getMistakeStorageKey());
+                    renderMistakesCount();
+                    openMistakeNotebookModal();
+                }
+            );
         }
 
         function createCardFromMistake(id) {
@@ -3046,7 +3341,7 @@
             closeMistakeNotebookModal();
             switchTab('flashcards');
             displayCurrentCard();
-            alert("✅ Yanlış yapılan soru başarıyla Flashcard destesine eklendi!");
+            showToast("✅ Yanlış yapılan soru başarıyla Flashcard destesine eklendi!", "success");
         }
 
         function retryMistakeInQuiz(id) {
@@ -3148,7 +3443,7 @@
         function printCheatSheet() {
             const contentEl = document.getElementById('cheatSheetContent');
             if (!contentEl || contentEl.classList.contains('hidden') || !contentEl.innerHTML.trim()) {
-                alert("Henüz formül kağıdı oluşturulmadı veya yükleniyor. Lütfen yükleme tamamlanınca tekrar deneyin.");
+                showToast("Henüz formül kağıdı oluşturulmadı veya yükleniyor. Lütfen yükleme tamamlanınca tekrar deneyin.", "info");
                 return;
             }
 
@@ -3332,7 +3627,7 @@
             const contentEl = document.getElementById('cheatSheetContent');
             if (!contentEl) return;
             navigator.clipboard.writeText(contentEl.innerText);
-            alert("✅ Formül kağıdı panoya kopyalandı!");
+            showToast("✅ Formül kağıdı panoya kopyalandı!", "success");
         }
 
         // -------------------------------------------------------------
@@ -4095,15 +4390,22 @@
         function initTheme() {
             const saved = localStorage.getItem('study_theme');
             if (saved) {
-                setTheme(saved);
+                setTheme(saved, false);
             } else {
                 const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                setTheme(prefersDark ? 'dark' : 'light');
+                setTheme(prefersDark ? 'dark' : 'light', false);
+            }
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('study_theme')) {
+                        setTheme(e.matches ? 'dark' : 'light', false);
+                    }
+                });
             }
         }
 
-        function setTheme(theme) {
-            localStorage.setItem('study_theme', theme);
+        function setTheme(theme, persist = true) {
+            if (persist) localStorage.setItem('study_theme', theme);
             const html = document.documentElement;
             const meta = document.querySelector('meta[name="color-scheme"]');
             if (meta) meta.content = theme;
@@ -4143,10 +4445,30 @@
             localStorage.setItem('study_student_name', name);
             localStorage.setItem('study_onboarding_done', 'true');
 
+            const syncInput = document.getElementById('onboardingSyncIdInput');
+            const syncId = syncInput ? syncInput.value.trim() : '';
+            if (syncId) {
+                currentUserId = syncId;
+                localStorage.setItem('study_user_id', currentUserId);
+            }
+
             const modal = document.getElementById('onboardingModal');
             if (modal) modal.classList.add('hidden');
 
             renderProfileWidget();
+            if (syncId) {
+                fetchStudentNameFromServer();
+                fetchUserCoursesFromServer();
+                fetchUserChatsFromServer();
+                initCourseDropdown();
+                fetchDocumentsForCurrentCourse();
+                refreshDashboardStats();
+                renderDailyFocusCard();
+                renderMistakesCount();
+                if (typeof renderHomeScreen === 'function') renderHomeScreen();
+            } else {
+                saveStudentNameToServer(name);
+            }
         }
 
         // Global Şık Bildirim (Toast) Sistemi
@@ -4600,7 +4922,7 @@
             const hasPdfs = Array.isArray(currentCoursePdfList) && currentCoursePdfList.length > 0;
 
             if (!hasPdfs) {
-                alert("Lütfen önce bu derse bir PDF ders notu ekleyiniz.");
+                showToast("Lütfen önce bu derse bir PDF ders notu ekleyiniz.", "error");
                 triggerHomePdfUpload();
                 return;
             }
@@ -4673,7 +4995,7 @@
             const btn = document.getElementById('homeSpeechBtn');
             const input = document.getElementById('homeMainInput');
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Tarayıcınız ses tanıma özelliğini desteklemiyor.");
+                showToast("Tarayıcınız ses tanıma özelliğini desteklemiyor.", "error");
                 return;
             }
 
@@ -4731,7 +5053,7 @@
             const nameInput = document.getElementById('firstCourseNameInput');
             const courseName = nameInput ? nameInput.value.trim() : '';
             if (!courseName) {
-                alert("Lütfen bir ders adı giriniz (örn: Fizik 101).");
+                showToast("Lütfen bir ders adı giriniz (örn: Fizik 101).", "error");
                 if (nameInput) nameInput.focus();
                 return;
             }
@@ -5709,8 +6031,12 @@
         }
 
         function selectChat(chatId) {
+            if (activeChatId && activeChatId !== chatId) {
+                chats = chats.filter(c => c.id === chatId || (c.messages && c.messages.length > 0));
+            }
             activeChatId = chatId;
             localStorage.setItem('study_active_chat_id', activeChatId);
+            saveChatsToStorage();
             renderChatList();
             renderActiveChatMessages();
             switchTab('chat');
@@ -5738,6 +6064,13 @@
 
         function saveChatsToStorage() {
             localStorage.setItem('study_chats', JSON.stringify(chats));
+            if (typeof currentUserId !== 'undefined' && currentUserId) {
+                fetch('/user-chats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+                    body: JSON.stringify({ chats: chats.filter(c => c.messages && c.messages.length > 0) })
+                }).catch(() => { });
+            }
             const visible = chats.filter(c => c.messages && c.messages.length > 0);
             const badge = document.getElementById('chatCountBadge');
             if (badge) badge.textContent = visible.length;
@@ -5747,8 +6080,8 @@
             const listEl = document.getElementById('chatHistoryList');
             const badgeEl = document.getElementById('chatCountBadge');
 
-            // Hiç mesaj içermeyen boş sohbet oturumlarını kenar çubuğu listesinde gösterme
-            const visibleChats = chats.filter(c => c.messages && c.messages.length > 0);
+            // Mesaj içeren sohbetleri ve aktif yeni sohbeti kenar çubuğu listesinde göster
+            const visibleChats = chats.filter(c => (c.messages && c.messages.length > 0) || c.id === activeChatId);
             if (badgeEl) badgeEl.textContent = visibleChats.length;
 
             if (visibleChats.length === 0) {
@@ -5787,7 +6120,7 @@
             if (!input.files || input.files.length === 0) return;
             const file = input.files[0];
             if (!file.type.startsWith('image/')) {
-                alert("Lütfen geçerli bir görsel dosyası seçin (PNG, JPG, WEBP).");
+                showToast("Lütfen geçerli bir görsel dosyası seçin (PNG, JPG, WEBP).", "error");
                 return;
             }
             const reader = new FileReader();
@@ -6066,7 +6399,7 @@
         let currentSpeakingButton = null;
         function toggleSpeechMessage(btn) {
             if (!window.speechSynthesis) {
-                alert("Tarayıcınız sesli okuma özelliğini desteklemiyor.");
+                showToast("Tarayıcınız sesli okuma özelliğini desteklemiyor.", "error");
                 return;
             }
 
@@ -6325,6 +6658,9 @@
                     });
                 } catch (_) { }
             }
+            requestAnimationFrame(() => {
+                container.scrollTop = container.scrollHeight;
+            });
             container.scrollTop = container.scrollHeight;
         }
 
@@ -6482,6 +6818,10 @@
                                         sourcesEl.classList.remove('hidden');
                                         lucide.createIcons();
                                     }
+                                    if (parsed.reset_text) {
+                                        fullText = '';
+                                        textEl.innerHTML = '';
+                                    }
                                     if (parsed.text) {
                                         fullText += parsed.text;
                                         textEl.innerHTML = formatMarkdownText(fullText, sources) + '<span class="inline-block w-1.5 h-3.5 bg-accent animate-pulse ml-0.5 align-middle"></span>';
@@ -6624,6 +6964,7 @@
             const qType = document.getElementById('quizType').value;
             const diff = document.getElementById('quizDifficulty').value;
             const count = parseInt(document.getElementById('quizCount').value) || 10;
+            const quizLang = document.getElementById('quizLanguage') ? document.getElementById('quizLanguage').value : 'tr';
             const weakToggle = document.getElementById('quizFocusWeakToggle');
 
             let focusWeak = false;
@@ -6674,6 +7015,7 @@
                         user_id: currentUserId,
                         focus_weak_topics: focusWeak,
                         focus_pages: targetPages,
+                        language: quizLang,
                         selected_docs: (getSelectedDocs().length > 0 ? getSelectedDocs() : null)
                     })
                 });
@@ -7237,17 +7579,61 @@
                         };
                     }
 
-                    weakListEl.innerHTML = sorted.map((k, i) => `
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-xs">
-                                <span class="font-medium text-rose-300 truncate max-w-[220px]">${i + 1}. ${escapeHtml(k)}</span>
-                                <span class="text-rose-400 font-bold shrink-0">${weakPages[k]} Yanlış</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div class="bg-rose-500 h-full" style="width: ${Math.min(weakPages[k] * 20, 100)}%"></div>
+                    const mistakesList = typeof getStoredMistakes === 'function' ? getStoredMistakes() : [];
+                    const weakPageTopics = stats.weak_page_topics || {};
+                    const groupedByDoc = {};
+                    sorted.forEach(k => {
+                        const match = k.match(/^(.+?)\s*\((Sayfa\s*\d+)\)$/i);
+                        const docTitle = match ? match[1].trim() : k;
+                        const subLabel = match ? match[2].trim() : 'Genel Konu';
+                        const pageNumMatch = subLabel.match(/\d+/);
+                        const pageNum = pageNumMatch ? parseInt(pageNumMatch[0], 10) : null;
+                        // Önce PDF sayfasının gerçek başlığını, yoksa yanlış defterindeki soru özetini kullan
+                        const pdfTopic = weakPageTopics[k] || '';
+                        const relatedMistake = !pdfTopic ? mistakesList.find(m =>
+                            (m.source_document === docTitle || (m.source_document && docTitle.includes(m.source_document))) &&
+                            (!pageNum || Number(m.page_number) === pageNum)
+                        ) : null;
+                        const topicHint = pdfTopic || (relatedMistake && relatedMistake.question_text
+                            ? relatedMistake.question_text.replace(/\s+/g, ' ').slice(0, 65) + (relatedMistake.question_text.length > 65 ? '...' : '')
+                            : '');
+
+                        if (!groupedByDoc[docTitle]) {
+                            groupedByDoc[docTitle] = { total: 0, items: [] };
+                        }
+                        groupedByDoc[docTitle].total += weakPages[k];
+                        groupedByDoc[docTitle].items.push({ subLabel, topicHint, count: weakPages[k] });
+                    });
+
+                    weakListEl.innerHTML = Object.entries(groupedByDoc).map(([docTitle, group], idx) => `
+                        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 space-y-2">
+                            <button type="button" onclick="const body = document.getElementById('weakGroupBody_${idx}'); const icon = document.getElementById('weakGroupIcon_${idx}'); if (body) body.classList.toggle('hidden'); if (icon) icon.classList.toggle('-rotate-90');"
+                                class="w-full flex items-center justify-between gap-2 text-left cursor-pointer group">
+                                <span class="text-xs font-semibold text-zinc-100 group-hover:text-white truncate flex items-center gap-1.5" title="${escapeHtml(docTitle)}">
+                                    <i id="weakGroupIcon_${idx}" data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200"></i>
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
+                                    <span class="truncate">${escapeHtml(docTitle)}</span>
+                                </span>
+                                <span class="text-[10px] font-bold text-rose-400 bg-rose-950/60 border border-rose-800/50 px-2 py-0.5 rounded-full shrink-0">${group.total} Yanlış</span>
+                            </button>
+                            <div id="weakGroupBody_${idx}" class="pl-3 border-l-2 border-rose-500/30 space-y-2">
+                                ${group.items.map(item => `
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between gap-2 text-[11px]">
+                                            <span class="text-zinc-300 truncate" title="${escapeHtml(item.topicHint || item.subLabel)}">
+                                                <span class="text-rose-300 font-medium">${escapeHtml(item.subLabel)}</span>${item.topicHint ? ` <span class="text-zinc-400">• ${escapeHtml(item.topicHint)}</span>` : ''}
+                                            </span>
+                                            <span class="text-rose-400 font-semibold shrink-0">${item.count} Yanlış</span>
+                                        </div>
+                                        <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                                            <div class="bg-rose-500 h-full" style="width: ${Math.min(item.count * 20, 100)}%"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     `).join('');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             } catch (err) {
                 console.error("Dashboard yüklenemedi:", err);
@@ -7292,12 +7678,16 @@
         }
 
         function clearAllDataPrompt() {
-            if (confirm("Tüm sohbet geçmişini sıfırlamak istediğinize emin misiniz?")) {
-                localStorage.removeItem('study_chats');
-                localStorage.removeItem('study_active_chat_id');
-                chats = [];
-                createNewChat(true);
-            }
+            showAppConfirm(
+                "Sohbet Geçmişini Sıfırla",
+                "Tüm sohbet geçmişini sıfırlamak istediğinize emin misiniz?",
+                () => {
+                    localStorage.removeItem('study_chats');
+                    localStorage.removeItem('study_active_chat_id');
+                    chats = [];
+                    createNewChat(true);
+                }
+            );
         }
 
         function escapeHtml(text) {
@@ -7843,6 +8233,349 @@
         </div>
     </div>
 
+    <script>
+        // ================= GLOBAL TR / EN ARAYÜZ DİL SİSTEMİ =================
+        const UI_TR_TO_EN = {
+            "Ana Ekran": "Home",
+            "Sohbet": "Chat",
+            "Quiz": "Quiz",
+            "Flashcard": "Flashcards",
+            "Zihin Haritası": "Mind Map",
+            "Gelişim": "Progress",
+            "Aktif Ders": "Active Course",
+            "AKTİF DERS": "ACTIVE COURSE",
+            "-- Henüz Ders Eklenmedi --": "-- No Course Added Yet --",
+            "Kaynak Dokümanlar": "Source Documents",
+            "KAYNAK DOKÜMANLAR": "SOURCE DOCUMENTS",
+            "+ PDF Ekle": "+ Add PDF",
+            "Ders Notu / PDF Yükle": "Upload Lecture Notes / PDF",
+            "Tıkla veya buraya sürükle bırak": "Click or drag & drop here",
+            "Çalışma Oturumları": "Study Sessions",
+            "ÇALIŞMA OTURUMLARI": "STUDY SESSIONS",
+            "Yeni Çalışma Sohbeti": "New Study Chat",
+            "Yeni Sohbet": "New Chat",
+            "Geçmiş sohbet bulunmuyor": "No past chats yet",
+            "Ders Seçin": "Select Course",
+            "Ders seçilmedi": "No course selected",
+            "Bugün ne çalışmak istiyorsun,": "What do you want to study today,",
+            "StudyRAG'e hoş geldin!": "Welcome to StudyRAG!",
+            "StudyRAG'e hoş geldin,": "Welcome to StudyRAG,",
+            "StudyRAG'e Hoş Geldin!": "Welcome to StudyRAG!",
+            "PDF Seç veya Buraya Sürükle": "Select PDF or Drag Here",
+            "Tek veya birden çok PDF seçebilirsiniz": "You can select one or multiple PDFs",
+            "Henüz quiz çözülmedi. Yanlış yapılan sayfalar burada gösterilir.": "No quizzes solved yet. Missed topics will appear here.",
+            "Başlamak için bir ders oluştur ve ders notlarını (PDF) yükle.": "Create a course and upload your lecture notes (PDF) to get started.",
+            "Ders notlarını yükle, yapay zeka ile sınavlara hazırlan.": "Upload your lecture notes and prepare for exams with AI.",
+            "Sana nasıl hitap edelim?": "What should we call you?",
+            "Mevcut Öğrenci Kodun Var mı?": "Do you have an existing Student ID?",
+            "İsteğe bağlı": "Optional",
+            "Çalışmaya Başla": "Start Studying",
+            "Ders Adı": "Course Name",
+            "Ders Notu (PDF)": "Lecture Notes (PDF)",
+            "Başla": "Start",
+            "Notlara soru sor": "Ask your notes",
+            "Notlarına soru sor, konu özetle": "Ask your notes, summarize topics",
+            "Notlarına soru sor, konuyu özetle": "Ask your notes, summarize topics",
+            "Çoktan seçmeli pratik yap": "Practice with multiple choice",
+            "Kartlarla hızlı tekrar et": "Quick review with cards",
+            "Konu ağacını görselleştir": "Visualize the topic tree",
+            "Sor": "Ask",
+            "Quiz Başlat": "Start Quiz",
+            "Kartları Üret": "Generate Cards",
+            "Harita Oluştur": "Create Map",
+            "+ Ekle": "+ Add",
+            "Devam et": "Continue",
+            "Sınav simülasyonu": "Exam simulation",
+            "Kartlarla tekrar": "Review with cards",
+            "Kavram haritası": "Concept map",
+            "Başarı analizi": "Performance analytics",
+            "Ders Zihin Haritası": "Course Mind Map",
+            "Ders Seçilmedi": "No Course Selected",
+            "Konu hiyerarşisi ve sayfa referansları (Sayfa rozetine tıklayarak inceleyin)": "Topic hierarchy and page references (Click a page badge to inspect)",
+            "Oluştur": "Generate",
+            "PNG İndir": "Download PNG",
+            "Zihin Haritası Çıkarılıyor...": "Generating Mind Map...",
+            "Ders notlarındaki ana temalar ve sayfa bağlantıları hiyerarşik olarak analiz ediliyor.": "Analyzing main themes and page links hierarchically from your notes.",
+            "Görsel Zihin Haritası": "Visual Mind Map",
+            "Zihin Haritası Oluştur": "Generate Mind Map",
+            "Bugün Ne Çalışmalıyım?": "What Should I Study Today?",
+            "Kişiselleştirilmiş Sınav & Tekrar Planı": "Personalized Exam & Review Plan",
+            "Öncelikli Tekrar": "Priority Review",
+            "Henüz zayıf sayfa yok": "No weak topics yet",
+            "Soru Çöz": "Solve Quiz",
+            "Sayfayı Oku": "Read Page",
+            "Aktif Hatırlama": "Active Recall",
+            "Kavram Kartı Üret": "Generate Flashcards",
+            "Sınav tarihini belirleyerek geri sayım ve çalışma planını başlat.": "Set your exam date to start the countdown and study plan.",
+            "Toplam Çözülen": "Total Solved",
+            "Soru analizi": "Question analysis",
+            "Başarı Oranı": "Success Rate",
+            "En Çok Yanlış Sayfa": "Most Missed Topic",
+            "Hedef tekrar": "Target review",
+            "Aktif Materyal": "Active Material",
+            "Bu derste": "In this course",
+            "Zor (2)": "Hard (2)",
+            "İyi (3)": "Good (3)",
+            "Kolay (4)": "Easy (4)",
+            "Tekrar (1)": "Again (1)",
+            "Zayıf sayfa yok": "No weak topics",
+            "Kart çalış": "Study cards",
+            "Genel": "General",
+            "Yeni Ders Ekle": "Add New Course",
+            "+ Yeni Ders Ekle": "+ Add New Course",
+            "Dersi Ekle": "Add Course",
+            "Dersi Sil": "Delete Course",
+            "Çalışma alanı ve döküman grubu oluşturun": "Create a workspace and document group",
+            "Ders / Konu Adı": "Course / Topic Name",
+            "Henüz ders eklenmedi": "No courses added yet",
+            "Henüz bir ders eklenmedi.": "No course added yet.",
+            "Yukarıdaki \"...\" menüsünden veya sol panelden ilk dersinizi oluşturabilirsiniz.": "Create your first course from the \"...\" menu above or the sidebar.",
+            "Sınav provası yap": "Practice for exams",
+            "Kavram kartları": "Concept cards",
+            "Konu ağacı": "Topic tree",
+            "Önerilen:": "Suggested:",
+            "Genel Özet": "General Summary",
+            "5 Kritik Tanım": "5 Key Definitions",
+            "Formüller": "Formulas",
+            "Formül Kağıdı": "Cheat Sheet",
+            "Tümüne Dön": "Show All",
+            "Yüklediğiniz PDF'ler ve soru geçmişiniz bu ID'ye kaydedilir. Telefon ve bilgisayarınızda farklı ID varsa dökümanlar ayrı tutulur.": "Your uploaded PDFs and question history are saved under this ID. If your phone and computer have different IDs, documents are kept separate.",
+            "Aktif Hatırlama (Flashcards)": "Active Recall (Flashcards)",
+            "Kavramları kartlarla pekiştirin": "Reinforce concepts with flashcards",
+            "Yeni Kart Seti Üret": "Generate New Card Set",
+            "KAVRAM / SORU": "CONCEPT / QUESTION",
+            "CEVAP / AÇIKLAMA": "ANSWER / EXPLANATION",
+            "Çevirmek için tıkla": "Click to flip",
+            "Henüz kart üretilmedi. Üstteki butona basarak başlayın.": "No cards generated yet. Click the button above to start.",
+            "Boşluk tuşu ile kartı çevirin": "Press Space to flip card",
+            "Yanlış Defteri (": "Mistake Notebook (",
+            "Üstteki \"Yeni Quiz Üret\" butonuna basarak ders notlarınızdan otomatik quiz oluşturun.": "Click the \"Generate New Quiz\" button above to create a quiz from your lecture notes.",
+            "ders notlarınızın büyük resmini ve konu ağacını görmek için aşağıdaki butona basın.": "click the button below to see the big picture and topic tree of your lecture notes.",
+            "Son gün taktiği: Yanlış yapılan sayfaları gözden geçir ve formülleri pekiştir.": "Last-day tip: Review missed pages and reinforce key formulas.",
+            "Sınava Yönelik Hızlı Tekrar Taktikleri": "Quick Exam Review Tactics",
+            "1. Konu Anlatımı için \"Basitçe Anlat\"": "1. Use \"Explain Simply\" for Concepts",
+            "Karmaşık terimleri anlamakta zorlandığınızda ELI5 modunu açarak soru sorun.": "Turn on ELI5 mode when you struggle with complex terminology.",
+            "2. Aktif Hatırlama (Flashcards)": "2. Active Recall (Flashcards)",
+            "Flashcards sekmesini kullanarak her gün 5 dakika kavram tekrarı yapın.": "Use the Flashcards tab to review key concepts for 5 minutes daily.",
+            "3. Vize Seviyesi Quiz Çözümü": "3. Exam-Level Quiz Practice",
+            "Sınav öncesi Quiz sekmesinden \"Karışık\" soru tipiyle kendinizi test edin.": "Test yourself before exams using the \"Mixed\" question mode in the Quiz tab.",
+            "Sayfa": "Page",
+            "İlgili Metin Alıntısını Göster": "Show Relevant Text Excerpt",
+            "İlgili Metin Alıntısını Gizle": "Hide Relevant Text Excerpt",
+            "Bu Sayfayı AI'a Sor": "Ask AI About This Page",
+            "PDF İndir": "Download PDF",
+            "Dökümanı Silmek İstediğinize Emin Misiniz?": "Are You Sure You Want to Delete This Document?",
+            "Bu dökümanı sildiğinizde, PDF dosyası ve ilgili tüm indeks kayıtları sistemden kalıcı olarak kaldırılacaktır.": "Deleting this document will permanently remove the PDF file and all its indexed records from the system.",
+            "Vazgeç": "Cancel",
+            "Evet, Dökümanı Sil": "Yes, Delete Document",
+            "Seçili": "Selected",
+            "Sesli Oku": "Read Aloud",
+            "Durdur": "Stop",
+            "Kart Yap": "Make Card",
+            "Quiz Üret": "Generate Quiz",
+            "Görsel analizi ile çözülecek": "Will be analyzed with Vision AI",
+            "Lütfen diğer cihazdaki ID'yi girin.": "Please enter the Student ID from your other device.",
+            "Zaten bu ID ile bağlısınız.": "You are already connected with this ID.",
+            "Cihaz başarıyla eşlendi!": "Device paired successfully!",
+            "Yeni bağımsız öğrenci kimliği oluşturuldu!": "New independent Student ID created!",
+            "Lütfen önce bir ders ekleyin veya seçin; ders olmadan PDF yüklenemez.": "Please add or select a course first; PDFs cannot be uploaded without a course.",
+            "Cihaz Eşle": "Pair Device",
+            "Yeni Öğrenci Kimliği": "New Student ID",
+            "Yanlış Defterini Temizle": "Clear Mistake Notebook",
+            "Sohbet Geçmişini Sıfırla": "Reset Chat History",
+            "Yanlış defterindeki tüm soruları temizlemek istediğinize emin misiniz?": "Are you sure you want to clear all questions in the mistake notebook?",
+            "Tüm sohbet geçmişini sıfırlamak istediğinize emin misiniz?": "Are you sure you want to reset all chat history?",
+            "Bu cihaz için yeni ve tamamen bağımsız bir öğrenci kimliği oluşturmak istiyor musunuz? (Mevcut cihaz diğer cihazlardan ayrılacaktır)": "Create a new independent Student ID for this device? (It will be unlinked from other devices)",
+            "Ders Notlarından Sınav Simülatörü": "Exam Simulator from Lecture Notes",
+            "Yapay zeka notlarını analiz edip sınava yönelik sorular çıkarır": "AI analyzes your notes and generates exam-focused questions",
+            "Tüm PDF'ler": "All PDFs",
+            "Soru Tipi": "Question Type",
+            "SORU TİPİ": "QUESTION TYPE",
+            "Karışık (Önerilen)": "Mixed (Recommended)",
+            "Çoktan Seçmeli": "Multiple Choice",
+            "Doğru / Yanlış": "True / False",
+            "Boşluk Doldurma": "Fill in the Blank",
+            "Klasik Açık Uçlu": "Open-Ended",
+            "Zorluk Seviyesi": "Difficulty",
+            "ZORLUK SEVİYESİ": "DIFFICULTY",
+            "Orta Seviye": "Medium",
+            "Kolay (Kavram Temeli)": "Easy (Core Concepts)",
+            "Zor (Vize / Final Düzeyi)": "Hard (Midterm / Final Level)",
+            "Soru Sayısı": "Question Count",
+            "SORU SAYISI": "QUESTION COUNT",
+            "5 Soru (Hızlı Test)": "5 Questions (Quick Test)",
+            "10 Soru (Standart Sınav)": "10 Questions (Standard Exam)",
+            "20 Soru (Kapsamlı Sınav)": "20 Questions (Comprehensive)",
+            "Sınav Dili": "Exam Language",
+            "SINAV DİLİ": "EXAM LANGUAGE",
+            "Odak Alanı": "Focus Area",
+            "ODAK ALANI": "FOCUS AREA",
+            "Zayıf Sayfalara Odaklan": "Focus on Weak Topics",
+            "PDF'ten Yeni Quiz Üret": "Generate New Quiz from PDF",
+            "Üretiliyor...": "Generating...",
+            "Quiz Hazırlanamadı": "Could Not Generate Quiz",
+            "Sol Menüden PDF Yükle": "Upload PDF from Sidebar",
+            "Zayıf Konular": "Weak Topics",
+            "Öğrenci Profili & Cihaz Yönetimi": "Student Profile & Device Management",
+            "Çalışma alanı kimliği ve senkronizasyon": "Workspace identity & synchronization",
+            "Öğrenci Adı / Profil İsmi": "Student Name / Profile Name",
+            "Kaydet": "Save",
+            "Bu Cihazın Öğrenci ID'si": "This Device's Student ID",
+            "Kopyala": "Copy",
+            "Kopyalandı": "Copied",
+            "Cihaz Eşle (PC & Telefonu Bağla)": "Pair Device (Link PC & Phone)",
+            "Eşle": "Pair",
+            "Test için yeni oturum başlat": "Start a fresh session for testing",
+            "Çıkış Yap / Sıfırla": "Log Out / Reset",
+            "Oturumu Sıfırla & Çıkış Yap": "Reset Session & Log Out",
+            "Site yeni açılmış gibi temiz oturum başlatılır": "Starts a clean session as if newly opened",
+            "İptal": "Cancel",
+            "Onayla": "Confirm",
+            "Evet, Sıfırla": "Yes, Reset",
+            "Sınav Tarihi Ekle": "Add Exam Date",
+            "Tekrar Dene": "Try Again",
+            "Formül Kağıdı Hazırlanıyor...": "Preparing Cheat Sheet...",
+            "Yeniden Oluştur": "Regenerate",
+            "Kayıt yok": "No records",
+            "Öğrenci": "Student",
+            "Gönder": "Send",
+            "Kapat": "Close",
+            "Temizle": "Clear",
+            "Sil": "Delete"
+        };
+
+        const UI_PLACEHOLDER_TR_TO_EN = {
+            "Ders notların hakkında bir soru sor...": "Ask a question about your lecture notes...",
+            "Ders notlarından bir soru sor...": "Ask a question about your notes...",
+            "Ders notlarından bir soru sor veya konu anlatımı iste... (Shift + Enter: yeni satır)": "Ask a question about your notes...",
+            "Örn: Termodinamiğin 2. yasasını açıkla...": "e.g. Explain the 2nd law of thermodynamics...",
+            "Hangi konudan soru hazırlayayım? (Boş bırakırsan tüm ders)": "Which topic should I create questions on? (Leave blank for all)",
+            "Hangi konuya odaklansın? (Boş bırakırsan tüm ders)": "Which topic should it focus on? (Leave blank for all)",
+            "Odak konusu (opsiyonel, örn: Kinetik Teori)": "Focus topic (optional, e.g. Kinetic Theory)",
+            "Konu (opsiyonel, örn: Termodinamik)": "Topic (optional, e.g. Thermodynamics)",
+            "Adınızı giriniz (Örn: Berk, Zeynep...)": "Enter your name (e.g. Alex, Sarah...)",
+            "Örn: user_... (Varsa eski verilerin yüklenir)": "e.g. user_... (Restores your previous data)",
+            "Örn: user_...": "e.g. user_...",
+            "Örn: Berk Cezik": "e.g. Alex Smith",
+            "Örn: Bilgisayar Mimarisi, Yapay Zeka, Fizik II...": "e.g. Computer Architecture, AI, Physics II...",
+            "Örn: \"Fizik 101\" veya \"Organik Kimya\"": "e.g. \"Physics 101\" or \"Organic Chemistry\""
+        };
+
+        const _origTextMap = new WeakMap();
+        function detectSystemLang() {
+            const navLang = (navigator.language || navigator.userLanguage || 'tr').toLowerCase();
+            return navLang.startsWith('tr') ? 'tr' : 'en';
+        }
+        let currentUiLang = localStorage.getItem('study_ui_lang') || detectSystemLang();
+        let _i18nObserver = null;
+        let _isTranslating = false;
+
+        function translateTextString(str, lang) {
+            if (!str || lang !== 'en') return str;
+            const trimmed = str.trim();
+            if (!trimmed) return str;
+            const normalized = trimmed.replace(/\s+/g, ' ');
+            const leading = str.match(/^\s*/)[0];
+            const trailing = str.match(/\s*$/)[0];
+            if (UI_TR_TO_EN[normalized]) {
+                return leading + UI_TR_TO_EN[normalized] + trailing;
+            }
+            if (normalized.includes(' · ')) {
+                const parts = normalized.split(' · ').map(p => translateTextString(p, 'en'));
+                const joined = parts.join(' · ');
+                if (joined !== normalized) return leading + joined + trailing;
+            }
+            if (normalized.includes(' • ')) {
+                const parts = normalized.split(' • ').map(p => translateTextString(p, 'en'));
+                const joined = parts.join(' • ');
+                if (joined !== normalized) return leading + joined + trailing;
+            }
+            let out = normalized;
+            out = out.replace(/^Pano_Gorseli_(.*)$/i, 'Clipboard_Image_$1');
+            out = out.replace(/^Profil ismi güncellendi:\s*(.*)$/i, 'Profile name updated: $1');
+            out = out.replace(/^Bu cihazın kimliği '([^']+)' olarak değiştirilecek ve o cihazdaki dökümanlar yüklenecektir\. Devam edilsin mi\?$/i, "This device's ID will be changed to '$1' and its documents will be loaded. Continue?");
+            out = out.replace(/^Notlarına soru sor, kon.*$/i, 'Ask your notes, explain concepts');
+            out = out.replace(/^Sayfa\s+(\d+)\s*\/\s*(\d+)$/i, 'Page $1 / $2');
+            out = out.replace(/^(\d+)\s+Sayfa\s*•$/i, '$1 Pages •');
+            out = out.replace(/^(\d+)\s*\/\s*(\d+)\s*PDF Seçili$/i, '$1/$2 PDFs Selected');
+            out = out.replace(/^(\d+)\s*\/\s*(\d+)\s*Seçili$/i, '$1/$2 Selected');
+            out = out.replace(/^Sadece seçili (\d+) PDF taranıyor:(.*)$/i, 'Scanning only $1 selected PDF:$2');
+            out = out.replace(/^(\d+)\s+kart çalış$/i, 'Study $1 cards');
+            out = out.replace(/^(\d+)\s+zayıf sayfa$/i, '$1 weak topics');
+            out = out.replace(/^(\d+)\s+D\s*\/\s*(\d+)\s+Y$/i, '$1 C / $2 W');
+            out = out.replace(/^(\d+)\s+Yanlış$/i, '$1 Wrong');
+            out = out.replace(/^(\d+)\s+Doğru$/i, '$1 Correct');
+            out = out.replace(/^(\d+)\s+Sayfa$/i, '$1 Pages');
+            out = out.replace(/^Sayfa\s+(\d+)$/i, 'Page $1');
+            out = out.replace(/^Yanlış Defteri\s*\((\d+)\)$/i, 'Mistake Notebook ($1)');
+            out = out.replace(/^Sınava\s+(\d+)\s+gün kaldı$/i, '$1 days until exam');
+            out = out.replace(/^Yarın sınav var!$/i, 'Exam is tomorrow!');
+            out = out.replace(/^Bugün sınav günü!$/i, 'Today is exam day!');
+            out = out.replace(/^Sınav tarihi geçti$/i, 'Exam date passed');
+            out = out.replace(/^(\d+)\s*\/\s*(\d+)\s*Soru Çözüldü$/i, '$1 / $2 Questions Solved');
+            if (out !== normalized) return leading + out + trailing;
+            return str;
+        }
+
+        function translateSubtree(root, lang) {
+            if (!root) return;
+            _isTranslating = true;
+            try {
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+                let node;
+                while ((node = walker.nextNode())) {
+                    const parentTag = node.parentElement ? node.parentElement.tagName : '';
+                    if (parentTag === 'SCRIPT' || parentTag === 'STYLE' || parentTag === 'CODE') continue;
+                    if (!_origTextMap.has(node)) {
+                        _origTextMap.set(node, node.nodeValue);
+                    }
+                    const orig = _origTextMap.get(node);
+                    node.nodeValue = lang === 'en' ? translateTextString(orig, 'en') : orig;
+                }
+                if (root.querySelectorAll) {
+                    root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+                        if (!el.dataset.trPlaceholder) el.dataset.trPlaceholder = el.placeholder;
+                        el.placeholder = lang === 'en'
+                            ? (UI_PLACEHOLDER_TR_TO_EN[el.dataset.trPlaceholder] || el.dataset.trPlaceholder)
+                            : el.dataset.trPlaceholder;
+                    });
+                }
+            } finally {
+                _isTranslating = false;
+            }
+        }
+
+        function applyUiLanguage(lang, persist = false) {
+            currentUiLang = (lang === 'en') ? 'en' : 'tr';
+            document.documentElement.lang = currentUiLang;
+            if (persist) localStorage.setItem('study_ui_lang', currentUiLang);
+            const label = document.getElementById('langToggleLabel');
+            if (label) label.textContent = currentUiLang.toUpperCase();
+            const quizLangSel = document.getElementById('quizLanguage');
+            if (quizLangSel) quizLangSel.value = currentUiLang;
+            translateSubtree(document.body, currentUiLang);
+        }
+
+        function toggleUiLanguage() {
+            applyUiLanguage(currentUiLang === 'tr' ? 'en' : 'tr', true);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            _i18nObserver = new MutationObserver((mutations) => {
+                if (_isTranslating || currentUiLang !== 'en') return;
+                for (const m of mutations) {
+                    m.addedNodes.forEach(n => {
+                        if (n.nodeType === 1) translateSubtree(n, 'en');
+                        else if (n.nodeType === 3 && n.parentElement) translateSubtree(n.parentElement, 'en');
+                    });
+                }
+            });
+            _i18nObserver.observe(document.body, { childList: true, subtree: true });
+            if (currentUiLang === 'en') {
+                setTimeout(() => applyUiLanguage('en'), 150);
+            }
+        });
+    </script>
 </body>
 
 </html>

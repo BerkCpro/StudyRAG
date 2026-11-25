@@ -52,9 +52,19 @@ from google.genai import types
 # ==========================================
 # 1. SABİT AYARLAR VE KALICI DEPOLAMA
 # ==========================================
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6KlANRxnfnM_uT_hqwWtKLWV9RT7txe6EttKtRp4b_G6A")
-GEMINI_MODEL = "gemini-3.5-flash-lite"
-GEMINI_FALLBACK_MODEL = "gemini-3.5-flash"
+# .env dosyası varsa ortam değişkenlerini otomatik yükle (harici paket gerekmez)
+if os.path.exists(".env"):
+    with open(".env", "r", encoding="utf-8") as _ef:
+        for _line in _ef:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-4-hydrogen"
+GEMINI_FALLBACK_MODEL = "gemini-3.8-flash"
+FALLBACK_MODELS = ["gemini-4-hydrogen", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash"]
 EMBEDDING_MODEL = "gemini-embedding-001"
 COLLECTION_NAME = "study_rag_collection"
 
@@ -616,6 +626,7 @@ class QuizGenerateRequest(BaseModel):
     user_id: Optional[str] = Field("default_user", description="Kullanıcı kimliği")
     focus_weak_topics: bool = Field(False, description="Hata yapılan zayıf konulara odaklan")
     focus_pages: Optional[list[int]] = Field(None, description="Odaklanılacak belirli sayfa listesi")
+    language: str = Field("tr", description="Sınav dili (tr veya en)")
     selected_docs: Optional[list[str]] = Field(None, description="Sadece seçili PDF'lerden quiz üretme filtresi")
 
     model_config = {
@@ -1406,10 +1417,13 @@ async def chat_with_pdf(request: ChatRequest):
         client = gemini_client or genai.Client(api_key=GEMINI_API_KEY)
         contents = [types.Content(parts=[types.Part.from_text(text=prompt), image_part])] if image_part else prompt
 
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=contents
-        )
+        def _call_chat(model_name: str):
+            return client.models.generate_content(
+                model=model_name,
+                contents=contents
+            )
+
+        response = await call_gemini_with_fallback(_call_chat, "Chat")
         return ChatResponse(answer=response.text, sources=sources)
     except HTTPException:
         raise
@@ -1430,6 +1444,23 @@ def format_user_friendly_ai_error(e: Exception) -> str:
         return "Yapay zeka servisinde geçici bir sunucu hatası oluştu (500). Lütfen tekrar deneyin."
     else:
         return f"Yapay zeka yanıtı üretilirken geçici bir bağlantı sorunu oluştu: {err_str[:120]}"
+
+
+async def call_gemini_with_fallback(call_fn, label: str = "AI"):
+    """FALLBACK_MODELS listesini sırayla dener; biri hata verirse anında sonraki modele geçer."""
+    last_err = None
+    for idx, model_name in enumerate(FALLBACK_MODELS):
+        try:
+            if idx > 0:
+                await asyncio.sleep(0.3)
+            return await asyncio.to_thread(call_fn, model_name)
+        except Exception as e:
+            last_err = e
+            logger.warning(f"[{label}] Model '{model_name}' hatası: {e} -> sonraki modele geçiliyor...")
+    raise HTTPException(
+        status_code=503,
+        detail=format_user_friendly_ai_error(last_err or Exception("503 UNAVAILABLE"))
+    )
 
 
 # 3.1 Canlı Akış (Streaming SSE - Kayan Metin & Multimodal Görsel)
@@ -1462,7 +1493,7 @@ async def chat_stream_with_pdf(request: ChatRequest):
         yield f"data: {json.dumps({'sources': [s.model_dump() for s in sources]})}\n\n"
 
         # 3. Gemini akışını canlı token olarak ilet (Fallback Zinciri & Akıllı Geçiş)
-        models_to_try = [GEMINI_MODEL, GEMINI_FALLBACK_MODEL, "gemini-2.5-flash"]
+        models_to_try = FALLBACK_MODELS
         stream_started = False
         last_exception = None
 
@@ -1488,9 +1519,13 @@ async def chat_stream_with_pdf(request: ChatRequest):
             except Exception as e:
                 last_exception = e
                 logger.warning(f"[CHAT-STREAM] Model '{model_name}' hatası: {e} (stream_started={stream_started})")
-                # Eğer akış zaten bir miktar metin ürettiyse, model değiştirmek metni bozacağı için durdur
-                if stream_started:
-                    break
+                # Eğer sonraki yedek model varsa, kısmi metni temizle ve bir sonraki modele geç
+                if idx < len(models_to_try) - 1:
+                    if stream_started:
+                        yield f"data: {json.dumps({'reset_text': True})}\n\n"
+                        stream_started = False
+                    continue
+                break
 
         if last_exception:
             friendly_err = format_user_friendly_ai_error(last_exception)
@@ -1605,8 +1640,15 @@ Lütfen soruları ÖNCELİKLE bu sayfa ve kavramlardaki püf noktaları, eksik a
         "open": "sadece klasik açık uçlu (open)"
     }.get(request.question_type, "karışık")
 
+    lang_instruction = (
+        "DİL KURALI: Tüm soruları, şıkları (options), doğru cevapları (correct_answer) ve açıklamaları (explanation) KESİNLİKLE İNGİLİZCE (English) olarak yaz."
+        if (request.language or "tr").lower() == "en"
+        else "DİL KURALI: Tüm soruları, şıkları, doğru cevapları ve açıklamaları Türkçe olarak yaz."
+    )
+
     prompt = f"""Aşağıdaki ders notlarından {request.difficulty} zorluk seviyesinde toplam {request.count} adet {type_desc} sınav sorusu üret.
 Her sorunun doğru cevabını, açıklamasını ve kaynak PDF ile sayfa numarasını eksiksiz doldur.
+{lang_instruction}
 {weak_focus_instructions}
 [DERS NOTLARI]:
 {context_text}
@@ -1624,12 +1666,7 @@ Her sorunun doğru cevabını, açıklamasını ve kaynak PDF ile sayfa numaras�
             ),
         )
 
-    try:
-        response = await asyncio.to_thread(_call_gemini_quiz, GEMINI_MODEL)
-    except Exception as e:
-        print(f"[WARN] Quiz lite model hatası: {e}, fallback modele geçiliyor...", flush=True)
-        response = await asyncio.to_thread(_call_gemini_quiz, GEMINI_FALLBACK_MODEL)
-
+    response = await call_gemini_with_fallback(_call_gemini_quiz, "Quiz")
     return QuizListResponse.model_validate_json(response.text)
 
 
@@ -1697,12 +1734,7 @@ KURALLAR (HIZLI VE ETKİLİ ÖĞRENME İÇİN):
             ),
         )
 
-    try:
-        response = await asyncio.to_thread(_call_gemini_flashcards, GEMINI_MODEL)
-    except Exception as e:
-        print(f"[WARN] Flashcard lite model hatasi: {e}, yedek modele geciliyor...", flush=True)
-        response = await asyncio.to_thread(_call_gemini_flashcards, GEMINI_FALLBACK_MODEL)
-
+    response = await call_gemini_with_fallback(_call_gemini_flashcards, "Flashcards")
     return FlashcardListResponse.model_validate_json(response.text)
 
 
@@ -1793,11 +1825,7 @@ Aşağıdaki ders notlarını incele ve öğrencinin sınavdan hemen önce tek b
             contents=prompt
         )
 
-    try:
-        response = await asyncio.to_thread(_call_gemini_cheatsheet, GEMINI_MODEL)
-    except Exception as e:
-        print(f"[WARN] CheatSheet fallback modele geçiliyor: {e}", flush=True)
-        response = await asyncio.to_thread(_call_gemini_cheatsheet, GEMINI_FALLBACK_MODEL)
+    response = await call_gemini_with_fallback(_call_gemini_cheatsheet, "CheatSheet")
 
     return CheatSheetResponse(
         course_name=course_title,
@@ -1979,30 +2007,29 @@ Ağaç yapısı kuralları:
             )
         return await asyncio.to_thread(_exec)
 
-    # 5. Model çağrısı & Hata Yönetimi (Model geçersiz JSON dönerse 1 kez tekrar dene)
+    # 5. Model çağrısı & Hata Yönetimi (Tüm fallback zincirini sırayla dene)
     mindmap_data = None
-    last_error = ""
+    last_error = None
 
-    for attempt in range(2):
-        model_name = GEMINI_MODEL if attempt == 0 else GEMINI_FALLBACK_MODEL
+    for idx, model_name in enumerate(FALLBACK_MODELS):
         try:
+            if idx > 0:
+                await asyncio.sleep(0.3)
             resp = await _call_gemini_mindmap(model_name)
             raw_text = (resp.text or "").strip()
             parsed_json = json.loads(raw_text)
             validated_obj = MindMapResponse.model_validate(parsed_json)
             mindmap_data = validated_obj.model_dump()
+            last_error = None
             break
         except Exception as e:
-            last_error = str(e)
-            print(f"[WARN] Mindmap deneme {attempt+1} başarısız ({model_name}): {e}", flush=True)
-            if attempt == 0:
-                await asyncio.sleep(0.8)
-                continue
+            last_error = e
+            logger.warning(f"[Mindmap] Model '{model_name}' başarısız: {e} -> sonraki modele geçiliyor...")
 
     if not mindmap_data:
         raise HTTPException(
-            status_code=502,
-            detail=f"Yapay zeka zihin haritasını yapılandırılmış JSON formatında üretemedi ({last_error[:100]}). Lütfen 'Yeniden Oluştur' butonuyla tekrar deneyiniz."
+            status_code=503,
+            detail=format_user_friendly_ai_error(last_error or Exception("503 UNAVAILABLE"))
         )
 
     # 6. Sayfa Doğrulama (Hallucination Guard): Bağlamda olmayan sayfaları null yap
@@ -2071,7 +2098,100 @@ async def get_dashboard_stats(
     x_user_id: Optional[str] = Header(None, alias="X-User-Id", description="İstemci oturum takip başlığı")
 ):
     uid = (x_user_id or user_id or "default_user").strip()
-    return get_user_quiz_stats(uid)
+    stats = get_user_quiz_stats(uid)
+    weak_page_topics = {}
+    import re as _re
+    for k in (stats.get("weak_pages") or {}).keys():
+        m = _re.match(r"^(.+?)\s*\(Sayfa\s*(\d+)\)$", k, _re.IGNORECASE)
+        if not m:
+            continue
+        fname, pnum = m.group(1).strip(), int(m.group(2))
+        pdf_path = find_pdf_file_path(fname, uid)
+        if not pdf_path:
+            continue
+        try:
+            with pymupdf.open(pdf_path) as doc:
+                if 1 <= pnum <= len(doc):
+                    text = doc[pnum - 1].get_text("text") or ""
+                    for line in text.splitlines():
+                        clean = " ".join(line.split()).strip()
+                        if len(clean) >= 4 and not clean.isdigit():
+                            weak_page_topics[k] = clean[:80] + ("..." if len(clean) > 80 else "")
+                            break
+        except Exception:
+            pass
+    return {**stats, "weak_page_topics": weak_page_topics}
+
+
+class ProfileUpdateRequest(BaseModel):
+    student_name: str = Field(..., min_length=1, max_length=100)
+
+
+@app.get("/profile", tags=["İlerleme"])
+async def get_profile(
+    user_id: Optional[str] = Query(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    u_stats = get_user_quiz_stats(uid)
+    return {"user_id": uid, "student_name": u_stats.get("student_name", "")}
+
+
+@app.post("/profile", tags=["İlerleme"])
+async def update_profile(
+    req: ProfileUpdateRequest,
+    user_id: Optional[str] = Query(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    u_stats = get_user_quiz_stats(uid)
+    u_stats["student_name"] = req.student_name.strip()
+    save_storage()
+    return {"status": "saved", "user_id": uid, "student_name": u_stats["student_name"]}
+
+
+@app.get("/user-courses", tags=["İlerleme"])
+async def get_user_courses(
+    user_id: Optional[str] = Query(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    courses = []
+    seen = set()
+    for doc in uploaded_documents:
+        if doc.get("user_id") == uid:
+            c = (doc.get("course_name") or "").strip()
+            if c and c not in seen:
+                seen.add(c)
+                courses.append(c)
+    return {"user_id": uid, "courses": courses}
+
+
+class UserChatsRequest(BaseModel):
+    chats: list = Field(default_factory=list)
+
+
+@app.get("/user-chats", tags=["İlerleme"])
+async def get_user_chats(
+    user_id: Optional[str] = Query(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    u_stats = get_user_quiz_stats(uid)
+    return {"user_id": uid, "chats": u_stats.get("chats", [])}
+
+
+@app.post("/user-chats", tags=["İlerleme"])
+async def save_user_chats(
+    req: UserChatsRequest,
+    user_id: Optional[str] = Query(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id")
+):
+    uid = (x_user_id or user_id or "default_user").strip()
+    u_stats = get_user_quiz_stats(uid)
+    u_stats["chats"] = req.chats
+    save_storage()
+    return {"status": "saved", "count": len(req.chats)}
 
 
 if __name__ == "__main__":
