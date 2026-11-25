@@ -1,6 +1,6 @@
 # StudyRAG — Smart Study Assistant & FastAPI RAG Platform
 
-**Advanced Computer Programming — Final Project**
+**Advanced Computer Programming Project**
 
 StudyRAG is a FastAPI-based educational platform that lets students upload lecture PDFs and generate page-cited answers, quizzes, flashcards, cheat sheets, and interactive mind maps.
 
